@@ -4,9 +4,9 @@ void write_propagator_type(WRITER *writer, const int type) {
   uint64_t bytes;
   char *message;
 
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   if (g_cart_id == 0) {
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
 
     message = (char *)malloc(128);
 
@@ -34,7 +34,7 @@ void write_propagator_type(WRITER *writer, const int type) {
 
     close_writer_record(writer);
     free(message);
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   }
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
 }

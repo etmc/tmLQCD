@@ -63,7 +63,7 @@ int check_xchange() {
       }
     }
 
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
     for (x0 = 0; x0 < T; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -74,7 +74,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     for (x0 = 0; x0 < T; x0++) {
       for (x1 = 0; x1 < LX; x1++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -113,7 +113,7 @@ int check_xchange() {
       }
     }
 
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
     x = (double*)&g_spinor_field[0][(VOLUME + 2 * LX * LY * LZ) / 2];
     for (i = 0; i < T * LY * LZ / 2 * 24; i++, x++) {
       if ((int)(*x) != g_nb_x_up) {
@@ -139,7 +139,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     x = (double*)&g_spinor_field[0][(VOLUME + 2 * LX * LY * LZ) / 2 + 2 * T * LY * LZ / 2];
     for (i = 0; i < T * LX * LZ / 2 * 24; i++, x++) {
       if ((int)(*x) != g_nb_y_up) {
@@ -166,7 +166,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
     set_spinor_field(0, -1.);
 
     for (x0 = 0; x0 < T; x0++) {
@@ -270,7 +270,7 @@ int check_xchange() {
       }
     }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* Set the x boundary */
     for (x0 = 0; x0 < T; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
@@ -284,7 +284,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* Set the y boundary */
     for (x0 = 0; x0 < T; x0++) {
       for (x1 = 0; x1 < LX; x1++) {
@@ -298,7 +298,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
     /* Set the z boundary */
     for (x0 = 0; x0 < T; x0++) {
       for (x1 = 0; x1 < LX; x1++) {
@@ -340,7 +340,7 @@ int check_xchange() {
       }
     }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     x = (double*)&g_gauge_field[(T + 2) * LX * LY * LZ][0];
     for (i = 0; i < T * LY * LZ * 72; i++, x++) {
       if ((int)(*x) != g_nb_x_up) {
@@ -368,7 +368,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     x = (double*)&g_gauge_field[(T + 2) * LX * LY * LZ + 2 * T * LZ * LY][0];
     for (i = 0; i < T * LX * LZ * 72; i++, x++) {
       if ((int)(*x) != g_nb_y_up) {
@@ -396,7 +396,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
     x = (double*)g_gauge_field[VOLUME + 2 * LX * LY * LZ + 2 * T * LZ * LY + 2 * T * LX * LZ];
     for (i = 0; i < T * LX * LY * 72; i++, x++) {
       if ((int)(*x) != g_nb_z_up) {
@@ -504,7 +504,7 @@ int check_xchange() {
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* The edges */
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     fprintf(stdout, "# Rank: %d, (c0, c1, c2, c3) = (%d, %d, %d, %d)\n", g_proc_id,
             g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
     fflush(stdout);
@@ -577,7 +577,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     di[1] = (g_proc_coords[1] - 1) % g_nproc_x;
     di[2] = (g_proc_coords[2] - 1) % g_nproc_y;
     di[0] = g_proc_coords[0];
@@ -712,7 +712,7 @@ int check_xchange() {
       }
     }
 #endif
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
     di[1] = (g_proc_coords[1] - 1) % g_nproc_x;
     di[3] = (g_proc_coords[3] - 1) % g_nproc_z;
     di[0] = g_proc_coords[0];
@@ -1001,7 +1001,7 @@ int check_xchange() {
         }
       }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
       x = (double*)&g_gauge_field[VOLUMEPLUSRAND + 2 * LX * LY * LZ][0];
       for (i = 0; i < T * LY * LZ * 72; i++, x++) {
         if ((int)(*x) != g_nb_x_up) {
@@ -1029,7 +1029,7 @@ int check_xchange() {
       }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
       x = (double*)&g_gauge_field[VOLUMEPLUSRAND + 2 * LX * LY * LZ + 2 * T * LZ * LY][0];
       for (i = 0; i < T * LX * LZ * 72; i++, x++) {
         if ((int)(*x) != g_nb_y_up) {
@@ -1058,7 +1058,7 @@ int check_xchange() {
       }
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
       x = (double*)&g_gauge_field[VOLUMEPLUSRAND + 2 * LX * LY * LZ + 2 * T * LZ * LY +
                                   2 * T * LX * LZ][0];
       for (i = 0; i < T * LX * LY * 72; i++, x++) {
@@ -1088,7 +1088,7 @@ int check_xchange() {
       }
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
 
       set_gauge_field(-1.);
 
@@ -1279,7 +1279,7 @@ int check_xchange() {
           }
         }
       }
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
       /* Set the tz boundary */
       for (x1 = 0; x1 < LX; x1++) {
         for (x2 = 0; x2 < LY; x2++) {
@@ -1332,7 +1332,7 @@ int check_xchange() {
       xchange_gauge(g_gauge_field);
       MPI_Barrier(MPI_COMM_WORLD);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
       di[0] = (g_proc_coords[0] - 1) % g_nproc_t;
       di[1] = (g_proc_coords[1] - 1) % g_nproc_x;
       di[2] = g_proc_coords[2];
@@ -1453,7 +1453,7 @@ int check_xchange() {
       }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
       di[1] = (g_proc_coords[1] - 1) % g_nproc_x;
       di[2] = (g_proc_coords[2] - 1) % g_nproc_y;
@@ -1693,7 +1693,7 @@ int check_xchange() {
         }
       }
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
 
       di[0] = (g_proc_coords[0] - 1) % g_nproc_t;
       di[3] = (g_proc_coords[3] - 1) % g_nproc_z;
@@ -2123,7 +2123,7 @@ int check_xchange() {
         }
       }
     }
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     for (x0 = 0; x0 < T; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -2145,7 +2145,7 @@ int check_xchange() {
       }
     }
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     for (x0 = 0; x0 < T; x0++) {
       for (x1 = 0; x1 < LX; x1++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -2167,7 +2167,7 @@ int check_xchange() {
       }
     }
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     for (x0 = 0; x0 < T; x0++) {
       for (x1 = 0; x1 < LX; x1++) {
         for (x2 = 0; x2 < LY; x2++) {
@@ -2194,7 +2194,7 @@ int check_xchange() {
     xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
-#if defined PARALLELT
+#if defined TM_PARALLELT
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -2228,7 +2228,7 @@ int check_xchange() {
       }
     }
 #endif
-#if defined PARALLELXT
+#if defined TM_PARALLELXT
     for (x1 = 1; x1 < LX - 1; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -2351,7 +2351,7 @@ int check_xchange() {
       }
     }
 #endif
-#if defined PARALLELXYT
+#if defined TM_PARALLELXYT
     for (x1 = 1; x1 < LX - 1; x1++) {
       for (x2 = 1; x2 < LY - 1; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -2748,7 +2748,7 @@ int check_xchange() {
 
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     for (x1 = 1; x1 < LX - 1; x1++) {
       for (x2 = 1; x2 < LY - 1; x2++) {
         for (x3 = 1; x3 < LZ - 1; x3++) {
@@ -3026,7 +3026,7 @@ int check_xchange() {
       }
     }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
     // xt edge
     for (x2 = 0; x2 < LY; x2++) {
@@ -3063,7 +3063,7 @@ int check_xchange() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
     // ty edge
     for (x1 = 0; x1 < LX; x1++) {
@@ -3139,7 +3139,7 @@ int check_xchange() {
     xchange_deri(df0);
     MPI_Barrier(MPI_COMM_WORLD);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
     di[0] = (g_proc_coords[0] - 1) % g_nproc_t;
     di[1] = (g_proc_coords[1] - 1) % g_nproc_x;
@@ -3156,7 +3156,7 @@ int check_xchange() {
     di[1] = (g_proc_coords[1] + 1) % g_nproc_x;
     MPI_Cart_rank(g_cart_grid, di, &pp);
 
-#ifdef PARALLELXT
+#ifdef TM_PARALLELXT
     for (x2 = 0; x2 < LY; x2++) {
       for (x3 = 0; x3 < LZ; x3++) {
 #else
@@ -3224,7 +3224,7 @@ int check_xchange() {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
     // xy-edge
     di[1] = (g_proc_coords[1] - 1) % g_nproc_x;

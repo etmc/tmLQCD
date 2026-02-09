@@ -63,20 +63,20 @@ int main(int argc, char *argv[]) {
   tmlqcd_mpi_init(argc, argv);
 
   if (g_proc_id == 0) {
-#ifdef _GAUGE_COPY
-    printf("# The code was compiled with -D_GAUGE_COPY\n");
+#ifdef TM_GAUGE_COPY
+    printf("# The code was compiled with -DTM_GAUGE_COPY\n");
 #endif
-#ifdef _USE_HALFSPINOR
-    printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+#ifdef TM_USE_HALFSPINOR
+    printf("# The code was compiled with -DTM_USE_HALFSPINOR\n");
 #endif
-#ifdef _USE_SHMEM
-    printf("# the code was compiled with -D_USE_SHMEM\n");
-#ifdef _PERSISTENT
+#ifdef TM_USE_SHMEM
+    printf("# the code was compiled with -DTM_USE_SHMEM\n");
+#ifdef TM_PERSISTENT
     printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
 #ifdef TM_USE_MPI
-#ifdef _NON_BLOCKING
+#ifdef TM_NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #endif
 #endif
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
   exit(0);
 #endif
 #endif
-#ifdef FIXEDVOLUME
-  printf(" Error: FIXEDVOLUME not allowed");
+#ifdef TM_FIXEDVOLUME
+  printf(" Error: TM_FIXEDVOLUME not allowed");
   exit(0);
 #endif
 

@@ -19,7 +19,7 @@
 
 #include "spinor.ih"
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int read_binary_spinor_data(spinor *const s, spinor *const r, LemonReader *lemonreader,
                             DML_Checksum *checksum) {
   int t, x, y, z, i = 0, status = 0;
@@ -126,7 +126,7 @@ int read_binary_spinor_data(spinor *const s, spinor *const r, LemonReader *lemon
   free(filebuffer);
   return 0;
 }
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 int read_binary_spinor_data(spinor *const s, spinor *const r, LimeReader *limereader,
                             DML_Checksum *checksum) {
   int t, x, y, z, i = 0, status = 0;
@@ -212,9 +212,9 @@ int read_binary_spinor_data(spinor *const s, spinor *const r, LimeReader *limere
 #endif
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int read_binary_spinor_data_l(spinor *const s, LemonReader *lemonreader, DML_Checksum *checksum) {
   int t, x, y, z, i = 0, status = 0;
   int latticeSize[] = {T_global, g_nproc_x * LX, g_nproc_y * LY, g_nproc_z * LZ};
@@ -314,7 +314,7 @@ int read_binary_spinor_data_l(spinor *const s, LemonReader *lemonreader, DML_Che
   free(filebuffer);
   return 0;
 }
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 int read_binary_spinor_data_l(spinor *const s, LimeReader *limereader, DML_Checksum *checksum) {
   int t, x, y, z, i = 0, status = 0;
   n_uint64_t bytes;
@@ -390,4 +390,4 @@ int read_binary_spinor_data_l(spinor *const s, LimeReader *limereader, DML_Check
 #endif
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */

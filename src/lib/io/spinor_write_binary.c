@@ -19,7 +19,7 @@
 
 #include "spinor.ih"
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int write_binary_spinor_data(spinor *const s, spinor *const r, LemonWriter *lemonwriter,
                              DML_Checksum *checksum, int const prec) {
   int x, y, z, t, i = 0, xG, yG, zG, tG, status = 0;
@@ -124,7 +124,7 @@ int write_binary_spinor_data(spinor *const s, spinor *const r, LemonWriter *lemo
   return 0;
 }
 
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 int write_binary_spinor_data(spinor *const s, spinor *const r, LimeWriter *limewriter,
                              DML_Checksum *checksum, const int prec) {
   int x, X, y, Y, z, Z, t, t0, tag = 0, id = 0, i = 0, status = 0;
@@ -272,9 +272,9 @@ int write_binary_spinor_data(spinor *const s, spinor *const r, LimeWriter *limew
   }
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int write_binary_spinor_data_l(spinor *const s, LemonWriter *lemonwriter, DML_Checksum *checksum,
                                int const prec) {
   int x, y, z, t, i = 0, xG, yG, zG, tG, status = 0;
@@ -374,7 +374,7 @@ int write_binary_spinor_data_l(spinor *const s, LemonWriter *lemonwriter, DML_Ch
   return 0;
 }
 
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 int write_binary_spinor_data_l(spinor *const s, LimeWriter *limewriter, DML_Checksum *checksum,
                                const int prec) {
   int x, X, y, Y, z, Z, t, t0, tag = 0, id = 0, i = 0, status = 0;
@@ -514,4 +514,4 @@ int write_binary_spinor_data_l(spinor *const s, LimeWriter *limewriter, DML_Chec
   }
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */

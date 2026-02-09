@@ -26,7 +26,7 @@
 		 g_cart_grid, &status);
   }
   
-#  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#  if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv(buffer[0],              1, slice_X_gath_type, g_nb_x_dn, 93,
@@ -108,10 +108,10 @@
 		 1, edge_XT_cont_type, g_nb_t_dn, 98,
 		 g_cart_grid, &status);
   }
-  /* end of if defined PARALLELXT || PARALLELXYT || PARALLELXYZT*/
+  /* end of if defined TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT*/
 #  endif
 
-#  if (defined PARALLELXYT || defined PARALLELXYZT)
+#  if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv(buffer[0],                            1, slice_Y_gath_type, g_nb_y_dn, 103,
@@ -247,9 +247,9 @@
 		 g_cart_grid, &status);
   }
 
-  /* end of if defined PARALLELXYT || PARALLELXYZT */
+  /* end of if defined TM_PARALLELXYT || TM_PARALLELXYZT */
 #  endif
-#  if defined PARALLELXYZT
+#  if defined TM_PARALLELXYZT
   /* z-Rand */
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
@@ -454,4 +454,4 @@
 
   }
 
-#endif /* PARALLELXYZT */
+#endif /* TM_PARALLELXYZT */

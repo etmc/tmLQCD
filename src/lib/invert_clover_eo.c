@@ -53,7 +53,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
@@ -81,7 +81,7 @@ int invert_clover_eo(spinor* const Even_new, spinor* const Odd_new, spinor* cons
     }
 #endif
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     if (solver_flag == MG) {
       return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter, rel_prec, VOLUME / 2,
                           gf[0], &Msw_full);
@@ -197,7 +197,7 @@ int invert_clover_eo(spinor* const Even_new, spinor* const Odd_new, spinor* cons
                     rel_prec, VOLUME, Qsq);
       Qm(g_spinor_field[DUM_DERI + 1], g_spinor_field[DUM_DERI]);
     }
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     else if (solver_flag == MG) {
       return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter, rel_prec, VOLUME / 2,
                           gf[0], &Msw_full);

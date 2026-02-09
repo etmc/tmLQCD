@@ -5,10 +5,10 @@ void destruct_reader(READER *reader) {
 
   fh = reader->fp;
   DestroyReader(reader);
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   MPI_File_close(fh);
   free(fh); /* NB This assumes construct_writer was used to malloc memory! */
-#else       /* HAVE_LIBLEMON */
+#else       /* TM_USE_LEMON */
   fclose(fh);
-#endif      /* HAVE_LIBLEMON */
+#endif      /* TM_USE_LEMON */
 }

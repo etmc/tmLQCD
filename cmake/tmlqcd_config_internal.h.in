@@ -3,20 +3,17 @@
  * into static const variables, following the convention used by the USQCD build
  * systems, for example. */
 
-/* We are on a CRAY */
-#cmakedefine CRAY
-
 /* lapack available */
-#cmakedefine HAVE_LAPACK 
+#cmakedefine TM_LAPACK 
 
 /* Define to 1 if you have the `lime' library (-llime). */
-#cmakedefine HAVE_LIBLIME 
+#cmakedefine TM_USE_LIME 
 
 /* Define to 1 if you have the `lemon' library (-llemon). */
-#cmakedefine HAVE_LIBLEMON 
+#cmakedefine TM_USE_LEMON 
 
 /* 1 if clock_gettime is available for use in benchmark */
-#cmakedefine HAVE_CLOCK_GETTIME 
+#cmakedefine TM_CLOCK_GETTIME 
 
 /* Compile with MPI support */
 #cmakedefine TM_USE_MPI
@@ -25,7 +22,7 @@
 #cmakedefine TM_USE_OMP
 
 /* Compile with FFTW support */
-#cmakedefine HAVE_FFTW 
+#cmakedefine TM_USE_FFTW 
 
 /* Fortran has not extra _ */
 #cmakedefine NOF77_
@@ -45,31 +42,31 @@
 #define PACKAGE_VERSION "@PROJECT_DESCRIPTION@ @PROJECT_VERSION@"
 
 /* X parallelisation */
-#cmakedefine PARALLELX 
+#cmakedefine TM_PARALLELX 
 
 /* XY parallelisation */
-#cmakedefine PARALLELXY 
+#cmakedefine TM_PARALLELXY 
 
 /* XYZ parallelisation */
-#cmakedefine PARALLELXYZ
+#cmakedefine TM_PARALLELXYZ
 
 /* One dimensional parallelisation */
-#cmakedefine PARALLELT
+#cmakedefine TM_PARALLELT
 
 /* Two dimensional parallelisation */
-#cmakedefine PARALLELXT
+#cmakedefine TM_PARALLELXT
 
 /* Three dimensional parallelisation */
-#cmakedefine PARALLELXYT
+#cmakedefine TM_PARALLELXYT
 
 /* Four dimensional parallelisation */
-#cmakedefine PARALLELXYZT
+#cmakedefine TM_PARALLELXYZT
 
 /* Fixed volume at compiletime */
-#cmakedefine FIXEDVOLUME
+#cmakedefine TM_FIXEDVOLUME
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
-#cmakedefine HAVE_FSEEKO
+#cmakedefine TM_FSEEKO
 
 /* Alignment for arrays -- necessary for SSE and automated vectorization */
 #define ALIGN_BASE @ALIGN_BASE@
@@ -88,40 +85,37 @@
 #cmakedefine YYTEXT_POINTER
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#cmakedefine _FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
+#cmakedefine TM_FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
 
 /* Construct an extra copy of the gauge fields */
-#cmakedefine _GAUGE_COPY
+#cmakedefine TM_USE_GAUGECOPY
 
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
-#cmakedefine _LARGEFILE_SOURCE
+#cmakedefine TM_LARGEFILE_SOURCE
 
 /* Define for large files, on AIX-style hosts. */
-#cmakedefine _LARGE_FILES 
+#cmakedefine TM_LARGE_FILES 
 
 /* Use even/odd geometry in the gauge fields */
-#cmakedefine _NEW_GEOMETRY
+#cmakedefine TM_NEW_GEOMETRY
 
 /* x86 64 Bit architecture */
-#cmakedefine _x86_64
+#cmakedefine TM_x86_64
 
 /* Define to 1 if Dirac operator with halfspinor should be used */
-#cmakedefine _USE_HALFSPINOR 
+#cmakedefine TM_USE_HALFSPINOR 
 
 /* Define to 1 if shmem API should be used */
-#cmakedefine _USE_SHMEM
+#cmakedefine TM_USE_SHMEM
 
 /* Define to 1 if KOJAK instrumentalisation should be done*/
-#cmakedefine _KOJAK_INST
+#cmakedefine TM_KOJAK_INST
 
 /* Define to 1 if persistent MPI calls for halfspinor should be used */
-#cmakedefine _PERSISTENT
+#cmakedefine TM_PERSISTENT
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
-#cmakedefine _NON_BLOCKING
-
-/* Define to 1 if you have the `quda' library (-lquda). */
-#cmakedefine HAVE_LIBQUDA
+#cmakedefine TM_NONBLOCKING
 
 /* Using QUDA GPU */
 #cmakedefine TM_USE_QUDA 
@@ -133,7 +127,7 @@
 #cmakedefine TM_QUDA_FERMIONIC_FORCES
 
 /* Using DDalphaAMG */
-#cmakedefine DDalphaAMG
+#cmakedefine TM_USE_DDalphaAMG
 
 /* Using QPHIX */
 #cmakedefine TM_USE_QPHIX 

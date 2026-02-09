@@ -446,7 +446,7 @@ int polyakov_loop_dir(const int nstore /* in  */, const int dir /* in  */) {
 
   /* (1) collect contributions from different time/z slices to nodes with rank=0
      in spatial volume/space-time slices */
-#ifndef PARALLELXYZT
+#ifndef TM_PARALLELXYZT
   if (dir == 0) {
 #endif
     tmp_ray = (su3 *)calloc(VOL3, sizeof(su3)); /* */
@@ -456,7 +456,7 @@ int polyakov_loop_dir(const int nstore /* in  */, const int dir /* in  */) {
     }
 
     MPI_Reduce(tmp_loc, tmp_ray, VOL3, mpi_su3, mpi_reduce_su3_ray, 0, ray);
-#ifndef PARALLELXYZT
+#ifndef TM_PARALLELXYZT
   }
 #endif
 
@@ -475,7 +475,7 @@ int polyakov_loop_dir(const int nstore /* in  */, const int dir /* in  */) {
     ks = 0.0;
 
 #ifdef TM_USE_MPI
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
     u = tmp_ray;
 #else
     if (dir == 0) {
@@ -502,11 +502,11 @@ int polyakov_loop_dir(const int nstore /* in  */, const int dir /* in  */) {
 #ifdef TM_USE_MPI
     MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
   }
-#ifndef PARALLELXYZT
+#ifndef TM_PARALLELXYZT
   if (dir == 0) {
 #endif
     free(tmp_ray);
-#ifndef PARALLELXYZT
+#ifndef TM_PARALLELXYZT
   }
 #endif
 

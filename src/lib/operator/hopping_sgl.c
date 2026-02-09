@@ -37,7 +37,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
   spinor32* restrict r, * restrict sp, * restrict sm;
   spinor32 temp;
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge();
   }
@@ -72,7 +72,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sp = k + icy;
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
     up = &g_gauge_field_copy[icx][0];
 #else
     up = &g_gauge_field[ix][0];
@@ -100,7 +100,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sm = k + icy;
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
     um = up + 1;
 #else
     um = &g_gauge_field[iy][0];
@@ -129,7 +129,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
 
     sp = k + icy;
 
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
     up = um + 1;
 #else
     up += 1;
@@ -157,7 +157,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sm = k + icy;
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
     um = &g_gauge_field[iy][1];
 #else
     um = up + 1;
@@ -185,7 +185,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sp = k + icy;
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
     up = um + 1;
 #else
     up += 1;
@@ -212,7 +212,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sm = k + icy;
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
     um = &g_gauge_field[iy][2];
 #else
     um = up + 1;
@@ -240,7 +240,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sp = k + icy;
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
     up = um + 1;
 #else
     up += 1;
@@ -267,7 +267,7 @@ void Hopping_Matrix(int ieo, spinor32* const l, spinor32* const k) {
     icy = g_lexic2eosub[iy];
 
     sm = k + icy;
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
     um = &g_gauge_field[iy][3];
 #else
     um = up + 1;

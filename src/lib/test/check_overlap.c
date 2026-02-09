@@ -105,12 +105,12 @@ int main(int argc, char *argv[]) {
   char *gaugecksum = NULL;
   double plaquette_energy;
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   MPI_File fh;
   LemonWriter *lemonWriter;
   paramsXlfInfo *xlfInfo;
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
 
   phmc_invmaxev = 1.;
 
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
       exit(-1);
     }
   }
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   if (even_odd_flag) {
     init_xchange_halffield();
   }
@@ -299,9 +299,9 @@ int main(int argc, char *argv[]) {
       printf("Reading Gauge field from file %s\n", conf_filename);
       fflush(stdout);
     }
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
     read_lemon_gauge_field_parallel(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
-#else  /* HAVE_LIBLEMON */
+#else  /* TM_USE_LEMON */
     if (xlfmessage != (char *)NULL) free(xlfmessage);
     if (gaugelfn != (char *)NULL) free(gaugelfn);
     if (gaugecksum != (char *)NULL) free(gaugecksum);
@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
     gaugelfn = read_message(conf_filename, "ildg-data-lfn");
     gaugecksum = read_message(conf_filename, "scidac-checksum");
     printf("%s \n", gaugecksum);
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
     if (g_proc_id == 0) {
       printf("done!\n");
       fflush(stdout);
@@ -389,7 +389,7 @@ int main(int argc, char *argv[]) {
     free_chi_dn_spinor_field();
   }
   return (0);
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }

@@ -30,28 +30,28 @@ int write_first_messages(FILE* parameterfile, char const* const executable,
            TMLQCD_PACKAGE_VERSION, git_hash);
   printf("%s", message);
   fprintf(parameterfile, "%s", message);
-#ifdef _GAUGE_COPY
-  printf("# The code is compiled with -D_GAUGE_COPY\n");
-  fprintf(parameterfile, "# The code is compiled with -D_GAUGE_COPY\n");
+#ifdef TM_GAUGE_COPY
+  printf("# The code is compiled with -DTM_GAUGE_COPY\n");
+  fprintf(parameterfile, "# The code is compiled with -DTM_GAUGE_COPY\n");
 #endif
-#ifdef _USE_HALFSPINOR
-  printf("# The code is compiled with -D_USE_HALFSPINOR\n");
-  fprintf(parameterfile, "# The code is compiled with -D_USE_HALFSPINOR\n");
+#ifdef TM_USE_HALFSPINOR
+  printf("# The code is compiled with -DTM_USE_HALFSPINOR\n");
+  fprintf(parameterfile, "# The code is compiled with -DTM_USE_HALFSPINOR\n");
 #endif
-#ifdef _USE_SHMEM
-  printf("# the code is compiled with -D_USE_SHMEM\n");
-  fprintf(parameterfile, "# the code is compiled with -D_USE_SHMEM\n");
-#ifdef _PERSISTENT
+#ifdef TM_USE_SHMEM
+  printf("# the code is compiled with -DTM_USE_SHMEM\n");
+  fprintf(parameterfile, "# the code is compiled with -DTM_USE_SHMEM\n");
+#ifdef TM_PERSISTENT
   printf("# the code is compiled for persistent MPI calls (halfspinor only)\n");
   fprintf(parameterfile, "# the code is compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
 #ifdef TM_USE_MPI
-#ifdef _NON_BLOCKING
+#ifdef TM_NON_BLOCKING
   printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile, "# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
 #endif
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   printf("# the code is compiled with MPI IO / Lemon\n");
   fprintf(parameterfile, "# the code is compiled with MPI IO / Lemon\n");
 #endif

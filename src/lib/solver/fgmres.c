@@ -85,7 +85,7 @@ int fgmres(spinor *const P, spinor *const Q, const int m, const int max_restarts
   atime = gettime();
   cumiter_lgcr = 0;
   if (N == VOLUME) {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf); /* #ifdef HAVE_LAPACK */
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf); /* #ifdef TM_LAPACK */
   } else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND / 2, nr_sf);
   }
