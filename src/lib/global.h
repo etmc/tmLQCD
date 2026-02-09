@@ -38,7 +38,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef FIXEDVOLUME
+#ifdef TM_FIXEDVOLUME
 #include "fixed_volume.h"
 #endif
 #include "su3.h"
@@ -79,7 +79,7 @@ EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
 EXTERN tm_timers_t g_timers;
 
 EXTERN int T_global;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
 EXTERN int T, L, LX, LY, LZ, VOLUME;
 EXTERN int N_PROC_T, N_PROC_X, N_PROC_Y, N_PROC_Z;
 EXTERN int RAND, EDGES, VOLUMEPLUSRAND;
@@ -130,7 +130,7 @@ EXTERN int g_running_phmc;
 
 EXTERN su3 **g_gauge_field;
 EXTERN su3_32 **g_gauge_field_32;
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
 EXTERN su3 ***g_gauge_field_copy;
 EXTERN su3_32 ***g_gauge_field_copy_32;
 #else

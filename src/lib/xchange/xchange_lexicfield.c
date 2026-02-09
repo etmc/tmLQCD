@@ -43,7 +43,7 @@
 #include "xchange_lexicfield.h"
 
 /* this version uses non-blocking MPI calls */
-#if (defined _NON_BLOCKING)
+#if (defined TM_NON_BLOCKING)
 
 /* this is the version independent of the content of the function Index (only available with
  * non-blocking)) */
@@ -51,16 +51,16 @@
 void xchange_lexicfield(spinor* const l) {
   MPI_Request requests[16];
   MPI_Status status[16];
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
   int reqcount = 4;
-#elif defined PARALLELXT
+#elif defined TM_PARALLELXT
   int reqcount = 8;
-#elif defined PARALLELXYT
+#elif defined TM_PARALLELXYT
   int reqcount = 12;
-#elif defined PARALLELXYZT
+#elif defined TM_PARALLELXYZT
   int reqcount = 16;
 #endif
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
 #endif
 
@@ -71,7 +71,7 @@ void xchange_lexicfield(spinor* const l) {
   MPI_Isend((void*)l, 1, lfield_time_slice_cont, g_nb_t_dn, 5081, g_cart_grid, &requests[0]);
   MPI_Irecv((void*)(l + VOLUME), 1, lfield_time_slice_cont, g_nb_t_up, 5081, g_cart_grid,
             &requests[1]);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)l, 1, lfield_x_slice_gath, g_nb_x_dn, 5091, g_cart_grid, &requests[4]);
@@ -80,7 +80,7 @@ void xchange_lexicfield(spinor* const l) {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)l, 1, lfield_y_slice_gath, g_nb_y_dn, 5101, g_cart_grid, &requests[8]);
@@ -88,7 +88,7 @@ void xchange_lexicfield(spinor* const l) {
             5101, g_cart_grid, &requests[9]);
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
 
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
@@ -103,7 +103,7 @@ void xchange_lexicfield(spinor* const l) {
   MPI_Irecv((void*)(l + (T + 1) * LX * LY * LZ), 1, lfield_time_slice_cont, g_nb_t_dn, 5082,
             g_cart_grid, &requests[3]);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(l + (LX - 1) * LY * LZ), 1, lfield_x_slice_gath, g_nb_x_up, 5092, g_cart_grid,
@@ -112,7 +112,7 @@ void xchange_lexicfield(spinor* const l) {
             5092, g_cart_grid, &requests[7]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(l + (LY - 1) * LZ), 1, lfield_y_slice_gath, g_nb_y_up, 5102, g_cart_grid,
@@ -121,7 +121,7 @@ void xchange_lexicfield(spinor* const l) {
             g_nb_y_dn, 5102, g_cart_grid, &requests[11]);
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
 
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */
@@ -135,21 +135,21 @@ void xchange_lexicfield(spinor* const l) {
 
 #endif
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchange_lexicfield)
 #endif
 }
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */
-#else /* _NON_BLOCKING */
+#else /* TM_NON_BLOCKING */
 /* exchanges the field  l */
 void xchange_lexicfield(spinor* const l) {
 
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
 #endif
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
 #endif
 
@@ -167,7 +167,7 @@ void xchange_lexicfield(spinor* const l) {
                (void*)(l + (T + 1) * LX * LY * LZ), 1, lfield_time_slice_cont, g_nb_t_dn, 5082,
                g_cart_grid, &status);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)l, 1, lfield_x_slice_gath, g_nb_x_dn, 5091,
@@ -182,7 +182,7 @@ void xchange_lexicfield(spinor* const l) {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv((void*)l, 1, lfield_y_slice_gath, g_nb_y_dn, 5101,
@@ -197,7 +197,7 @@ void xchange_lexicfield(spinor* const l) {
 
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Sendrecv((void*)l, 1, lfield_z_slice_gath, g_nb_z_dn, 5503,
@@ -214,7 +214,7 @@ void xchange_lexicfield(spinor* const l) {
 #endif
 #endif
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchange_lexicfield)
 #endif
 }
@@ -226,20 +226,20 @@ void xchange_lexicfield(spinor* const l) {
  ***********************************************************************/
 
 /* this version uses non-blocking MPI calls */
-#if (defined _NON_BLOCKING)
+#if (defined TM_NON_BLOCKING)
 void xchange_lexicfield32(spinor32* const l) {
   MPI_Request requests[16];
   MPI_Status status[16];
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
   int reqcount = 4;
-#elif defined PARALLELXT
+#elif defined TM_PARALLELXT
   int reqcount = 8;
-#elif defined PARALLELXYT
+#elif defined TM_PARALLELXYT
   int reqcount = 12;
-#elif defined PARALLELXYZT
+#elif defined TM_PARALLELXYZT
   int reqcount = 16;
 #endif
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield32)
 #endif
 
@@ -250,7 +250,7 @@ void xchange_lexicfield32(spinor32* const l) {
   MPI_Isend((void*)l, 1, lfield_time_slice_cont32, g_nb_t_dn, 5081, g_cart_grid, &requests[0]);
   MPI_Irecv((void*)(l + VOLUME), 1, lfield_time_slice_cont32, g_nb_t_up, 5081, g_cart_grid,
             &requests[1]);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)l, 1, lfield_x_slice_gath32, g_nb_x_dn, 5091, g_cart_grid, &requests[4]);
@@ -259,7 +259,7 @@ void xchange_lexicfield32(spinor32* const l) {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)l, 1, lfield_y_slice_gath32, g_nb_y_dn, 5101, g_cart_grid, &requests[8]);
@@ -267,7 +267,7 @@ void xchange_lexicfield32(spinor32* const l) {
             5101, g_cart_grid, &requests[9]);
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
 
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
@@ -282,7 +282,7 @@ void xchange_lexicfield32(spinor32* const l) {
   MPI_Irecv((void*)(l + (T + 1) * LX * LY * LZ), 1, lfield_time_slice_cont32, g_nb_t_dn, 5082,
             g_cart_grid, &requests[3]);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(l + (LX - 1) * LY * LZ), 1, lfield_x_slice_gath32, g_nb_x_up, 5092, g_cart_grid,
@@ -291,7 +291,7 @@ void xchange_lexicfield32(spinor32* const l) {
             g_nb_x_dn, 5092, g_cart_grid, &requests[7]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(l + (LY - 1) * LZ), 1, lfield_y_slice_gath32, g_nb_y_up, 5102, g_cart_grid,
@@ -300,7 +300,7 @@ void xchange_lexicfield32(spinor32* const l) {
             lfield_y_slice_cont32, g_nb_y_dn, 5102, g_cart_grid, &requests[11]);
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
 
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */
@@ -314,21 +314,21 @@ void xchange_lexicfield32(spinor32* const l) {
 
 #endif
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchange_lexicfield32)
 #endif
 }
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */
-#else /* _NON_BLOCKING */
+#else /* TM_NON_BLOCKING */
 /* exchanges the field  l */
 void xchange_lexicfield32(spinor32* const l) {
 
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
 #endif
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield32)
 #endif
 
@@ -347,7 +347,7 @@ void xchange_lexicfield32(spinor32* const l) {
                (void*)(l + (T + 1) * LX * LY * LZ), 1, lfield_time_slice_cont32, g_nb_t_dn, 5082,
                g_cart_grid, &status);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)l, 1, lfield_x_slice_gath32, g_nb_x_dn, 5091,
@@ -362,7 +362,7 @@ void xchange_lexicfield32(spinor32* const l) {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv((void*)l, 1, lfield_y_slice_gath32, g_nb_y_dn, 5101,
@@ -377,7 +377,7 @@ void xchange_lexicfield32(spinor32* const l) {
 
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Sendrecv((void*)l, 1, lfield_z_slice_gath32, g_nb_z_dn, 5503,
@@ -394,7 +394,7 @@ void xchange_lexicfield32(spinor32* const l) {
 #endif
 #endif
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchange_lexicfield32)
 #endif
 }

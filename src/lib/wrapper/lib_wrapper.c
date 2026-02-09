@@ -121,7 +121,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   for (int j = 0; j < no_operators; j++)
     if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   int j = init_gauge_field(VOLUMEPLUSRAND, 1);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
@@ -161,7 +161,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   // initialise the operators
   init_operators();
 
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "tmLQCD_init_invert: Not enough memory for halffield! Aborting...\n");
@@ -172,7 +172,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
     fprintf(stderr, "tmLQCD_init_invert: Not enough memory for 32-bit halffield! Aborting...\n");
     return (-1);
   }
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   if (even_odd_flag) init_xchange_halffield();
 #endif
 #endif

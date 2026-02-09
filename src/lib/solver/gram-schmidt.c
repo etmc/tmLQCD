@@ -26,7 +26,7 @@
 #include "linalg/blas.h"
 #include "linalg_eo.h"
 #include "su3spinor.h"
-#ifdef CRAY
+#ifdef TM_CRAY
 #include <fortran.h>
 #endif
 #include "gram-schmidt.h"
@@ -62,7 +62,7 @@ void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Compl
       work1[j] = scalar_prod((spinor *)(A + j * lda), (spinor *)v,
                              n * sizeof(_Complex double) / sizeof(spinor), 1);
     }
-#ifdef HAVE_LAPACK
+#ifdef TM_LAPACK
     _FT(zgemv)(fupl_n, &n, &m, &CMONE, A, &lda, work1, &ONE, &CONE, v, &ONE, 1);
 #endif
     (*vnrm) = sqrt(square_norm((spinor *)v, n * sizeof(_Complex double) / sizeof(spinor), 1));
@@ -90,7 +90,7 @@ void ModifiedGS(_Complex double v[], int n, int m, _Complex double A[], int lda)
     s = scalar_prod((spinor *)(A + i * lda), (spinor *)v,
                     n * sizeof(_Complex double) / sizeof(spinor), 1);
     s = -s;
-#ifdef HAVE_LAPACK
+#ifdef TM_LAPACK
     _FT(zaxpy)(&n, &s, A + i * lda, &ONE, v, &ONE);
 #endif
   }

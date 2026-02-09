@@ -26,9 +26,7 @@
  *     Returns the value of the action
  ************************************************************************/
 
-#ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
-#endif
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

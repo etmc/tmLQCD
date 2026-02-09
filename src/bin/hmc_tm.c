@@ -67,7 +67,7 @@
 #include "solver/solver.h"
 #include "test/check_geometry.h"
 #include "update_tm.h"
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QUDA
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_HMC_TM);
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 
   g_mu = g_mu1;
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
   status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   init_xchange_halffield();
 #endif
 #endif
@@ -504,7 +504,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* online measurements */
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     // When the configuration is rejected, we have to update it in the MG and redo the setup.
     int mg_update = accept ? 0 : 1;
 #endif
@@ -514,7 +514,7 @@ int main(int argc, char *argv[]) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
         if (mg_update) {
           mg_update = 0;
           MG_reset();
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   return (0);
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }

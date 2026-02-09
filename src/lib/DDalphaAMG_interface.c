@@ -17,13 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Interface for DDalphaAMG
+ * Interface for TM_USE_DDalphaAMG
  *
  *******************************************************************************/
 
 #include "DDalphaAMG_interface.h"
 
-#ifndef DDalphaAMG
+#ifndef TM_USE_DDalphaAMG
 
 int mg_setup_iter;
 int mg_coarse_setup_iter;
@@ -43,47 +43,47 @@ double mg_dtau_update;
 double mg_rho_update;
 
 void MG_init(void) {
-  printf("ERROR: MG_init called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_init called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 void MG_update_gauge(double step) {
-  printf("ERROR: MG_update_gauge called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_update_gauge called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD) {
-  printf("ERROR: MG_update_mu called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_update_mu called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 void MG_reset(void) {
-  printf("ERROR: MG_reset called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_reset called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 void MG_finalize(void) {
-  printf("ERROR: MG_finalize called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_finalize called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 int MG_solver(spinor *const phi_new, spinor *const phi_old, const double precision,
               const int max_iter, const int rel_prec, const int N, su3 **gf, matrix_mult f) {
-  printf("ERROR: MG_solver called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_solver called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 int MG_solver_eo(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
                  spinor *const Odd, const double precision, const int max_iter, const int rel_prec,
                  const int N, su3 **gf, matrix_mult_full f_full) {
-  printf("ERROR: MG_solver_eo called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_solver_eo called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
 int MG_solver_nd(spinor *const up_new, spinor *const dn_new, spinor *const up_old,
                  spinor *const dn_old, const double precision, const int max_iter,
                  const int rel_prec, const int N, su3 **gf, matrix_mult_nd f) {
-  printf("ERROR: MG_solver_nd called but DDalphaAMG library not included.\n");
+  printf("ERROR: MG_solver_nd called but TM_USE_DDalphaAMG library not included.\n");
   exit(1);
 }
 
@@ -207,7 +207,7 @@ static inline int MG_check(spinor *const phi_new, spinor *const phi_old, const i
           "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
           "restart... \n");
       printf(
-          "ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
+          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
           "\n",
           differ[0], differ[1], differ[0] / differ[1], precision);
     }
@@ -215,7 +215,7 @@ static inline int MG_check(spinor *const phi_new, spinor *const phi_old, const i
   }
 
   if (g_debug_level > 0 && g_proc_id == 0)
-    printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+    printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
            differ[0], differ[1], differ[0] / differ[1]);
 
   return 1;
@@ -257,7 +257,7 @@ static inline int MG_check_nd(spinor *const up_new, spinor *const dn_new, spinor
           "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
           "restart... \n");
       printf(
-          "ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
+          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
           "\n",
           differ[0], differ[1], differ[0] / differ[1], precision);
     }
@@ -265,7 +265,7 @@ static inline int MG_check_nd(spinor *const up_new, spinor *const dn_new, spinor
   }
 
   if (g_debug_level > 0 && g_proc_id == 0)
-    printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+    printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
            differ[0], differ[1], differ[0] / differ[1]);
 
   return 1;
@@ -304,7 +304,7 @@ static inline int MG_mms_check_nd(spinor **const up_new, spinor **const dn_new,
             "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
             "restart... \n");
         printf(
-            "ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > "
+            "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > "
             "%e \n",
             differ[0], differ[1], differ[0] / differ[1], precision[i]);
       }
@@ -313,7 +313,7 @@ static inline int MG_mms_check_nd(spinor **const up_new, spinor **const dn_new,
     }
 
     if (g_debug_level > 0 && g_proc_id == 0)
-      printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+      printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
              differ[0], differ[1], differ[0] / differ[1]);
   }
 
@@ -343,7 +343,7 @@ static int MG_pre_solve(su3 **gf) {
   if (mg_initialized == 0) {
     MG_init();
     mg_initialized = 1;
-    if (g_proc_id == 0) printf("DDalphaAMG initialized\n");
+    if (g_proc_id == 0) printf("TM_USE_DDalphaAMG initialized\n");
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
@@ -351,23 +351,23 @@ static int MG_pre_solve(su3 **gf) {
     DDalphaAMG_set_configuration((double *)&(gf[0][0]), &mg_status);
     mg_update_gauge = 0;
     if (mg_status.success && g_proc_id == 0)
-      printf("DDalphaAMG cnfg set, plaquette %e\n", mg_status.info);
+      printf("TM_USE_DDalphaAMG cnfg set, plaquette %e\n", mg_status.info);
     else if (g_proc_id == 0)
       printf("ERROR: configuration updating did not run correctly");
   }
 
   if (mg_do_setup == 1) {
     if (mg_setup_mu_set) {
-      if (g_proc_id == 0) printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
+      if (g_proc_id == 0) printf("TM_USE_DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
       MG_update_mu(mg_setup_mu, 0);
     } else
       MG_update_mu(g_mu, 0);
-    if (g_proc_id == 0) printf("DDalphaAMG running setup\n");
+    if (g_proc_id == 0) printf("TM_USE_DDalphaAMG running setup\n");
     DDalphaAMG_setup(&mg_status);
     mg_do_setup = 0;
     mg_tau = gauge_tau;
     if (mg_status.success && g_proc_id == 0)
-      printf("DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
+      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
              100. * (mg_status.coarse_time / mg_status.time));
     else if (g_proc_id == 0)
       printf("ERROR: setup procedure did not run correctly");
@@ -375,16 +375,16 @@ static int MG_pre_solve(su3 **gf) {
 
   if (mg_update_setup > 0) {
     if (mg_setup_mu_set) {
-      if (g_proc_id == 0) printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
+      if (g_proc_id == 0) printf("TM_USE_DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
       MG_update_mu(mg_setup_mu, 0);
     } else
       MG_update_mu(g_mu, 0);
-    if (g_proc_id == 0) printf("DDalphaAMG updating setup\n");
+    if (g_proc_id == 0) printf("TM_USE_DDalphaAMG updating setup\n");
     DDalphaAMG_update_setup(mg_update_setup, &mg_status);
     mg_update_setup = 0;
     mg_tau = gauge_tau;
     if (mg_status.success && g_proc_id == 0)
-      printf("DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
+      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
              100. * (mg_status.coarse_time / mg_status.time));
     else if (g_proc_id == 0)
       printf("ERROR: setup updating did not run correctly");
@@ -395,7 +395,7 @@ static int MG_pre_solve(su3 **gf) {
 
 static int MG_solve(spinor *const phi_new, spinor *const phi_old, const double precision,
                     const int N, matrix_mult f) {
-  // for rescaling  convention in DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
+  // for rescaling  convention in TM_USE_DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
   // rescale by 1/4+m
   double mg_scale = 0.5 / g_kappa;
   double *old = (double *)phi_old;
@@ -529,7 +529,7 @@ static int MG_solve(spinor *const phi_new, spinor *const phi_old, const double p
 
 static int MG_solve_nd(spinor *up_new, spinor *dn_new, spinor *const up_old, spinor *const dn_old,
                        const double precision, const int N, matrix_mult_nd f) {
-  // for rescaling  convention in DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
+  // for rescaling  convention in TM_USE_DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
   // rescale by 1/4+m moreover in the nd case, the tmLQCD is multiplied by phmc_invmaxev
   double mg_scale = 0.5 / g_kappa / phmc_invmaxev;
   double sqnorm;
@@ -803,7 +803,7 @@ static int MG_solve_nd(spinor *up_new, spinor *dn_new, spinor *const up_old, spi
                                          // 0 and shift
              f == Qsw_pm_ndpsi ||        // (Gamma5 Dh tau1)^2 - Schur complement squared
              f == Qsw_pm_ndpsi_shift) {  // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
-    // DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
+    // TM_USE_DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
     // tmLQCD:          gamma5 Dh tau1 gamma5 Dh tau1
     if (init_guess) {
       mul_gamma5(old1, VOLUME);
@@ -900,7 +900,7 @@ static int MG_solve_nd(spinor *up_new, spinor *dn_new, spinor *const up_old, spi
 static int MG_mms_solve_nd(spinor **const up_new, spinor **const dn_new, spinor *const up_old,
                            spinor *const dn_old, const double *shifts, const int no_shifts,
                            double *precision, const int N, matrix_mult_nd f) {
-  // for rescaling  convention in DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
+  // for rescaling  convention in TM_USE_DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} ->
   // rescale by 1/4+m moreover in the nd case, the tmLQCD is multiplied by phmc_invmaxev
   double mg_scale = 0.5 / g_kappa / phmc_invmaxev;
   double *old1 = (double *)up_old;
@@ -1001,7 +1001,7 @@ static int MG_mms_solve_nd(spinor **const up_new, spinor **const dn_new, spinor 
                                          // 0 and shift
              f == Qsw_pm_ndpsi_shift) {  // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
     mg_scale *= mg_scale;
-    // DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
+    // TM_USE_DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
     // tmLQCD:          gamma5 Dh tau1 gamma5 Dh tau1
     DDalphaAMG_solve_ms_doublet_squared_odd(new2, old2, new1, old1, mg_even_shifts, mg_odd_shifts,
                                             no_shifts, precision, &mg_status);
@@ -1110,7 +1110,7 @@ void MG_init() {
   mg_params.conf_index_fct = conf_index_fct;
   mg_params.vector_index_fct = vector_index_fct;
 
-  /* in DDalphaAMG
+  /* in TM_USE_DDalphaAMG
    * Printing level:
    *  -1: silent (errors or warnings)
    *   0: minimal //default

@@ -7,11 +7,11 @@ void kill_with_error(LIME_FILE *fh, int const rank, char const *error) {
   }
 
   if (fh != NULL)
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
     MPI_File_close(fh);
 #else
     fclose(fh);
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
 
 #ifdef TM_USE_MPI
   MPI_Abort(MPI_COMM_WORLD, 1);

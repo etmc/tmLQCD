@@ -45,7 +45,7 @@
 
 void Hopping_Matrix_Indices(void);
 
-#if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ))
+#if ((defined TM_PARALLELX) || (defined TM_PARALLELXY) || (defined TM_PARALLELXYZ))
 
 /* This is the version of the function Index  introduced for Aurora-like parallelizations (mainly
  * xyz)  */
@@ -72,7 +72,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + T * LY * LZ + y0 * LY * LZ + y2 * LZ + y3;
   }
 
-#if (defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   /* y-Rand */
   if (x2 == LY) {
     ix = VOLUME + 2 * T * LY * LZ + y0 * LX * LZ + y1 * LZ + y3;
@@ -97,9 +97,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUME + RAND + 3 * T * LZ + y0 * LZ + y3;
     }
   }
-#endif /* endif of PARALLELXY  || PARALLELXYZ */
+#endif /* endif of TM_PARALLELXY  || TM_PARALLELXYZ */
 
-#if defined PARALLELXYZ
+#if defined TM_PARALLELXYZ
   /* z-Rand */
   if (x3 == LZ) {
     ix = VOLUME + 2 * T * LY * LZ + 2 * T * LX * LZ + y0 * LX * LY + y1 * LY + y2;
@@ -142,7 +142,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
   }
 
-#endif /* endif of PARALLELXYZ */
+#endif /* endif of TM_PARALLELXYZ */
 
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
@@ -150,44 +150,44 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   /* x2-rand+ */
   if (x1 == LX + 1) {
     ix = VOLUMEPLUSRAND + y0 * LY * LZ + y2 * LZ + y3;
-#if (defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXY || defined TM_PARALLELXYZ)
     /* x2y */
     if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + y0 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 1 * T * LZ + y0 * LZ + y3;
     }
-#endif /* endif of PARALLELXY || PARALLELXYZ  */
-#if defined PARALLELXYZ
+#endif /* endif of TM_PARALLELXY || TM_PARALLELXYZ  */
+#if defined TM_PARALLELXYZ
     /* x2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 4 * T * LY + y0 * LY + y2;
     } else if (x3 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 5 * T * LY + y0 * LY + y2;
     }
-#endif /* endif of PARALLELXYZ  */
+#endif /* endif of TM_PARALLELXYZ  */
   }
   /* x2-rand- */
   if (x1 == -2) {
     ix = VOLUMEPLUSRAND + T * LY * LZ + y0 * LY * LZ + y2 * LZ + y3;
-#if (defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXY || defined TM_PARALLELXYZ)
     /* x2y */
     if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + 2 * T * LZ + y0 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 3 * T * LZ + y0 * LZ + y3;
     }
-#endif /* endif of PARALLELXY || PARALLELXYZ  */
-#if defined PARALLELXYZ
+#endif /* endif of TM_PARALLELXY || TM_PARALLELXYZ  */
+#if defined TM_PARALLELXYZ
     /* x2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 6 * T * LY + y0 * LY + y2;
     } else if (x3 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 7 * T * LY + y0 * LY + y2;
     }
-#endif /* endif of  PARALLELXYZ  */
+#endif /* endif of  TM_PARALLELXYZ  */
   }
-#if (defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   /* y2-rand+ */
   if (x2 == LY + 1) {
     ix = VOLUMEPLUSRAND + 2 * T * LY * LZ + y0 * LX * LZ + y1 * LZ + y3;
@@ -197,14 +197,14 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x1 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 6 * T * LZ + y0 * LZ + y3;
     }
-#if defined PARALLELXYZ
+#if defined TM_PARALLELXYZ
     /* y2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 8 * T * LY + 4 * T * LX + y0 * LX + y1;
     } else if (x3 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 8 * T * LY + 5 * T * LX + y0 * LX + y1;
     }
-#endif /* endif of PARALLELXYZ  */
+#endif /* endif of TM_PARALLELXYZ  */
   }
   /* y2-rand- */
   if (x2 == -2) {
@@ -215,17 +215,17 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x1 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 7 * T * LZ + y0 * LZ + y3;
     }
-#if defined PARALLELXYZ
+#if defined TM_PARALLELXYZ
     /* y2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 8 * T * LY + 6 * T * LX + y0 * LX + y1;
     } else if (x3 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 8 * T * LY + 7 * T * LX + y0 * LX + y1;
     }
-#endif /* endif of PARALLELXYZ  */
+#endif /* endif of TM_PARALLELXYZ  */
   }
-#endif /* endif of PARALLELXY || PARALLELXYZ  */
-#if defined PARALLELXYZ
+#endif /* endif of TM_PARALLELXY || TM_PARALLELXYZ  */
+#if defined TM_PARALLELXYZ
   /* z2-rand+ */
   if (x3 == LZ + 1) {
     ix = VOLUMEPLUSRAND + 2 * T * LY * LZ + 2 * T * LX * LZ + y0 * LX * LY + y1 * LY + y2;
@@ -259,12 +259,12 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * T * LZ + 8 * T * LY + 3 * T * LX + y0 * LX + y1;
     }
   }
-#endif /* endif of PARALLELXYZ  */
+#endif /* endif of TM_PARALLELXYZ  */
 
   return (ix);
 }
 
-#else /* original version of Index(): used for no parallelization  or PARALLEL*T */
+#else /* original version of Index(): used for no parallelization  or TM_PARALLEL*T */
 
 int Index(const int x0, const int x1, const int x2, const int x3) {
   int y0, y1, y2, y3, ix;
@@ -274,7 +274,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   y3 = (x3 + LZ) % LZ;
   ix = ((y0 * LX + y1) * LY + y2) * LZ + y3;
 
-#if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
   if (x0 == T) {
     ix = VOLUME + y3 + LZ * y2 + LZ * LY * y1;
   }
@@ -283,7 +283,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     ix = VOLUME + LX * LY * LZ + y3 + LZ * y2 + LZ * LY * y1;
   }
 #endif
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
   if (x1 == LX) {
     ix = VOLUME + 2 * LX * LY * LZ + y0 * LY * LZ + y2 * LZ + y3;
   }
@@ -309,9 +309,9 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
   }
 
-#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT */
+#endif /* endif of TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT */
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* y-Rand */
   if (x2 == LY) {
     ix = VOLUME + 2 * LX * LY * LZ + 2 * T * LY * LZ + y0 * LX * LZ + y1 * LZ + y3;
@@ -358,8 +358,8 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
   }
 
-#endif /* endif of PARALLELXYT  || PARALLELXYZT */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT  || TM_PARALLELXYZT */
+#if defined TM_PARALLELXYZT
   /* z-Rand */
   if (x3 == LZ) {
     ix =
@@ -429,30 +429,30 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     }
   }
 
-#endif /* endif of PARALLELXYZT */
+#endif /* endif of TM_PARALLELXYZT */
 
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
-#if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
   if (x0 == T + 1) {
     ix = VOLUMEPLUSRAND + y3 + LZ * y2 + LZ * LY * y1;
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
     /* t2x */
     if (x1 == LX) {
       ix = VOLUMEPLUSRAND + RAND + y2 * LZ + y3;
     } else if (x1 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 1 * LY * LZ + y2 * LZ + y3;
     }
-#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#endif /* endif of TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* t2y */
     else if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + y1 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 2 * LX * LZ + y1 * LZ + y3;
     }
-#endif /* endif of PARALLELXYT || PARALLELXYZT  */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if defined TM_PARALLELXYZT
     /* t2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + y1 * LY + y2;
@@ -460,28 +460,28 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 2 * LX * LY + y1 * LY +
            y2;
     }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   }
   /* the slice at time -2 is put behind the one at time T+1 */
   else if (x0 == -2) {
     ix = VOLUMEPLUSRAND + LX * LY * LZ + y3 + LZ * y2 + LZ * LY * y1;
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
     /* t2x */
     if (x1 == LX) {
       ix = VOLUMEPLUSRAND + RAND + 2 * LY * LZ + y2 * LZ + y3;
     } else if (x1 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 3 * LY * LZ + y2 * LZ + y3;
     }
-#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#endif /* endif of TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* t2y */
     else if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + LX * LZ + y1 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 3 * LX * LZ + y1 * LZ + y3;
     }
-#endif /* endif of PARALLELXYT || PARALLELXYZT  */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if defined TM_PARALLELXYZT
     /* t2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + LX * LY + y1 * LY + y2;
@@ -489,10 +489,10 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 3 * LX * LY + y1 * LY +
            y2;
     }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   }
-#endif /* endif of PARALLELT || PARALLELXT || PARALLELXYT || PARALLELXYZT  */
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || defined PARALLELXYZT)
+#endif /* endif of TM_PARALLELT || TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || defined TM_PARALLELXYZT)
   if (x1 == LX + 1) {
     ix = VOLUMEPLUSRAND + 2 * LX * LY * LZ + y0 * LY * LZ + y2 * LZ + y3;
     /* x2t */
@@ -501,15 +501,15 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 6 * LY * LZ + y2 * LZ + y3;
     }
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* x2y */
     else if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + y0 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 1 * T * LZ + y0 * LZ + y3;
     }
-#endif /* endif of PARALLELXYT || PARALLELXYZT  */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if defined TM_PARALLELXYZT
     /* x2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
@@ -518,7 +518,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
            5 * T * LY + y0 * LY + y2;
     }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   }
   if (x1 == -2) {
     ix = VOLUMEPLUSRAND + 2 * LX * LY * LZ + T * LY * LZ + y0 * LY * LZ + y2 * LZ + y3;
@@ -528,15 +528,15 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 7 * LY * LZ + y2 * LZ + y3;
     }
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* x2y */
     else if (x2 == LY) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 2 * T * LZ + y0 * LZ + y3;
     } else if (x2 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 3 * T * LZ + y0 * LZ + y3;
     }
-#endif /* endif of PARALLELXYT || PARALLELXYZT  */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if defined TM_PARALLELXYZT
     /* x2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
@@ -545,10 +545,10 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
            7 * T * LY + y0 * LY + y2;
     }
-#endif /* endif of  PARALLELXYZT  */
+#endif /* endif of  TM_PARALLELXYZT  */
   }
-#endif /* endif of PARALLELXT || PARALLELXYT || PARALLELXYZT  */
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#endif /* endif of TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   if (x2 == LY + 1) {
     ix = VOLUMEPLUSRAND + 2 * LX * LY * LZ + 2 * T * LY * LZ + y0 * LX * LZ + y1 * LZ + y3;
     /* y2x */
@@ -563,7 +563,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 5 * LX * LZ + y1 * LZ + y3;
     }
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     /* y2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
@@ -572,7 +572,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
            8 * T * LY + 5 * T * LX + y0 * LX + y1;
     }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   }
   if (x2 == -2) {
     ix = VOLUMEPLUSRAND + 2 * LX * LY * LZ + 2 * T * LY * LZ + T * LX * LZ + y0 * LX * LZ +
@@ -589,7 +589,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
     } else if (x0 == -1) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 7 * LX * LZ + y1 * LZ + y3;
     }
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     /* y2z */
     else if (x3 == LZ) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
@@ -598,10 +598,10 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
       ix = VOLUMEPLUSRAND + RAND + 8 * LY * LZ + 8 * T * LZ + 8 * LX * LZ + 8 * LX * LY +
            8 * T * LY + 7 * T * LX + y0 * LX + y1;
     }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   }
-#endif /* endif of PARALLELXYT || PARALLELXYZT  */
-#if defined PARALLELXYZT
+#endif /* endif of TM_PARALLELXYT || TM_PARALLELXYZT  */
+#if defined TM_PARALLELXYZT
   /* z2-Rand */
   if (x3 == LZ + 1) {
     if ((x0 < T) && (x0 > -1) && (x1 < LX) && (x1 > -1) && (x2 > -1) && (x2 < LY)) {
@@ -663,14 +663,14 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
            8 * T * LY + 3 * T * LX + y0 * LX + y1;
     }
   }
-#endif /* endif of PARALLELXYZT  */
+#endif /* endif of TM_PARALLELXYZT  */
   /*   if(ix == 372) { */
   /*     printf("## %d %d %d %d ix = %d, %d %d %d %d\n", x0, x1, x2, x3, ix, T, LX, LY, LZ); */
   /*   } */
   return (ix);
 }
 
-#endif /* PARALLEL???  */
+#endif /* TM_PARALLEL???  */
 
 void geometry() {
   int x0, x1, x2, x3, ix;
@@ -685,17 +685,17 @@ void geometry() {
 
   xeven = malloc(VOLUMEPLUSRAND * sizeof(int));
 
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   startvaluet = 1;
 #endif
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || \
-     defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
+     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   startvaluex = 1;
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   startvaluey = 1;
 #endif
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   startvaluez = 1;
 #endif
 
@@ -795,7 +795,7 @@ void geometry() {
     }
   }
 
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   ix = 0;
   for (x0 = 0; x0 < T; x0++) {
     for (x1 = 0; x1 < LX; x1++) {
@@ -852,7 +852,7 @@ void geometry() {
   }
 
 
-#endif /* PARALLELXYZ || PARALLELXYZT*/
+#endif /* TM_PARALLELXYZ || TM_PARALLELXYZT*/
 
   /* The rectangular gauge action part */
   /* Everything is stored behind VOLUMEPLUSRAND-1 !*/
@@ -861,7 +861,7 @@ void geometry() {
       printf("# Initialising rectangular gauge action stuff\n");
       fflush(stdout);
     }
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     for (x1 = -startvaluex; x1 < (LX + startvaluex); x1++) {
       for (x2 = -startvaluey; x2 < (LY + startvaluey); x2++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {
@@ -910,8 +910,8 @@ void geometry() {
       }
     }
 #endif
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || \
-     defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
+     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T + startvaluet); x0++) {
       for (x2 = -startvaluey; x2 < (LY + startvaluey); x2++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {
@@ -959,7 +959,7 @@ void geometry() {
       }
     }
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T + startvaluet); x0++) {
       for (x1 = -startvaluex; x1 < (LX + startvaluex); x1++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {
@@ -1007,7 +1007,7 @@ void geometry() {
       }
     }
 #endif
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T + startvaluet); x0++) {
       for (x1 = -startvaluex; x1 < (LX + startvaluex); x1++) {
         for (x2 = -startvaluey; x2 < (LY + startvaluey); x2++) {

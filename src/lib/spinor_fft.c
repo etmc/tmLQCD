@@ -22,7 +22,7 @@
 #include "mpi_init.h"
 #include "spinor_fft.h"
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 #include <fftw3.h>
 #endif
 
@@ -35,7 +35,7 @@ void check_mpi_comm_membership(MPI_Comm commself, MPI_Comm commcheck, const char
                                const char *name_b, FILE *logFile);
 #endif
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 fftw_plan spinor_fftw_plan2d(spinor *spinor_in, spinor *spinor_out, int dim0, int dim1, int howmany,
                              unsigned int forward, int fftw_flags);
 #endif
@@ -50,7 +50,7 @@ void spinor_fft_transpose_xp_t(spinor *fieldout, spinor *fieldin, int dim0, int 
 void spinor_fft_reduce_2d(spinor *localSpinorField, int *collectionRank, spinor ***field_collection,
                           spinor **membuff) {
   /* this implementation is intended for four dimensional parallelisation */
-#if (defined PARALLELXYZT && defined TM_USE_MPI && defined HAVE_FFTW)
+#if (defined TM_PARALLELXYZT && defined TM_USE_MPI && defined TM_USE_FFTW)
 
   int sendRecvCoord[4];
   int i;
@@ -195,7 +195,7 @@ void spinor_fft_reduce_2d(spinor *localSpinorField, int *collectionRank, spinor 
 void spinor_fft_redist_2d(spinor *localSpinorField, int collectionRank, spinor **field_collection,
                           spinor *membuff) {
   /* this implementation is intended for four dimensional parallelisation */
-#if (defined PARALLELXYZT && defined TM_USE_MPI && defined HAVE_FFTW)
+#if (defined TM_PARALLELXYZT && defined TM_USE_MPI && defined TM_USE_FFTW)
 
   int sendRecvCoord[4];
   int dims[] = {g_nproc_t, g_nproc_x, g_nproc_y, g_nproc_z};
@@ -326,7 +326,7 @@ void spinor_fft_redist_2d(spinor *localSpinorField, int collectionRank, spinor *
 #endif
 }
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 fftw_plan spinor_fftw_plan2d(spinor *spinor_in, spinor *spinor_out, int dim0, int dim1,
                              int howmany_wospin, unsigned int forward, int fftw_flags) {
   /*    int index_s = gsi(get_index(it, ix, iy, iz, T, L)); */

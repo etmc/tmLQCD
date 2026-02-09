@@ -19,8 +19,8 @@
  *
  *******************************************************************************/
 
-#ifndef _INIT_PARALLEL_H
-#define _INIT_PARALLEL_H
+#ifndef _INIT_TM_PARALLEL_H
+#define _INIT_TM_PARALLEL_H
 
 void init_parallel_and_read_input(int argc, char *argv[], const char input_filename[]);
 

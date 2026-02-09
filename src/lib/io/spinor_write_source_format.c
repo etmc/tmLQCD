@@ -22,9 +22,9 @@
 void write_source_format(WRITER *writer, paramsSourceFormat const *format) {
   uint64_t bytes;
   char *buf = NULL;
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   if (g_cart_id == 0) {
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
     buf = (char *)malloc(512);
     sprintf(buf,
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -49,7 +49,7 @@ void write_source_format(WRITER *writer, paramsSourceFormat const *format) {
     close_writer_record(writer);
 
     free(buf);
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   }
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
 }

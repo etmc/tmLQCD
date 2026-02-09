@@ -39,7 +39,7 @@
 #include "su3spinor.h"
 #include "update_gauge.h"
 #include "xchange/xchange.h"
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 /*******************************************************
@@ -51,7 +51,7 @@
 void update_gauge(const double step, hamiltonian_field_t *const hf) {
   tm_stopwatch_push(&g_timers, __func__, "");
   update_tm_gauge_id(&g_gauge_state, step);
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   MG_update_gauge(step);
 #endif
 
@@ -65,7 +65,7 @@ void update_gauge(const double step, hamiltonian_field_t *const hf) {
     su3 *z;
     static su3adj deriv;
     su3adj *xm;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(updategauge)
 #endif
 
@@ -115,7 +115,7 @@ void update_gauge(const double step, hamiltonian_field_t *const hf) {
 
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(updategauge)
 #endif
 }

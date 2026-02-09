@@ -51,12 +51,12 @@
 // where cfactor = a + i b
 //
 
-#if (defined _USE_HALFSPINOR && !defined _NO_COMM)
+#if (defined TM_USE_HALFSPINOR && !defined _NO_COMM)
 #include "operator/halfspinor_hopping.h"
 
 void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
                              complex double const cfactor) {
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -78,10 +78,10 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
   return;
 }
 
-#elif (!defined _NO_COMM && !defined _USE_HALFSPINOR)
+#elif (!defined _NO_COMM && !defined TM_USE_HALFSPINOR)
 void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
                              double complex const cfactor) {
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -103,4 +103,4 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 #endif
   return;
 }
-#endif  //_USE_HALFSPINOR && !defined _NO_COMM
+#endif  //TM_USE_HALFSPINOR && !defined _NO_COMM

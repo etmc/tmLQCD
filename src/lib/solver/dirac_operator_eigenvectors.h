@@ -24,7 +24,7 @@
 #ifdef HAVE_CONFIG_H
 #include "tmlqcd_config.h"
 #endif
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 #include <fftw3.h>
 #endif
 
@@ -68,7 +68,7 @@ extern tm_operator PRECWSOPERATORSELECT[14];
 /* */
 extern double g_prec_sequence_d_dagger_d[3];
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 fftw_plan spinor_fftw_plan(const spinor *spinor_in, spinor *spinor_out, int tt, int ll,
                            unsigned int forward, int fftw_flags);
 #endif
@@ -170,7 +170,7 @@ void spinor_mulp_half_phase(spinor *spinor_out, const spinor *spinor_in, double 
  * read and write fftw wisdoms
  * this is supposed to speed up things
  */
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 void writeFFTWWisdom(int tt, int ll);
 void loadFFTWWisdom(spinor *spinor_in, spinor *spinor_out, int tt, int ll);
 #endif

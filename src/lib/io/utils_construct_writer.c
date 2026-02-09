@@ -4,14 +4,14 @@ void construct_writer(WRITER **writer, char *filename, const int append) {
   LIME_FILE *fh = NULL;
   int status = 0;
   if (g_debug_level > 0 && g_cart_id == 0) {
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
     printf("# Constructing LEMON writer for file %s for append = %d\n", filename, append);
 #else
     printf("# Constructing LIME writer for file %s for append = %d\n", filename, append);
 #endif
   }
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   fh = (MPI_File *)malloc(sizeof(MPI_File));
   if (append) {
     status = MPI_File_open(g_cart_grid, filename,
@@ -24,7 +24,7 @@ void construct_writer(WRITER **writer, char *filename, const int append) {
   status = (status == MPI_SUCCESS) ? 0 : 1;
   *writer = lemonCreateWriter(fh, g_cart_grid);
   status = status || (writer == NULL);
-#else  /* HAVE_LIBLEMON */
+#else  /* TM_USE_LEMON */
   if (g_cart_id == 0) {
     if (append) {
       fh = fopen(filename, "a");
@@ -35,7 +35,7 @@ void construct_writer(WRITER **writer, char *filename, const int append) {
     *writer = limeCreateWriter(fh);
     status = status || (writer == NULL);
   }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
 
   if (status) kill_with_error(fh, g_cart_id, "Failed to create writer. Aborting...\n");
 }

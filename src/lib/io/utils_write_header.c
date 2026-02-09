@@ -23,9 +23,9 @@ void write_header(WRITER *writer, int MB, int ME, char const *type, uint64_t byt
   int status;
   RECORD_HEADER *header;
 
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   if (g_cart_id == 0) {
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
     /* Nasty (but probably harmless) hack to get rid of const qualifier - the original c-lime was
      * sloppy here. */
     header = CreateHeader(MB, ME, (char *)type, bytes);
@@ -35,8 +35,8 @@ void write_header(WRITER *writer, int MB, int ME, char const *type, uint64_t byt
     if (status != LIME_SUCCESS) {
       kill_with_error(writer->fp, g_cart_id, "Header writing error. Aborting\n");
     }
-#ifndef HAVE_LIBLEMON
+#ifndef TM_USE_LEMON
   }
-#endif /* ! HAVE_LIBLEMON */
+#endif /* ! TM_USE_LEMON */
   return;
 }

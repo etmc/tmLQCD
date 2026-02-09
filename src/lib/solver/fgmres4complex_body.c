@@ -57,7 +57,7 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE *const P, _Complex _F_TYPE *const 
   int fltcntr = 0;
   double alphasave = 0;
 
-  _PSWITCH(init_lsolver_field)(&solver_field, /*why not N?*/ lda, nr_sf); /* #ifdef HAVE_LAPACK */
+  _PSWITCH(init_lsolver_field)(&solver_field, /*why not N?*/ lda, nr_sf); /* #ifdef TM_LAPACK */
 
   eps = sqrt(eps_sq);
   _PSWITCH(init_lgmres)(m, lda);

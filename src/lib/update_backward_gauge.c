@@ -25,7 +25,7 @@
 #include "su3.h"
 #include "update_backward_gauge.h"
 
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
 void update_backward_gauge(su3** const gf) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
