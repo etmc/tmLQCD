@@ -332,7 +332,7 @@ list(
   get_rectangle_staples.c
   rnd_gauge_trafo.c
   measure_rectangles.c
-  #invert.c
+  # invert.c
   deriv_Sb_D_psi.c
   mpi_init.c
   update_momenta_fg.c
@@ -414,7 +414,7 @@ endif()
 # create a target library with namespacing because cmake does not know name
 # space at all
 
-if (BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS)
   add_library(hmc SHARED "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
 else()
   add_library(hmc STATIC "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
@@ -449,8 +449,7 @@ target_link_libraries(
          m)
 
 target_compile_definitions(
-  hmc PUBLIC HAVE_CONFIG_H
-             $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
+  hmc PUBLIC HAVE_CONFIG_H $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
 
 target_include_directories(
   hmc
