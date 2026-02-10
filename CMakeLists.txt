@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.30)
 
 project(
   tmlqcd
@@ -103,6 +103,7 @@ option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
 option(TM_USE_GPROF "Enable gprof profiler" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
+option(TM_ENABLE_TESTS "Enable tests" OFF)
 
 # MPI dependent options
 cmake_dependent_option(
