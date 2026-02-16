@@ -69,15 +69,13 @@ int init_dirac_halfspinor() {
     errno = 0;
     return (1);
   }
-  sendBuffer =
-      (halfspinor *)(((unsigned long int)(sendBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
+  sendBuffer = (halfspinor *)(((unsigned long int)(sendBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
   if ((void *)(recvBuffer_ = (halfspinor *)calloc(RAND / 2 + 8, sizeof(halfspinor))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
     return (1);
   }
-  recvBuffer =
-      (halfspinor *)(((unsigned long int)(recvBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
+  recvBuffer = (halfspinor *)(((unsigned long int)(recvBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
 #endif
 
   for (int ieo = 0; ieo < 2; ieo++) {
@@ -94,7 +92,8 @@ int init_dirac_halfspinor() {
         NBPointer[ieo][8 * i + 2 * mu + 1] =
             &HalfSpinor[8 * g_lexic2eosub[g_iup[j][mu]] + 2 * mu + 1];
       }
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
       if (t == 0) {
         k = (g_lexic2eosub[g_idn[j][0]] - VOLUME / 2);
         NBPointer[ieo][8 * i] = &sendBuffer[k];
@@ -154,7 +153,8 @@ int init_dirac_halfspinor() {
       for (int mu = 0; mu < 8; mu++) {
         NBPointer[ieo][8 * i + mu] = &HalfSpinor[8 * i + mu];
       }
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
       if (t == T - 1) {
         NBPointer[ieo][8 * i] = &recvBuffer[(g_lexic2eosub[g_iup[j][0]] - VOLUME / 2)];
       }
@@ -240,7 +240,8 @@ int init_dirac_halfspinor32() {
         NBPointer32[ieo][8 * i + 2 * mu + 1] =
             &HalfSpinor32[8 * g_lexic2eosub[g_iup[j][mu]] + 2 * mu + 1];
       }
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
       if (t == 0) {
         k = (g_lexic2eosub[g_idn[j][0]] - VOLUME / 2);
         NBPointer32[ieo][8 * i] = &sendBuffer32[k];
@@ -300,7 +301,8 @@ int init_dirac_halfspinor32() {
       for (mu = 0; mu < 8; mu++) {
         NBPointer32[ieo][8 * i + mu] = &HalfSpinor32[8 * i + mu];
       }
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
       if (t == T - 1) {
         NBPointer32[ieo][8 * i] = &recvBuffer32[(g_lexic2eosub[g_iup[j][0]] - VOLUME / 2)];
       }

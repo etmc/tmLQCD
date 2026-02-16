@@ -960,5 +960,4 @@ void xchange_gauge(su3** const gf) {
   return;
 }
 
-
 #endif /* TM_NON_BLOCKING */

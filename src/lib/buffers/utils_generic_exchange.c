@@ -127,7 +127,7 @@ void generic_exchange(void *field_in, int bytes_per_site) {
   /* Following are implementations using different compile time flags */
 #if defined TM_NON_BLOCKING
 #include "utils_generic_exchange.nonblocking.inc"
-#else  /* TM_NON_BLOCKING */
+#else /* TM_NON_BLOCKING */
 #include "utils_generic_exchange.blocking.inc"
 #endif /* TM_NON_BLOCKING */
 }

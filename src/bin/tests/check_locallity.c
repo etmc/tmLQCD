@@ -18,13 +18,13 @@
  ***********************************************************************/
 
 #include <lime.h>
-#include <tmlqcd_config.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <tmlqcd_config.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   double *norm;
   struct stout_parameters params_smear;
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   int kb = 0;
 #endif
 #ifdef TM_USE_MPI
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);

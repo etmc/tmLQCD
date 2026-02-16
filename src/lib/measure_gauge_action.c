@@ -26,10 +26,10 @@
  *     Returns the value of the action
  ************************************************************************/
 
-#include <tmlqcd_config.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <tmlqcd_config.h>
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
