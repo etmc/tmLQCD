@@ -347,18 +347,20 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   for (i = 0; i < 8; i++) {
     g_nb_list[i] = g_cart_id;
   }
-#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || \
+     defined TM_PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
   g_nb_list[0] = g_nb_t_up;
   g_nb_list[1] = g_nb_t_dn;
 #endif
-#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
-     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || \
+     defined TM_PARALLELX || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
   g_nb_list[2] = g_nb_x_up;
   g_nb_list[3] = g_nb_x_dn;
 #endif
-#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || \
+     defined TM_PARALLELXYZ)
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
   g_nb_list[4] = g_nb_y_up;
   g_nb_list[5] = g_nb_y_dn;
@@ -551,7 +553,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   MPI_Type_vector(T * LX * LY, 1, LZ, field_point32, &lfield_z_slice_gath32);
   MPI_Type_commit(&lfield_z_slice_cont32);
   MPI_Type_commit(&lfield_z_slice_gath32);
-
 
   /* The internal z_ and zt_ slices are constructed in geometry() with MPI_Type_indexed() */
 

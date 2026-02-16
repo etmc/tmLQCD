@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);

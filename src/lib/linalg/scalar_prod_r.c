@@ -97,4 +97,3 @@ double scalar_prod_r(const spinor *const S, const spinor *const R, const int N,
 #endif
   return res;
 }
-

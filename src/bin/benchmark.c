@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
   tmlqcd_mpi_init(argc, argv);
 
   if (g_proc_id == 0) {
-#ifdef TM_GAUGE_COPY
-    printf("# The code was compiled with -DTM_GAUGE_COPY\n");
+#ifdef TM_USE_GAUGE_COPY
+    printf("# The code was compiled with -DTM_USE_GAUGE_COPY\n");
 #endif
 #ifdef TM_USE_HALFSPINOR
     printf("# The code was compiled with -DTM_USE_HALFSPINOR\n");
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
   }
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);

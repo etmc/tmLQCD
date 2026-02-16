@@ -90,7 +90,8 @@ int check_geometry() {
           ix = g_ipt[x0][x1][x2][x3];
 
           iy0 = g_iup[ix][0];
-#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || \
+     defined TM_PARALLELXYZT)
           if (x0 != T - 1) {
             iz0 = g_ipt[(x0 + 1) % T][x1][x2][x3];
           } else {
@@ -176,7 +177,8 @@ int check_geometry() {
           }
 
           iy0 = g_idn[ix][0];
-#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || \
+     defined TM_PARALLELXYZT)
           if (x0 != 0) {
             iz0 = g_ipt[(x0 + T - 1) % T][x1][x2][x3];
           } else {
@@ -1554,4 +1556,3 @@ int check_geometry() {
 
   return (0);
 }
-

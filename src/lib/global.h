@@ -121,7 +121,6 @@ EXTERN int *g_field_z_disp_even_up;
 EXTERN int *g_field_z_disp_odd_dn;
 EXTERN int *g_field_z_disp_odd_up;
 
-
 /* IF PHMC  */
 EXTERN spinor **g_chi_up_spinor_field;
 EXTERN spinor **g_chi_dn_spinor_field;

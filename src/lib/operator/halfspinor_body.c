@@ -103,7 +103,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-  xchange_halffield32();
+    xchange_halffield32();
 #endif
 
 #ifdef TM_USE_OMP
@@ -237,7 +237,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-  xchange_halffield();
+    xchange_halffield();
 #endif
 
 #ifdef TM_USE_OMP

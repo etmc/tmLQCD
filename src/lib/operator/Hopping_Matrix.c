@@ -68,7 +68,7 @@
 #include "operator/halfspinor_hopping.h"
 
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -91,7 +91,7 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 #else /* thats TM_USE_HALFSPINOR */
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }

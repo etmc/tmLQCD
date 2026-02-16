@@ -47,4 +47,3 @@ void assign_32(spinor32 *const R, spinor32 *const S, const int N) {
   memcpy(R, S, N * sizeof(spinor32));
   return;
 }
-
