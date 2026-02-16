@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
   tmlqcd_mpi_init(argc, argv);
   g_dbw2rand = 0;
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
   init_gauge_field(VOLUMEPLUSRAND, 0);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
 #endif
 
   g_update_gauge_copy = 1;
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   update_backward_gauge(g_gauge_field);
 #endif
 

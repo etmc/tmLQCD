@@ -75,7 +75,6 @@ void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Compl
   }
 }
 
-
 /*
  *  ModifiedGramSchmidt
  *

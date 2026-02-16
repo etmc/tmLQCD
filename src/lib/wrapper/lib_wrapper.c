@@ -60,11 +60,11 @@
 #include "misc_types.h"
 #include "mpi_init.h"
 #include "operator.h"
+#include "operator/clover_leaf.h"
+#include "qphix_interface.h"
 #include "read_input.h"
 #include "sighandler.h"
 #include "start.h"
-#include "operator/clover_leaf.h"
-#include "qphix_interface.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -121,7 +121,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   for (int j = 0; j < no_operators; j++)
     if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   int j = init_gauge_field(VOLUMEPLUSRAND, 1);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else

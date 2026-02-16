@@ -33,8 +33,8 @@
 #include "init/init_gauge_tmp.h"
 #include "init/init_geometry_indices.h"
 #include "init/init_global_states.h"
-#include "init/init_parallel.h"
 #include "init/init_moment_field.h"
+#include "init/init_parallel.h"
 #include "init/init_spinor_field.h"
 #include "init/init_stout_smear_vars.h"
 #ifdef TM_USE_OMP

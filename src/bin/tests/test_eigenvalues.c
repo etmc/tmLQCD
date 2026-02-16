@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
   g_eps_sq_acc = g_eps_sq_acc1;
   g_eps_sq_force = g_eps_sq_force1;
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
@@ -277,8 +277,8 @@ int main(int argc, char *argv[]) {
 #ifdef TM_NEW_GEOMETRY
     printf("# The code was compiled with -DTM_NEW_GEOMETRY\n");
 #endif
-#ifdef TM_GAUGE_COPY
-    printf("# The code was compiled with -DTM_GAUGE_COPY\n");
+#ifdef TM_USE_GAUGE_COPY
+    printf("# The code was compiled with -DTM_USE_GAUGE_COPY\n");
 #endif
     printf("# The lattice size is %d x %d x %d x %d\n", (int)(T * g_nproc_t), (int)(LX * g_nproc_x),
            (int)(LY), (int)(LZ));
@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
 #ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   update_backward_gauge();
 #endif
 
