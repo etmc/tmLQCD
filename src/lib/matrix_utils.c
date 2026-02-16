@@ -30,9 +30,8 @@
 #ifndef TM_USE_OMP
 static
 #endif
-    void
-    exponent_from_coefficients(su3 *out, _Complex double f0, _Complex double f1, _Complex double f2,
-                               su3 const *in) {
+    void exponent_from_coefficients(su3 *out, _Complex double f0, _Complex double f1,
+                                    _Complex double f2, su3 const *in) {
   su3 ALIGN tmp;
   _complex_times_su3(tmp, f2, *in);
   _su3_add_equals_complex_identity(tmp, f1);

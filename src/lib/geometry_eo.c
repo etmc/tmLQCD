@@ -274,7 +274,8 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   y3 = (x3 + LZ) % LZ;
   ix = ((y0 * LX + y1) * LY + y2) * LZ + y3;
 
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
   if (x0 == T) {
     ix = VOLUME + y3 + LZ * y2 + LZ * LY * y1;
   }
@@ -433,7 +434,8 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 
   /* The DBW2 stuff --> second boundary slice */
   /* This we put a the very end.              */
-#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
+#if ((defined TM_PARALLELT) || (defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || \
+     (defined TM_PARALLELXYZT))
   if (x0 == T + 1) {
     ix = VOLUMEPLUSRAND + y3 + LZ * y2 + LZ * LY * y1;
 #if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
@@ -685,14 +687,16 @@ void geometry() {
 
   xeven = malloc(VOLUMEPLUSRAND * sizeof(int));
 
-#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || \
+     defined TM_PARALLELXYZT)
   startvaluet = 1;
 #endif
-#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
-     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || \
+     defined TM_PARALLELX || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   startvaluex = 1;
 #endif
-#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || \
+     defined TM_PARALLELXYZ)
   startvaluey = 1;
 #endif
 #if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
@@ -851,7 +855,6 @@ void geometry() {
     }
   }
 
-
 #endif /* TM_PARALLELXYZ || TM_PARALLELXYZT*/
 
   /* The rectangular gauge action part */
@@ -861,7 +864,8 @@ void geometry() {
       printf("# Initialising rectangular gauge action stuff\n");
       fflush(stdout);
     }
-#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || \
+     defined TM_PARALLELXYZT)
     for (x1 = -startvaluex; x1 < (LX + startvaluex); x1++) {
       for (x2 = -startvaluey; x2 < (LY + startvaluey); x2++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {
@@ -910,8 +914,8 @@ void geometry() {
       }
     }
 #endif
-#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
-     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || \
+     defined TM_PARALLELX || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T + startvaluet); x0++) {
       for (x2 = -startvaluey; x2 < (LY + startvaluey); x2++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {
@@ -959,7 +963,8 @@ void geometry() {
       }
     }
 #endif
-#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || \
+     defined TM_PARALLELXYZ)
     for (x0 = -startvaluet; x0 < (T + startvaluet); x0++) {
       for (x1 = -startvaluex; x1 < (LX + startvaluex); x1++) {
         for (x3 = -startvaluez; x3 < (LZ + startvaluez); x3++) {

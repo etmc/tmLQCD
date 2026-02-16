@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);

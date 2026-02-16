@@ -370,7 +370,7 @@ list(
 list(APPEND TEST_SRC_C test/check_xchange.c test/check_geometry.c
      test/overlaptests.c)
 if(TM_USE_QPHIX)
-  list(APPEND MAIN_SRC_C QphiX/qphix_interface.cpp)
+  list(APPEND MAIN_SRC_C qphix/qphix_interface.cpp)
 endif()
 
 if(TM_USE_QUDA)
@@ -404,11 +404,11 @@ include_directories(
 
 # cmake 4.0 uses a different syntax for the option
 if(CMAKE_MAJOR_VERSION LESS 4)
-  flex_target(tmlqcd_input_read read_input.l read_input.c
-              COMPILE_FLAGS "-Ca -Ptmlqcd")
+  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
+              COMPILE_FLAGS "-Ca -Ptmlqcd -i")
 else()
-  flex_target(tmlqcd_input_read read_input.l read_input.c OPTIONS
-              "-Ca -Ptmlqcd")
+  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c OPTIONS
+              "-Ca -Ptmlqcd -i")
 endif()
 
 # create a target library with namespacing because cmake does not know name
@@ -425,8 +425,7 @@ set_target_properties(hmc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 # define a library and add the dependencies
 target_link_libraries(
   hmc
-  PUBLIC $<$<BOOL:${TM_CLOCK_GETTIME_IN_RT}>:rt>
-         $<$<BOOL:${TM_DDalphaAMG}>:tmlqcd::DDalphaAMG>
+  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:tmlqcd::DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
          $<$<BOOL:${TM_USE_QUDA}>:QUDA::quda>
@@ -439,7 +438,7 @@ target_link_libraries(
          roc::hipblas
          hip::host>
          tmlqcd::clime
-         $<$<BOOL:${TM_USE_LEMON}>:clemon::lemon>
+         $<$<BOOL:${TM_USE_LEMON}>:lemon::lemon>
          ${LAPACK_LIBRARIES}
          ${BLAS_LIBRARIES}
          $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_C
