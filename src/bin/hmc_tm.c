@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 
   g_mu = g_mu1;
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
   status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else

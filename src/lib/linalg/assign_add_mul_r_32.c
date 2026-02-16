@@ -35,7 +35,7 @@
 #include "su3.h"
 
 void assign_add_mul_r_32_orphaned(spinor32 *const R, spinor32 *const S, const float c,
-                                         const int N) {
+                                  const int N) {
 #ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif

@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else

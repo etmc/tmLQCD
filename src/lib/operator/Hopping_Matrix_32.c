@@ -63,8 +63,8 @@
 #endif
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
-#include "update_backward_gauge.h"
 #include "operator/Hopping_Matrix_32.h"
+#include "update_backward_gauge.h"
 
 #if defined TM_USE_HALFSPINOR
 #include "operator/halfspinor_hopping_32.h"
@@ -72,7 +72,7 @@
 
 void Hopping_Matrix_32_orphaned(const int ieo, spinor32* const l, spinor32* const k) {
 #if defined TM_USE_HALFSPINOR
-#ifdef TM_GAUGE_COPY
+#ifdef TM_USE_GAUGE_COPY
   if (g_update_gauge_copy_32) {
     update_backward_gauge_32_orphaned(g_gauge_field_32);
   }

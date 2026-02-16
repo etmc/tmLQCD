@@ -207,7 +207,8 @@ static inline int MG_check(spinor *const phi_new, spinor *const phi_old, const i
           "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
           "restart... \n");
       printf(
-          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
+          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = "
+          "%e > %e "
           "\n",
           differ[0], differ[1], differ[0] / differ[1], precision);
     }
@@ -215,8 +216,9 @@ static inline int MG_check(spinor *const phi_new, spinor *const phi_old, const i
   }
 
   if (g_debug_level > 0 && g_proc_id == 0)
-    printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
-           differ[0], differ[1], differ[0] / differ[1]);
+    printf(
+        "MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+        differ[0], differ[1], differ[0] / differ[1]);
 
   return 1;
 }
@@ -257,7 +259,8 @@ static inline int MG_check_nd(spinor *const up_new, spinor *const dn_new, spinor
           "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
           "restart... \n");
       printf(
-          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e "
+          "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = "
+          "%e > %e "
           "\n",
           differ[0], differ[1], differ[0] / differ[1], precision);
     }
@@ -265,8 +268,9 @@ static inline int MG_check_nd(spinor *const up_new, spinor *const dn_new, spinor
   }
 
   if (g_debug_level > 0 && g_proc_id == 0)
-    printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
-           differ[0], differ[1], differ[0] / differ[1]);
+    printf(
+        "MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+        differ[0], differ[1], differ[0] / differ[1]);
 
   return 1;
 }
@@ -304,7 +308,8 @@ static inline int MG_mms_check_nd(spinor **const up_new, spinor **const dn_new,
             "ERROR: something bad happened... MG converged giving the wrong solution!! Trying to "
             "restart... \n");
         printf(
-            "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > "
+            "ERROR contd: || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = "
+            "%e > "
             "%e \n",
             differ[0], differ[1], differ[0] / differ[1], precision[i]);
       }
@@ -313,8 +318,9 @@ static inline int MG_mms_check_nd(spinor **const up_new, spinor **const dn_new,
     }
 
     if (g_debug_level > 0 && g_proc_id == 0)
-      printf("MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
-             differ[0], differ[1], differ[0] / differ[1]);
+      printf(
+          "MGTEST:  || s - f_{tmLQC} * f_{TM_USE_DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n",
+          differ[0], differ[1], differ[0] / differ[1]);
   }
 
   finalize_solver(check_vect, 2);
@@ -367,8 +373,8 @@ static int MG_pre_solve(su3 **gf) {
     mg_do_setup = 0;
     mg_tau = gauge_tau;
     if (mg_status.success && g_proc_id == 0)
-      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
-             100. * (mg_status.coarse_time / mg_status.time));
+      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
+             mg_status.time, 100. * (mg_status.coarse_time / mg_status.time));
     else if (g_proc_id == 0)
       printf("ERROR: setup procedure did not run correctly");
   }
@@ -384,8 +390,8 @@ static int MG_pre_solve(su3 **gf) {
     mg_update_setup = 0;
     mg_tau = gauge_tau;
     if (mg_status.success && g_proc_id == 0)
-      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n", mg_status.time,
-             100. * (mg_status.coarse_time / mg_status.time));
+      printf("TM_USE_DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
+             mg_status.time, 100. * (mg_status.coarse_time / mg_status.time));
     else if (g_proc_id == 0)
       printf("ERROR: setup updating did not run correctly");
   }

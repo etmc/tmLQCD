@@ -74,7 +74,6 @@ int init_geometry_indices(const int V) {
   if ((void *)g_field_z_disp_odd_up == NULL) return (17);
 #endif
 
-
   g_coord = (int **)calloc(VOLUME, sizeof(int *));
   if ((void *)g_coord == NULL) return (19);
   for (i = 0; i < VOLUME; i++) {

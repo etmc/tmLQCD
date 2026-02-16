@@ -35,16 +35,16 @@ jobs:
           repository: usqcd-software/c-lime
           path: lime
 
-      - name: autogen_lime
+      - name: create_builddir_lime
         working-directory: ${{github.workspace}}/lime
-        run: ./autogen.sh && mkdir build
+        run: mkdir build
 
       - name: build_lime
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
             CFLAGS="-march=haswell -mtune=haswell -O2" \
-            ../configure --prefix=$(pwd)/install_dir
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir .. >> config.log
           make -j
           make install
 
@@ -61,10 +61,9 @@ jobs:
           repository: etmc/lemon
           path: lemon
 
-      - name: autogen_lemon
+      - name: create_builddir_lemon
         working-directory: ${{github.workspace}}/lemon
         run: |
-          autoreconf -i -f
           mkdir build
 
       - name: build_lemon
@@ -72,18 +71,16 @@ jobs:
         run: |
           CC=mpicc \
             CFLAGS="-march=haswell -mtune=haswell -O2" \
-            ../configure \
-            --prefix=$(pwd)/install_dir
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir ..
           make -j
-          make install
-
+          make install > config.log
+      
       - name: Archive lemon config.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: lemon_config_output
           path: ${{github.workspace}}/lemon/build/config.log 
-
 
       - name: get_qmp
         uses: actions/checkout@v4
@@ -151,9 +148,10 @@ jobs:
             -DCMAKE_C_COMPILER=mpicc \
             -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
             -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
-            ..
+            .. >> config.log
           VERBOSE=1 make -j $(( ${nb_cores} + 3 ))
-          make install
+          make install > config.log
+          cat config.log
 
       - name: get_tmlqcd
         uses: actions/checkout@v4
@@ -164,31 +162,21 @@ jobs:
         shell: bash
         run: mkdir ${{github.workspace}}/main/build
 
-      - name: autogen_tmlqcd
-        working-directory: ${{github.workspace}}/main
-        run: autoconf
-
       - name: configure_and_build
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-            LDFLAGS="-fopenmp" \
-            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-            ../configure \
-            --enable-mpi \
-            --with-mpidimension=4 \
-            --enable-omp \
-            --disable-sse2 \
-            --disable-sse3 \
-            --with-limedir=${{github.workspace}}/lime/build/install_dir \
-            --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-            --with-lapack="-lblas -llapack" \
-            --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
-            --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
-            --enable-qphix-soalen=4 || cat config.log
-          make -j
+          cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/qmp/build/install_dir;${{github.workspace}}/qphix/build/install_dir" \
+           -DTM_USE_MPI=ON \
+           -DTM_USE_OMP=ON \
+           -DTM_USE_LEMON=ON \
+           -DTM_USE_QPHIX=ON \
+           -DCMAKE_CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+           -DCMAKE_CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+           -DQPHIX_DIR="${{github.workspace}}/qphix/build/install_dir" \
+            ..
+          make -j > config.log
 
       - name: Archive tmLQCD config.log
         if: ${{ always() }}
@@ -200,7 +188,7 @@ jobs:
       - name: nf2_qphix_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          mpirun -np 2 ./hmc_tm \
+          mpirun -np 2 src/bin/hmc_tm \
             -f ../doc/sample-input/sample-hmc-qphix-tmcloverdetratio.input
 
       - name: Archive nf2_qphix_hmc_tmcloverdetratio output

@@ -30,9 +30,9 @@ int write_first_messages(FILE* parameterfile, char const* const executable,
            TMLQCD_PACKAGE_VERSION, git_hash);
   printf("%s", message);
   fprintf(parameterfile, "%s", message);
-#ifdef TM_GAUGE_COPY
-  printf("# The code is compiled with -DTM_GAUGE_COPY\n");
-  fprintf(parameterfile, "# The code is compiled with -DTM_GAUGE_COPY\n");
+#ifdef TM_USE_GAUGE_COPY
+  printf("# The code is compiled with -DTM_USE_GAUGE_COPY\n");
+  fprintf(parameterfile, "# The code is compiled with -DTM_USE_GAUGE_COPY\n");
 #endif
 #ifdef TM_USE_HALFSPINOR
   printf("# The code is compiled with -DTM_USE_HALFSPINOR\n");
