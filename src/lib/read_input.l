@@ -951,7 +951,7 @@ static inline double fltlist_next_token(int * const list_end){
     mg_no_shifts=0;
     if(myverbose) printf("  MG_MMS_Mass set to %.16f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
   }
-  End_DDalphaAMG{SPC}* {
+  EndDDalphaAMG{SPC}* {
   if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
   BEGIN(0);
   }

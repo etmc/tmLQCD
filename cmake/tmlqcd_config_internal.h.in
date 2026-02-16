@@ -12,9 +12,6 @@
 /* Define to 1 if you have the `lemon' library (-llemon). */
 #cmakedefine TM_USE_LEMON 
 
-/* 1 if clock_gettime is available for use in benchmark */
-#cmakedefine TM_CLOCK_GETTIME 
-
 /* Compile with MPI support */
 #cmakedefine TM_USE_MPI
 
@@ -31,9 +28,9 @@
 #define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "@PROJECT_DESCRIPTION@"
+#define PACKAGE_NAME "@tmlqcd_DESCRIPTION@"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "@PROJECT_VERSION@"
+#define PACKAGE_STRING "@tmlqcd_VERSION@"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
@@ -65,9 +62,6 @@
 /* Fixed volume at compiletime */
 #cmakedefine TM_FIXEDVOLUME
 
-/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
-#cmakedefine TM_FSEEKO
-
 /* Alignment for arrays -- necessary for SSE and automated vectorization */
 #define ALIGN_BASE @ALIGN_BASE@
 
@@ -88,7 +82,7 @@
 #cmakedefine TM_FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
 
 /* Construct an extra copy of the gauge fields */
-#cmakedefine TM_USE_GAUGECOPY
+#cmakedefine TM_USE_GAUGE_COPY
 
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
 #cmakedefine TM_LARGEFILE_SOURCE

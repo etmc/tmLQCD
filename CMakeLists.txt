@@ -23,9 +23,6 @@ endif()
 # =================================================================================================
 # PROJECT AND VERSION
 include(CMakeDependentOption)
-include(CheckSymbolExists)
-include(CheckLibraryExists)
-include(CheckFunctionExists)
 include(GNUInstallDirs)
 
 cmake_policy(SET CMP0048 NEW)
@@ -56,16 +53,18 @@ endif()
 
 find_package(PkgConfig)
 
-# ##############################################################################
-# Define the paths for static libraries and executables
-# ##############################################################################
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${cp2k_BINARY_DIR}/lib
-    CACHE PATH "Single output directory for building all libraries.")
-
 # Search for rocm in common locations
-foreach(__var ROCM_ROOT CRAY_ROCM_ROOT ORNL_ROCM_ROOT CRAY_ROCM_PREFIX
-              ROCM_PREFIX CRAY_ROCM_DIR)
+foreach(
+  __var
+  ROCM_ROOT
+  HIP_ROOT
+  HIP_PATH
+  CRAY_ROCM_ROOT
+  ORNL_ROCM_ROOT
+  CRAY_ROCM_PREFIX
+  ROCM_PREFIX
+  CRAY_ROCM_DIR
+  ROCM_PATH)
   if($ENV{${__var}})
     list(APPEND CMAKE_PREFIX_PATH $ENV{__var})
     set(ROCM_PATH
@@ -75,7 +74,7 @@ foreach(__var ROCM_ROOT CRAY_ROCM_ROOT ORNL_ROCM_ROOT CRAY_ROCM_PREFIX
 endforeach()
 
 option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" ON)
-option(BUILD_SHARED_LIBS "Enable shared library" ON)
+option(BUILD_SHARED_LIBS "Enable shared library" OFF)
 option(TM_USE_FFTW "Enable fftw support" OFF)
 option(TM_USE_MPI "Enable MPI support" OFF)
 option(TM_USE_CUDA "Enable QUDA support" OFF)
@@ -93,15 +92,12 @@ set(TM_ENABLE_ALIGNMENT
 set_property(CACHE TM_ENABLE_ALIGNMENT PROPERTY STRINGS "auto" "none" "16" "32"
                                                 "64")
 
-option(TM_BGL_DRAM "use BGL dram window (BGL only!)" ON)
 option(TM_USE_OPTIMIZATION "enable optimisation" ON)
-option(TM_USE_GAUGECOPY "Enable use of a copy of the gauge field" ON)
+option(TM_USE_GAUGE_COPY "Enable use of a copy of the gauge field" ON)
 option(TM_USE_HALFSPINOR "Use a Dirac Op. with halfspinor exchange" ON)
-option(TM_USE_TSPLITPAR "Enable timeslice-splitted communications" ON)
 option(TM_USE_QPHIX "enable QPhiX" OFF)
 option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
-option(TM_USE_GPROF "Enable gprof profiler" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
 option(TM_ENABLE_TESTS "Enable tests" OFF)
 
@@ -203,7 +199,7 @@ if(TM_USE_HDF5)
 endif()
 
 if(TM_USE_LEMON)
-  find_package(Clemon REQUIRED)
+  find_package(lemon REQUIRED)
 endif()
 
 find_package(CLime REQUIRED)
@@ -231,6 +227,8 @@ endif()
 
 if(TM_USE_CUDA OR QUDA_TARGET_CUDA)
   enable_language(CUDA)
+
+  # placeholder for nvhpc for future use
   if(TM_USE_NVHPC)
     find_package(NVHPC REQUIRED COMPONENTS CUDA MATH HOSTUTILS NCCL)
   else()
@@ -238,11 +236,11 @@ if(TM_USE_CUDA OR QUDA_TARGET_CUDA)
   endif()
 endif()
 
+# We may want to use hip-cuda for development or debugging purposes especially
+# if AMD GPU access is not possible. So allow it
+
 if(TM_USE_HIP OR QUDA_TARGET_HIP)
   enable_language(hip)
-
-  # we may want to use hip-cuda for development or debugging purposes especially
-  # if AMD GPU access is not possible. So allow it
   if(TM_USE_CUDA_HIP)
     find_package(CUDA)
   endif()
@@ -254,14 +252,15 @@ if(TM_USE_HIP OR QUDA_TARGET_HIP)
   endif()
 endif()
 
-if(TM_USE_QPIHX)
-  find_package(QPhiX REQUIRED)
+if(TM_USE_QPHIX)
+  find_package(QPhiX REQUIRED CONFIG)
+  message("${QPhiX_LIBRARIES}")
   if(NOT TARGET tmlqcd::qphix)
     add_library(tmlqcd::qphix INTERFACE IMPORTED)
     set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_LINK_LIBRARIES
-                                                   "${QPHIX_LIBRARIES}")
+                                                   "${QPhiX_LIBRARIES}")
     set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                                   "${QPHIX_INCLUDE_DIRS}")
+                                                   "${QPhiX_INCLUDE_DIRS}")
   endif()
 endif()
 
@@ -274,17 +273,7 @@ if(TM_USE_FFTW)
 endif()
 
 if(TM_USE_DDalphaAMG)
-  find_package(DDAlphaAMG REQUIRED)
-endif()
-
-# gprofiler
-
-if(TM_USE_GPROF)
-  set(PROFILE_FLAGS "-pg;-g")
-  if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "powerpc|powerpc64")
-    list(APPEND PROFILE_FLAGS "-qfullpath")
-  endif()
-  add_compile_options($<BOOL:$<COMPILE_LANGUAGE:C>:$PROFILE_FLAGS>)
+  find_package(DDalphaAMG REQUIRED)
 endif()
 
 if(TM_ENABLE_WARNINGS)
@@ -292,31 +281,26 @@ if(TM_ENABLE_WARNINGS)
                       $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wall>)
 endif()
 
-# check for the presence of clock_gettime in libc or librt
-check_symbol_exists(clock_gettime "time.h" TM_CLOCK_GETTIME)
-check_library_exists(rt clock_gettime "" TM_CLOCK_GETTIME_IN_RT)
-check_function_exists(fseeko TM_FSEEKO)
-
 # set the parallelization
 
 if(TM_USE_MPI)
-  if(TM_MPI_DIMENSION EQUAL "1")
+  if(TM_MPI_DIMENSION STREQUAL "1")
     # T parallelisation
     set(TM_PARALLELT ON)
-  elseif(TM_MPI_DIMENSION EQUAL "2")
+  elseif(TM_MPI_DIMENSION STREQUAL "2")
     # XT parallelisation
     set(TM_PARALLELXT ON)
-  elseif(TM_MPI_DIMENSION EQUAL "3")
+  elseif(TM_MPI_DIMENSION STREQUAL "3")
     set(TM_PARALLELXYT ON)
     # XYZ parallelisation
-  elseif(TM_MPI_DIMENSION EQUAL "4")
+  elseif(TM_MPI_DIMENSION STREQUAL "4")
     # timeslice-splitted communications
     set(TM_PARALLELXYZT ON)
-  elseif(TM_MPI_DIMENSION EQUAL "X")
+  elseif(TM_MPI_DIMENSION STREQUAL "X")
     set(TM_PARALLELX ON)
-  elseif(TM_MPI_DIMENSION EQUAL "XY")
+  elseif(TM_MPI_DIMENSION STREQUAL "XY")
     set(TM_PARALLELXY ON)
-  elseif(TM_MPI_DIMENSION EQUAL "XYZ")
+  elseif(TM_MPI_DIMENSION STREQUAL "XYZ")
     set(TM_PARALLELXYZ ON)
   else()
     set(TM_PARALLELXYZT ON)
@@ -346,7 +330,6 @@ if(DEFINED GIT_EXE AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(STATUS "git hash ${TM_SHA}")
 else()
-  # set(TM_GIT_BRANCH "release v${SIRIUS_VERSION}")
   set(TM_SHA
       "https://github.com/etmc/tmLQCD/releases/tag/rel-${TMLQCD_VERSION_MAJOR}-${TMLQCD_VERSION_MINOR}"
   )
