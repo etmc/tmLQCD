@@ -63,10 +63,6 @@ void deriv_Sb_D_psi(spinor* const l, spinor* const k, hamiltonian_field_t* const
 #undef static
 #endif
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(derivSb)
-#endif
-
     /************** loop over all lattice sites ****************/
 #ifdef TM_USE_OMP
 #pragma omp for
@@ -225,9 +221,6 @@ void deriv_Sb_D_psi(spinor* const l, spinor* const k, hamiltonian_field_t* const
 
       /****************** end of loop ************************/
     }
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(derivSb)
-#endif
 
 #ifdef TM_USE_OMP
   } /*OpenMP closing brace */

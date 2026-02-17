@@ -113,11 +113,6 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_HMC_TM);
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst init
-#pragma pomp inst begin(main)
-#endif
-
   strcpy(gauge_filename, "conf.save");
   strcpy(nstore_filename, "nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
@@ -591,9 +586,6 @@ int main(int argc, char *argv[]) {
 #endif
 
   return (0);
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(main)
-#endif
 }
 
 static void usage(const tm_ExitCode_t exit_code) {

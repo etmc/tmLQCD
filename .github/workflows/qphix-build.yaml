@@ -172,9 +172,10 @@ jobs:
            -DTM_USE_OMP=ON \
            -DTM_USE_LEMON=ON \
            -DTM_USE_QPHIX=ON \
-           -DCMAKE_CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-           -DCMAKE_CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+           -DCMAKE_CXX_FLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+           -DCMAKE_C_FLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
            -DQPHIX_DIR="${{github.workspace}}/qphix/build/install_dir" \
+           -DQMP_DIR="${{github.workspace}}/qmp/build/install_dir" \
             ..
           make -j > config.log
 

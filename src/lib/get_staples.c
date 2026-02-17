@@ -35,10 +35,6 @@ void get_staples(su3* const staple, const int x, const int mu, const su3** in_ga
   su3 ALIGN st;
   const su3 *w1, *w2, *w3;
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(staples)
-#endif
-
   _su3_zero(*staple);
   for (int k = 0; k < 4; k++) {
     if (k != mu) {
@@ -61,9 +57,6 @@ void get_staples(su3* const staple, const int x, const int mu, const su3** in_ga
       _su3d_times_su3_acc(*staple, *w1, st);
     }
   }
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(staples)
-#endif
 }
 
 void get_spacelike_staples(su3* const staple, const int x, const int mu,
@@ -71,10 +64,6 @@ void get_spacelike_staples(su3* const staple, const int x, const int mu,
   int iy;
   su3 ALIGN st;
   const su3 *w1, *w2, *w3;
-
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(staples)
-#endif
 
   _su3_zero(*staple);
   for (int k = 1; k < 4; k++) {
@@ -98,9 +87,6 @@ void get_spacelike_staples(su3* const staple, const int x, const int mu,
       _su3d_times_su3_acc(*staple, *w1, st);
     }
   }
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(staples)
-#endif
 }
 
 void get_timelike_staples(su3* const staple, const int x, const int mu,
@@ -108,10 +94,6 @@ void get_timelike_staples(su3* const staple, const int x, const int mu,
   int iy;
   su3 ALIGN st;
   const su3 *w1, *w2, *w3;
-
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(staples)
-#endif
 
   _su3_zero(*staple);
   int k = 0;
@@ -134,7 +116,4 @@ void get_timelike_staples(su3* const staple, const int x, const int mu,
     /* v = v + w1^d * st */
     _su3d_times_su3_acc(*staple, *w1, st);
   }
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(staples)
-#endif
 }
