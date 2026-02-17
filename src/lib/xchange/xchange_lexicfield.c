@@ -60,12 +60,8 @@ void xchange_lexicfield(spinor* const l) {
 #elif defined TM_PARALLELXYZT
   int reqcount = 16;
 #endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchange_lexicfield)
-#endif
 
 #ifdef TM_USE_MPI
-
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Isend((void*)l, 1, lfield_time_slice_cont, g_nb_t_dn, 5081, g_cart_grid, &requests[0]);
@@ -135,9 +131,6 @@ void xchange_lexicfield(spinor* const l) {
 
 #endif
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchange_lexicfield)
-#endif
 }
 
 /* Here comes the naive version */
@@ -149,12 +142,8 @@ void xchange_lexicfield(spinor* const l) {
 #ifdef TM_PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
 #endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchange_lexicfield)
-#endif
 
 #ifdef TM_USE_MPI
-
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -214,9 +203,6 @@ void xchange_lexicfield(spinor* const l) {
 #endif
 #endif
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchange_lexicfield)
-#endif
 }
 
 #endif
@@ -239,12 +225,8 @@ void xchange_lexicfield32(spinor32* const l) {
 #elif defined TM_PARALLELXYZT
   int reqcount = 16;
 #endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchange_lexicfield32)
-#endif
 
 #ifdef TM_USE_MPI
-
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
   MPI_Isend((void*)l, 1, lfield_time_slice_cont32, g_nb_t_dn, 5081, g_cart_grid, &requests[0]);
@@ -314,9 +296,6 @@ void xchange_lexicfield32(spinor32* const l) {
 
 #endif
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchange_lexicfield32)
-#endif
 }
 
 /* Here comes the naive version */
@@ -328,12 +307,8 @@ void xchange_lexicfield32(spinor32* const l) {
 #ifdef TM_PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
 #endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchange_lexicfield32)
-#endif
 
 #ifdef TM_USE_MPI
-
   MPI_Status status;
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
@@ -394,9 +369,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #endif
 #endif
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchange_lexicfield32)
-#endif
 }
 
 #endif
