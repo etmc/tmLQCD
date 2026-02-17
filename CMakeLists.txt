@@ -100,7 +100,7 @@ option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
 option(TM_ENABLE_TESTS "Enable tests" OFF)
-
+set(TM_QPHIX_SOALEN "4" CACHE STRING "QPhiX specific parameter")
 # MPI dependent options
 cmake_dependent_option(
   TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]" OFF
@@ -123,12 +123,6 @@ cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF "TM_USE_MPI"
                        ON)
 
 # GPU dependent options
-cmake_dependent_option(TM_USE_QUDA_EXPERIMENTAL "Enable QUDA support" ON
-                       "TM_USE_QUDA" OFF)
-cmake_dependent_option(
-  TM_QUDA_FERMIONIC_FORCES "Enable support for fermionic forces using QUDA" ON
-  "TM_USE_QUDA" OFF)
-
 cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
                        "TM_USE_CUDA" OFF)
 
@@ -253,15 +247,7 @@ if(TM_USE_HIP OR QUDA_TARGET_HIP)
 endif()
 
 if(TM_USE_QPHIX)
-  find_package(QPhiX REQUIRED CONFIG)
-  message("${QPhiX_LIBRARIES}")
-  if(NOT TARGET tmlqcd::qphix)
-    add_library(tmlqcd::qphix INTERFACE IMPORTED)
-    set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_LINK_LIBRARIES
-                                                   "${QPhiX_LIBRARIES}")
-    set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                                   "${QPhiX_INCLUDE_DIRS}")
-  endif()
+  find_package(Qphix REQUIRED)
 endif()
 
 # check for fftw3 (rely on pkgconfig).

@@ -105,11 +105,6 @@ int main(int argc, char *argv[]) {
   char *gaugecksum = NULL;
   double plaquette_energy;
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst init
-#pragma pomp inst begin(main)
-#endif
-
 #ifdef TM_USE_LEMON
   MPI_File fh;
   LemonWriter *lemonWriter;
@@ -389,7 +384,4 @@ int main(int argc, char *argv[]) {
     free_chi_dn_spinor_field();
   }
   return (0);
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(main)
-#endif
 }
