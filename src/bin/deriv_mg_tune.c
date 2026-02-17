@@ -98,11 +98,6 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_DERIV_MG_TUNE);
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst init
-#pragma pomp inst begin(main)
-#endif
-
   verbose = 1;
   g_use_clover_flag = 0;
 
@@ -367,9 +362,6 @@ int main(int argc, char *argv[]) {
 #endif
 
   return (0);
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(main)
-#endif
 }
 
 static void usage(const tm_ExitCode_t exit_code) {

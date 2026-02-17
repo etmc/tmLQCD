@@ -85,10 +85,6 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
 #undef static
 #endif
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(derivSb)
-#endif
-
     if (ieo == 0) {
       ioff = 0;
     } else {
@@ -292,7 +288,4 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
   } /* OpenMP closing brace */
 #endif
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(derivSb)
-#endif
 }
