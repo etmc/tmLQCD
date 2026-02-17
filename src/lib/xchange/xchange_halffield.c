@@ -176,9 +176,6 @@ void xchange_halffield() {
   int reqcount = 16;
 #endif
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchangehalf)
-#endif
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(sendBuffer), LX * LY * LZ * 12 / 2, MPI_DOUBLE, g_nb_t_up, 81, g_cart_grid,
@@ -245,10 +242,6 @@ void xchange_halffield() {
   MPI_Waitall(reqcount, requests, status);
 #endif /* MPI */
   return;
-
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchangehalf)
-#endif
 }
 
 #endif /* def (TM_USE_SHMEM || TM_PERSISTENT) */
@@ -265,9 +258,6 @@ void xchange_halffield32() {
   int reqcount = 12;
 #elif defined TM_PARALLELXYZT
   int reqcount = 16;
-#endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchangehalf32)
 #endif
 
   /* send the data to the neighbour on the right in t direction */
@@ -336,8 +326,5 @@ void xchange_halffield32() {
   MPI_Waitall(reqcount, requests, status);
 #endif /* MPI */
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchangehalf32)
-#endif
 }
 #endif /* defined TM_USE_HALFSPINOR */

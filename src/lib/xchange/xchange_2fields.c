@@ -52,10 +52,6 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
   int ix = 0;
 #endif
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchange2fields)
-#endif
-
 #ifdef TM_USE_MPI
 
   /* send the data to the neighbour on the left */
@@ -237,8 +233,5 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
   MPI_Waitall(reqcount, requests, status);
 #endif
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchange2fields)
-#endif
 }
 #endif /*  TM_NON_BLOCKING */

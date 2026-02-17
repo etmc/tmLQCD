@@ -66,7 +66,7 @@
 #define ALIGN_BASE @ALIGN_BASE@
 
 /* Alignment compiler hint macro */
-#cmakedefine ALIGN @ALIGN@
+#define ALIGN @ALIGN@
 
 /* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
 #define ALIGN_BASE32 @ALIGN_BASE32@
@@ -76,10 +76,10 @@
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
-#cmakedefine YYTEXT_POINTER
+//#cmakedefine YYTEXT_POINTER
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#cmakedefine TM_FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
+#define TM_FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
 
 /* Construct an extra copy of the gauge fields */
 #cmakedefine TM_USE_GAUGE_COPY
@@ -111,17 +111,14 @@
 /* Using QUDA GPU */
 #cmakedefine TM_USE_QUDA 
 
-/* Using experimental QUDA version */
-#cmakedefine TM_QUDA_EXPERIMENTAL
-
-/* Using QUDA fermionic forces */
-#cmakedefine TM_QUDA_FERMIONIC_FORCES
-
 /* Using DDalphaAMG */
 #cmakedefine TM_USE_DDalphaAMG
 
 /* Using QPHIX */
 #cmakedefine TM_USE_QPHIX 
 
+#ifdef TM_USE_QPHIX
 /* Structure of Array length to use with QPhiX */
-#cmakedefine QPHIX_SOALEN @TMLQCD_QPHIX_SOALEN@
+#define QPHIX_SOALEN @TM_QPHIX_SOALEN@
+#endif
+

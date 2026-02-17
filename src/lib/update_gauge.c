@@ -56,43 +56,23 @@ void update_gauge(const double step, hamiltonian_field_t *const hf) {
 #endif
 
 #ifdef TM_USE_OMP
-#define static
-#pragma omp parallel
-  {
+#pragma omp parallel for
 #endif
-    int i, mu;
-    static su3 v, w;
-    su3 *z;
-    static su3adj deriv;
-    su3adj *xm;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(updategauge)
-#endif
-
-#ifdef TM_USE_OMP
-#undef static
-#endif
-
-#ifdef TM_USE_OMP
-#pragma omp for
-#endif
-    for (i = 0; i < VOLUME; i++) {
-      for (mu = 0; mu < 4; mu++) {
-        /* moment[i][mu] = h_{i,mu}^{alpha} */
-        xm = &hf->momenta[i][mu];
-        z = &hf->gaugefield[i][mu];
-        _su3adj_assign_const_times_su3adj(deriv, step, *xm);
-        exposu3(&w, &deriv);
-        restoresu3(&v, &w);
-        _su3_times_su3(w, v, *z);
-        restoresu3(&v, &w);
-        _su3_assign(*z, v);
-      }
+  for (int i = 0; i < VOLUME; i++) {
+    for (int mu = 0; mu < 4; mu++) {
+      /* moment[i][mu] = h_{i,mu}^{alpha} */
+      su3 v, w;
+      su3adj *xm = &hf->momenta[i][mu];
+      su3 *z = &hf->gaugefield[i][mu];
+      su3adj deriv;
+      _su3adj_assign_const_times_su3adj(deriv, step, *xm);
+      exposu3(&w, &deriv);
+      restoresu3(&v, &w);
+      _su3_times_su3(w, v, *z);
+      restoresu3(&v, &w);
+      _su3_assign(*z, v);
     }
-
-#ifdef TM_USE_OMP
-  } /* OpenMP parallel closing brace */
-#endif
+  }
 
 #ifdef TM_USE_MPI
   /* for parallelization */
@@ -115,7 +95,4 @@ void update_gauge(const double step, hamiltonian_field_t *const hf) {
 
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(updategauge)
-#endif
 }
