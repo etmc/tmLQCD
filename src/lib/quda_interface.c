@@ -2059,9 +2059,7 @@ void _setQudaMultigridParam(QudaMultigridParam *mg_param) {
 
     // this is needed after QUDA commit
     // https://github.com/lattice/quda/commit/7903288629f0fcc474989fec5a1393ecc17a4b42
-#ifdef TM_QUDA_EXPERIMENTAL
     mg_param->n_vec_batch[level] = 1;
-#endif
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
@@ -3031,7 +3029,6 @@ void quda_mg_tune_params(void *spinorOut, void *spinorIn, const int max_iter) {
   free(tunable_params);
 }
 
-#ifdef TM_QUDA_FERMIONIC_FORCES
 void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t *const hf,
                                        spinor *const X_o, spinor *const phi, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
@@ -3131,23 +3128,6 @@ void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
-#else
-void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t *const hf,
-                                       spinor *const X_o, spinor *const phi, int detratio) {
-  tm_debug_printf(0, 0,
-                  "Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with "
-                  "--enable-quda_fermionic=yes\n");
-  exit(1);
-}
-void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_t *const hf,
-                                         spinor **const Qup, spinor **const Qdn,
-                                         solver_params_t *solver_params, int detratio) {
-  tm_debug_printf(0, 0,
-                  "Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with "
-                  "--enable-quda_fermionic=yes\n");
-  exit(1);
-}
-#endif
 
 void compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE *outfile) {
   tm_stopwatch_push(&g_timers, __func__, "");

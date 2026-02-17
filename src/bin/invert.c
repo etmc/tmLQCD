@@ -114,11 +114,6 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_INVERT);
 
-#ifdef TM_KOJAK_INST
-#pragma pomp inst init
-#pragma pomp inst begin(main)
-#endif
-
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
@@ -457,9 +452,6 @@ int main(int argc, char *argv[]) {
   MPI_Finalize();
 #endif
   return (0);
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(main)
-#endif
 }
 
 static void usage(tm_ExitCode_t exit_code) {
