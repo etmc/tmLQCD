@@ -80,8 +80,8 @@ option(TM_USE_MPI "Enable MPI support" OFF)
 option(TM_USE_CUDA "Enable QUDA support" OFF)
 option(TM_USE_HIP "Enable HIP support" OFF)
 option(TM_USE_DDalphaAMG "Enable DDalphaAMG support" OFF)
-option(TM_USE_OMP "Enable openMP" ON)
-option(TM_FIXEDVOLUME "fix volume at compile time" OFF)
+option(TM_USE_OMP "Enable OpenMP" ON)
+option(TM_FIXEDVOLUME "Fix volume at compile time" OFF)
 set(TM_ENABLE_ALIGNMENT
     "auto"
     CACHE
@@ -95,7 +95,7 @@ set_property(CACHE TM_ENABLE_ALIGNMENT PROPERTY STRINGS "auto" "none" "16" "32"
 option(TM_USE_OPTIMIZATION "enable optimisation" ON)
 option(TM_USE_GAUGE_COPY "Enable use of a copy of the gauge field" ON)
 option(TM_USE_HALFSPINOR "Use a Dirac Op. with halfspinor exchange" ON)
-option(TM_USE_QPHIX "enable QPhiX" OFF)
+option(TM_USE_QPHIX "Enable QPhiX" OFF)
 option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
@@ -106,7 +106,7 @@ cmake_dependent_option(
   TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]" OFF
   "TM_USE_MPI" OFF)
 cmake_dependent_option(
-  TM_NONBLOCKING_MPI "Use non-blocking MPI calls for spinor and gaug" ON
+  TM_NONBLOCKING_MPI "Use non-blocking MPI calls for spinor and gauge" ON
   "TM_USE_MPI" OFF)
 
 # need to do it properly. Just a place holder
@@ -132,8 +132,6 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 set(TM_LAPACK ON)
 find_package(FLEX REQUIRED)
-# do we need bison ?
-find_package(BISON REQUIRED)
 
 set(PACKAGE_NAME ${PROJECT_DESCRIPTION})
 set(PACKAGE_VERSION ${PROJECT_VERSION})
@@ -201,12 +199,6 @@ set(TM_USE_LIME ON)
 
 if(TM_USE_QUDA)
   find_package(QUDA REQUIRED config)
-  if(TM_USE_QUDA_EXPERIMENTAL)
-    set(TM_QUDA_EXPERIMENTAL ON)
-  endif()
-  if(TM_QUDA_FERMIONIC_FORCES)
-    set(TM_QUDA_FERMIONIC_FORCES ON)
-  endif()
 endif()
 
 if(TM_USE_SHMEM)
@@ -293,6 +285,9 @@ if(TM_USE_MPI)
   endif()
 endif()
 
+if (TM_USE_HALFSPINOR AND NOT TM_USE_GAUGE_COPY)
+  message(FATAL_ERROR "The TM_USE_GAUGE_COPY option should also be set to ON when TM_USE_HALFSPINOR is ON")
+endif()
 # keep the autotool config.h header.
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlqcd_config_internal.h.in"
                "${PROJECT_BINARY_DIR}/tmlqcd_config_internal.h" @ONLY)

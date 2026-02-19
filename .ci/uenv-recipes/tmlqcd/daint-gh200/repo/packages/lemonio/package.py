@@ -28,7 +28,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         args = [
-            self.define_from_variant("DBUILD_SHARED_LIBS" "shared"),
+            self.define_from_variant("DBUILD_SHARED_LIBS", "shared"),
         ]
         return args
 
