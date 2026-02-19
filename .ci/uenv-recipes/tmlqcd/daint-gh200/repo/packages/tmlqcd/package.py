@@ -1,0 +1,113 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack_repo.builtin.build_systems.cmake import CmakePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
+from spack.package import *
+
+class Tmlqcd(CmakePackage, CudaPackage, ROCmPackage):
+"""Base class for building tmlQCD."""
+
+    homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
+    url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
+    git = "https://github.com/etmc/tmLQCD.git"
+    license("GPL-3.0-or-later")
+
+    maintainers("mtaillefumier")
+    version("master", branch="master")
+
+    variant("lemon", default=False, description="Enable the lemon backend")
+    variant("mpi", default=True, description="Enable mpi support")
+    variant("DDalphaAMG", default=False, description="Enable DAlphaAMG support")
+    variant("openmp", default=True, description="Enable OpenMP")
+    variant("fftw", default=True, description="Enable FFTW interface")
+    variant(
+        "persistent_mpi",
+        default=True,
+        description="Enable persistent mpi calls for spinor and gauge fields",
+        when="+mpi",
+    )
+    variant(
+        "nonblocking_mpi",
+        default=True,
+        description="Enable non-blocking mpi calls for spinor and gauge fields",
+        when="+mpi",
+    )
+    variant("fixedvolume", default=True, description="Enable fixed volume at compile time")
+    variant(
+        "alignment",
+        default="auto",
+        values=("none", "auto", "16", "32", "64"),
+        description="Automatically or expliclty align arrays",
+    )
+    variant("gauge_copy", default=True, description="Enable gauge field copy")
+    variant("half_spinor", default=True, description="Use a Dirac operator with half-spinor")
+    variant("shared", default=False, description="Enable shared library")
+    variant("shmem", default=False, description="Use shmem API")
+    variant("quda", default=True, description="Enable the QUDA library", when="+cuda",)
+    variant("quda", default=True, description="Enable the QUDA library", when="+rocm",)
+    variant(
+        "QPhiX", default=False, description="Enable the QPhiX library for Intel Xeon and Xeon Phis"
+    )
+    variant(
+        "mpi_dimensions",
+        default="4",
+        values=("1", "2", "3", "4", "x", "xy", "xyz"),
+        description="number of dimensions the mpi processes are distributed. the default is parallelization over all four dimensions txyz",
+        when="+mpi",
+    )
+
+    generator("ninja")
+
+    # language dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
+    # conflicts
+    conflicts("+cuda", when="cuda_arch=none")
+    conflicts("+rocm", when="amdgpu_target=none")
+
+    # hard dependencies
+    depends_on("c-lime")
+    depends_on("blas")
+    depends_on("lapack")
+    depends_on("pkgconfig", type="build")
+
+     # dependencies
+    depends_on("mpi", when="+mpi")
+    depends_on("lemon-io", when="+lemon")
+
+    with when("+quda"):
+        depends_on(
+            "quda+twisted_mass+twisted_clover+clover+ndeg_twisted_clover+ndeg_twisted_mass+wilson+qdp+staggered+usqcd+multigrid"
+        )
+
+        depends_on("quda+mpi", when="+mpi")
+        depends_on("quda+cuda", when="+cuda")
+        depends_on("quda+rocm", when="+rocm")
+        depends_on("quda+nvshmem", when="+shmem")
+
+    depends_on("fftw-api@3", when="+fftw")
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant("DBUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("TM_USE_LEMON", "lemon"),
+            self.define_from_variant("TM_USE_MPI", "mpi"),
+            self.define_from_variant("TM_USE_QUDA", "quda"),
+            self.define_from_variant("TM_USE_CUDA","cuda"),
+            self.define_from_variant("TM_USE_HIP", "cuda"),
+            self.define_from_variant("TM_USE_FFTW", "fftw"),
+            self.define_from_variant("TM_FIXEDVOLUME", "fixed_volume"),
+            self.define_from_variant("TM_USE_OMP", "openmp"),
+            self.define_from_variant("TM_USE_SHMEM", "shmem"),
+            self.define_from_variant("TM_USE_GAUGE_COPY", "gauge_copy"),
+            self.define_from_variant("TM_USE_HALFSPINOR", "half_spinor"),
+        ]
+        return args

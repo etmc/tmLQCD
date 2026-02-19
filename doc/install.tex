@@ -1,103 +1,136 @@
-The software ships with a GNU autoconf environment and a configure
-script, which will generate GNU Makefiles to build the programmes. It
-is supported and recommended to configure and build the executables in
-a separate build directory. This also allows to have several builds with
-different options from the same source code directory. 
+The software ships with a CMake environment, which will configure and build the
+programmes. It is recommended to configure and build the executables in a
+separate build directory. This also allows to have several builds with different
+options from the same source code directory.
 
 \subsection{Prerequisites}
 
-In order to compile the programmes the {\ttfamily
-  LAPACK}~\cite{lapack:web} library (fortran version) needs to be
-installed. In addition it must be known which linker options are
-needed to link against {\ttfamily LAPACK}, e.g. {\ttfamily
-  -Lpath-to-lapack -llapack  -lblas}. Also a the latest
-version (tested is version 1.2.3) of {\ttfamily
-  C-LIME}~\cite{lime:web} must be available, which is used as a
-packaging scheme to read and write gauge configurations and
-propagators to files.
+In order to compile the programmes the {\ttfamily LAPACK}~\cite{lapack:web}
+library (fortran version) needs to be installed. CMake will search for the
+library in all default directories. Also the latest version (tested is version
+1.2.3) of {\ttfamily C-LIME}~\cite{lime:web} must be available, which is used as
+a packaging scheme to read and write gauge configurations and propagators to
+files.
 
 \subsection{Configuring the hmc package}
 \label{sec:config}
 
-In order to get a simple configuration of the hmc package it is enough
-to just type 
-\begin{verbatim}
-path-to-src-code/configure   --with-lime=<path-to-lime> \
-     --with-lapack=<linker-flags> CC=<mycc> \
-     F77=<myf77> CFLAGS=<c-compiler flags>
-\end{verbatim}
-in the build directory. If 
-{\ttfamily CC, F77} and {\ttfamily CFLGAS} are not specified,
-{\ttfamily configure} will guess them.
-
-The code was successfully compiled and run at least on the following
-platforms: i686 and compatible, x64 and compatible, IBM Regatta
-systems, IBM Blue Gene/L, IBM Blue Gene/P, SGI Altix and SGI PC
-clusters, powerpc clusters.
-
-The configure script accepts certain options to influence the building
-procedure. One can get an overview over all supported options with
-{\ttfamily configure --help}. There are {\ttfamily enable|disable}
-options switching on and off optional features and {\ttfamily
-  with|without} switches usually related to optional packages. In the
-following we describe the most important of them (check {\ttfamily
-  configure --help} for the defaults and more options):
-
+The build system uses CMake to configure and build the hmc package. The
+following list gives all options (OFF by default unless specified):
 \begin{itemize}
-\item {\ttfamily --enable-mpi}:\\
-  This option switches on the support for MPI. On certain platforms it
-  automatically chooses the correct parallel compiler or searches for
-  a command {\ttfamily mpicc} in the search path.
-
-\item {\ttfamily --enable-gaugecopy}:\\
-  See section \ref{sec:dirac} for details on this option. It will
+\item {\ttfamily CMAKE\_POSITION\_INDEPENDENT\_CODE}: Build a position independent
+  code. ON by default.
+\item {\ttfamily BUILD\_SHARED\_LIBS}: Build the shared version of the hmc library.
+\item {\ttfamily TM\_USE\_FFTW}: Enable fftw support. 
+\item {\ttfamily TM\_USE\_CUDA}: Enable CUDA support.
+\item {\ttfamily TM\_USE\_HIP}: Enable HIP support (AMD or NVidia GPUs)
+\item {\ttfamily TM\_USE\_DDalphaAMG}: Enable DDalphaAMG support.
+\item {\ttfamily TM\_USE\_LEMON}: Use the lemon io library.
+\item {\ttfamily TM\_USE\_OMP}: Enable OpenMP ({\bf ON} by default)
+\item {\ttfamily TM\_FIXEDVOLUME}: Fix volume at compile time.
+\item {\ttfamily TM\_ENABLE\_ALIGNMENT}: Automatically or expliclty align arrays to
+  byte number. auto, none, 16, 32, 64.
+\item {\ttfamily TM\_USE\_GAUGE\_COPY}: Enable use of a copy of the gauge field (ON
+  by default). See section \ref{sec:dirac} for details on this option. It will
   increase the memory requirement of the code.
-
-\item {\ttfamily --enable-halfspinor}:\\
-  If this option is enabled the Dirac operator using half spinor
-  fields is used. See sub-section \ref{sec:dirac} for details. If this
-  feature is switched on, also the gauge copy feature is switched
-  on automatically. 
-
-%\item {\ttfamily --enable-shmem}:\\
-%  Use shared memory API instead of MPI for the communication of spinor
-%  fields. This is currently only usable on the Munich Altix machine.
-
-\item {\ttfamily --with-mpidimension=n}:\\
-  This option has only effect if the preceding one is switched
-  on. The number of parallel directions can be specified. 1,2,3 and 4
-  dimensional parallelisation is supported.
-
-\item {\ttfamily --with-lapack="<linker flags>"}:\\
-  the code requires lapack to be linked. All linker flags necessary
-  to do so must be specified here. Note, that {\ttfamily LIBS="..."}
-  works similar.
-
-\item {\ttfamily --with-limedir=<dir>}:\\
-  Tells configure where to find the lime package, which is required for
-  the build of the HMC. It is used for the ILDG file format.
- 
+\item {\ttfamily TM\_USE\_HALFSPINOR}: Use a Dirac Op. with halfspinor exchange (ON
+  by default). See sub-section \ref{sec:dirac} for details. 
+\item {\ttfamily TM\_USE\_QUDA}: Enable QUDA support.
+\item {\ttfamily TM\_USE\_SHMEM}: Use shmem API.
+\item {\ttfamily TM\_ENABLE\_WARNINGS}: Enable all warnings (ON by default).
+\item {\ttfamily TM\_ENABLE\_TESTS}: Enable tests.
+\item {\ttfamily TM\_USE\_QPHIX}: Enable QPhiX.
+  \begin{itemize}
+  \item {\ttfamily TM\_QPHIX\_SOALEN}: QPhiX specific parameter (default is 4)
+  \item \textcolor{red}{{\ttfamily QPHIX\_DIR}}: Directory where QPhiX is installed.
+    The QPhiX current CMake build system does not export all information (
+    include and lib directories) that are needed to compile hmc.
+  \item \textcolor{red}{\ttfamily QMP\_DIR}: Directory where QMP is installed (
+    QPhiX dependency).
+    The QPhiX current CMake build system does not export all information about the
+    include and lib directories nor its dependencies (QMP in that case).
+  \end{itemize}
+\item {\ttfamily TM\_USE\_MPI}: Enable MPI support.
+  \begin{itemize}
+  \item {\ttfamily TM\_PERSISTENT\_MPI}: Use persistent MPI calls for halfspinor.
+  \item {\ttfamily TM\_NONBLOCKING\_MPI}: Use non-blocking MPI calls for spinor and
+    gauge.
+  \item {\ttfamily TM\_MPI\_DIMENSION}: Use $n$ dimensional parallelisation ($XYZT$)
+    [default=4]. The number of parallel directions can be specified. $1, 2, 3$ and $4$
+    dimensional parallelisation is supported.
+  \item {\ttfamily TM\_USE\_LEMON} Use the lemon io library
+  \end{itemize}
 \end{itemize}
 
-The configure script will guess at the very beginning on which
-platform the build is done. In case this fails or a cross compilation
-must be performed please use the option {\ttfamily --host=HOST}. For
-instance in order to compile for the BG/P one needs to specify
-{\ttfamily --host=ppc-ibm-bprts --build=ppc64-ibm-linux}. 
+The following minimal list of commands will configure and build the hmc package with
+minimal dependencies
+\begin{verbatim}
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/my_path -DCMAKE_PREFIX_PATH=/my_c_line_path ..
+make -j
+make install
+\end{verbatim}
 
-For certain architectures like the Blue Gene systems there are
-{\ttfamily README.arch} files in the top source directory with
-example configure calls.
+These instructions assume that the {\ttfamily c-lime} package is installed in {\ttfamily
+  /my\_c\_line\_path}. By default {\ttfamily CMAKE\_PREFIX\_PATH} variable is a list
+of paths separated by a semi-colunm containing the path of all installed to
+dependencies.
 
-\subsection{Building and Installing}
+Adding {\ttfamily -DTM\_USE\_MPI=ON} will enable MPI support with parallelization
+over spatial and temporal dimensions. The command line is then
+\begin{verbatim}
+cmake -DCMAKE_INSTALL_PREFIX=/my_path -DCMAKE_PREFIX_PATH=/my_c_line_path -DTM_USE_MPI=ON ..
+\end{verbatim}
+We can combine it with the lemon-io library (isntalled in {\ttfamily /my\_lemon\_path})
+\begin{verbatim}
+cmake -DCMAKE_INSTALL_PREFIX=/my_path \
+      -DCMAKE_PREFIX_PATH="/my_c_line_path;/my_lemon_path" \
+      -DTM_USE_MPI=ON \
+      -DTM_USE_LEMON=ON ..
+\end{verbatim}
 
-After successfully configuring the package the code can be build by
-simply typing {\ttfamily make} in the build directory. This will
-compile the standard executables. Typing {\ttfamily make install} will
-copy these executables into the install directory. The default install
-directory is {\ttfamily \$HOME/bin}, which can be influenced e.g. with
-the {\ttfamily --prefix} option to {\ttfamily configure}. 
+{\ttfamily QUDA} support (installed in {\ttfamily my\_quda\_path}) can be added with
+\begin{verbatim}
+cmake -DCMAKE_INSTALL_PREFIX=/my_path \
+      -DCMAKE_PREFIX_PATH="/my_c_line_path;/my_lemon_path;\my_quda_path" \
+      -DTM_USE_MPI=ON \
+      -DTM_USE_LEMON=ON \
+      -DTM_USE_QUDA \
+      -DTM_USE_CUDA=ON \
+      -DCMAKE_CUDA_ARCHITECTURES=90 ..
+\end{verbatim}
+Note that the command assumes that QUDA is compiled with CUDA support. AMD GPU
+are also supported after replacing {\ttfamily -DTM\_USE\_CUDA=ON} with
+{\ttfamily -DTM\_USE\_HIP=ON} and compiling {\ttfamily QUDA} with {\ttfamily
+  HIP} support. The {\ttfamily ROCM} architecture is defined by the variable
+{\ttfamily CMAKE\_HIP\_ARCHITECTURES=gfxxxx}.
 
+{\ttfamily QPhiX} and/or {\ttfamily DDalphaAMG} support can be added with
+\begin{verbatim}
+cmake -DCMAKE_INSTALL_PREFIX=/my_path \
+      -DCMAKE_PREFIX_PATH="/my_c_line_path;/my_lemon_path;/my_quda_path;/my_path_ddalphaamg" \
+      -DTM_USE_MPI=ON \
+      -DTM_USE_LEMON=ON \
+      -DTM_USE_QUDA=ON \
+      -DTM_USE_CUDA=ON \
+      -DCMAKE_CUDA_ARCHITECTURES=90 \
+      -DTM_USE_QPHIX=ON \
+      -DQPHIX_DIR=/my_qphix_dir \
+      -DTM_USE_DDalphaAMG=ON \
+      -DQMP_DIR=/my_qmp_dir \
+      -DTM_USE_OMP=ON ..
+\end{verbatim}
+{\ttfamily QPhiX} cmake config support is incomplete and requires both the {\ttfamily QPhiX}
+and {\ttfamily QMP} installation directories to work properly.
+
+CMake has several relevant specific options that control the build. Compiler
+options are defined by the variable {\ttfamily CMAKE\_C\_FLAGS} and {\ttfamily
+  CMAKE\_CXX\_FLAGS}. CUDA and HIP compilations options are controlled by their
+equivalent {\ttfamily CMAKE\_\{CUDA/HIP\}\_FLAGS}. 
+
+Adding for instance {\ttfamily -GNinja} to the {\ttfamily CMake} command line will use
+{\ttfamily ninja} instead of {\ttfamily make}.
 
 %%% Local Variables: 
 %%% mode: latex

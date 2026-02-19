@@ -79,7 +79,7 @@
 //#cmakedefine YYTEXT_POINTER
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#define TM_FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
+#define TM_FILE_OFFSET_BITS @TM_FILE_OFFSET_BITS@
 
 /* Construct an extra copy of the gauge fields */
 #cmakedefine TM_USE_GAUGE_COPY
