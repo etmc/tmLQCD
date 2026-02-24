@@ -111,8 +111,8 @@ jobs:
         run: |
           CC=mpicc CXX=mpicxx \
             LDFLAGS="-fopenmp" \
-            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CFLAGS="-O3 -ffast-math -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CXXFLAGS="-O3 -ffast-math -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
             cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/ddalphaamg" \
             -DTM_USE_MPI=ON \
             -DTM_USE_OMP=ON \
