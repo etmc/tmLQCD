@@ -1,0 +1,80 @@
+cmake_minimum_required(VERSION 3.23)
+
+if (NOT TARGET tmlqcd::tmlqcd)
+
+  # store CXX compiler id. Used in MKL package.
+  set(TM_C_COMPILER_ID @CMAKE_C_COMPILER_ID@)
+  if(NOT ${CMAKE_C_COMPILER_ID})
+    set(CMAKE_C_COMPILER_ID ${TM_C_COMPILER_ID})
+  endif()
+
+  # pass REQUIRED or QUIET depending on top Config call
+  if(tmlQCD_c_FIND_REQUIRED)
+    set(mode REQUIRED)
+  else()
+    set(mode QUIET)
+  endif()
+
+  if (@TM_USE_MPI@)
+    set(TM_USE_MPI @TM_USE_MPI@)
+    find_dependency(MPI ${mode} COMPONENTS C)
+  endif()
+
+  if (@TM_USE_OMP@)
+    set(TM_USE_OMP @TM_USE_OMP@)
+    find_dependency(OpenMP ${mode})
+  endif()
+
+  if (@TM_USE_LEMON@)
+    set(TM_USE_LEMON @TM_USE_LEMON@)
+    find_dependency(Lemon ${mode})
+  endif()
+
+  find_package(BLAS ${mode})
+  find_dependency(LAPACK ${mode})
+
+  find_package(CLime REQUIRED)
+  set(TM_USE_LIME ON)
+
+  if(@TM_USE_QUDA@)
+    set(TM_USE_QUDA @TM_USE_QUDA@)
+    find_package(QUDA REQUIRED config)
+  endif()
+
+  if(@TM_USE_HIP@)
+    set(TM_USE_HIP @TM_USE_HIP@)
+    enable_language(hip)
+  endif()
+
+  if(@TM_USE_QPHIX@)
+    set(TM_USE_QPHIX @TM_USE_QPHIX@)
+    set(QPHIX_DIR @QPHIX_DIR@)
+    set(QMP_DIR @QMP_DIR@)
+    find_package(Qphix REQUIRED)
+  endif()
+
+  if(@TM_USE_FFTW@)
+    set(TM_USE_FFTW @TM_USE_FFTW@)
+    pkg_search_module(tmlqcd_fftw3 IMPORTED_TARGET GLOBAL fftw3)
+    if(tmlqcd_fftw3_FOUND)
+      add_library(tmlqcd::fftw3 ALIAS PkgConfig::tmlqcd_fftw3)
+    endif()
+  endif()
+
+  if(TM_USE_DDalphaAMG)
+    set(TM_USE_DDalphaAMG @TM_USE_DDalphaAMG@)
+  endif()
+
+  set(TM_MPI_DIMENSION @TM_USE_DIMENSION@)
+
+  if(@TM_USE_HALFSPINOR@)
+    set(TM_USE_HALFSPINOR @TM_USE_HALFSPINOR@)
+  endif()
+
+  if (@TM_USE_GAUGE_COPY@)
+    set(TM_USE_GAUGE_COPY @TM_USE_GAUGE_COPY@)
+  endif()
+
+  # Include SIRIUS target
+  include("${CMAKE_CURRENT_LIST_DIR}/tmlQCDTargets.cmake")
+endif()

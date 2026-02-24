@@ -399,6 +399,7 @@ include_directories(
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/lib/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<$<BOOL:${TMLQCD_USE_LEMON}>:${TMLQCD_LEMON_INCLUDE_DIRS}>
   ${TMLQCD_CLIME_INCLUDE_DIRS})
 
@@ -407,8 +408,8 @@ if(CMAKE_MAJOR_VERSION LESS 4)
   flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
               COMPILE_FLAGS "-Ca -Ptmlqcd -i")
 else()
-  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c OPTIONS
-              "-Ca -Ptmlqcd -i")
+  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
+              OPTIONS "-Ca -Ptmlqcd -i")
 endif()
 
 # create a target library with namespacing because cmake does not know name
@@ -425,7 +426,7 @@ set_target_properties(hmc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 # define a library and add the dependencies
 target_link_libraries(
   hmc
-  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:tmlqcd::DDalphaAMG>
+  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
          $<$<BOOL:${TM_USE_QUDA}>:QUDA::quda>
@@ -452,6 +453,24 @@ target_compile_definitions(
 
 target_include_directories(
   hmc
-  PUBLIC $<INSTALL_INTERFACE:include>
+  PUBLIC $<INSTALL_INTERFACE:include/tmlqcd>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+
+install(TARGETS hmc
+EXPORT tmlqcd_targets
+LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+install(EXPORT tmlqcd_targets
+  FILE tmlQCDTargets.cmake
+  NAMESPACE tmlQCD::
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/lib/include
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+  FILES_MATCHING
+  PATTERN "*.h")
+
+install(FILES "${CMAKE_BINARY_DIR}/tmlqcd_config_internal.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+)
