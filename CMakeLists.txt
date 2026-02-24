@@ -24,6 +24,7 @@ endif()
 # PROJECT AND VERSION
 include(CMakeDependentOption)
 include(GNUInstallDirs)
+include(FetchContent)
 
 cmake_policy(SET CMP0048 NEW)
 
@@ -100,7 +101,9 @@ option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
 option(TM_ENABLE_TESTS "Enable tests" OFF)
-set(TM_QPHIX_SOALEN "4" CACHE STRING "QPhiX specific parameter")
+set(TM_QPHIX_SOALEN
+    "4"
+    CACHE STRING "QPhiX specific parameter")
 # MPI dependent options
 cmake_dependent_option(
   TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]" OFF
@@ -126,6 +129,44 @@ cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF "TM_USE_MPI"
 cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
                        "TM_USE_CUDA" OFF)
 
+# DDAlphaAMG specific options
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT "Enable paramount output support" ON
+  "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(DDalphaAMG_ENABLE_FGMRES_RESTEST "Enable GMRES test" ON
+                       "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_PROFILING "Enable paramount output support" OFF
+  "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(DDalphaAMG_ENABLE_TRACK_RES "Enable track res support"
+                       ON "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI OFF
+  "Enable paramount output support" OFF "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_COARSE_RES OFF "Enable paramount output support" OFF
+  "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_SCHWARZ_RES OFF "Enable paramount output support" OFF
+  "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(DDalphaAMG_ENABLE_OMP OFF "Enable OpenMP support" ON
+                       "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(
+  DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS "Enable vector analysis support" OFF
+  "TM_USE_DDalphaAMG" OFF)
+
+cmake_dependent_option(DDalphaAMG_ENABLE_HDF5 "Enable HDF5 support" OFF
+                       "TM_USE_DDalphaAMG" OFF)
+
 # search for blas and lapack
 find_package(BLAS REQUIRED)
 #
@@ -144,12 +185,16 @@ set(ALIGN_BASE "0")
 set(ALIGN_BASE32 "0")
 set(ALIGN32 " ")
 
-message("${TM_ENABLE_ALIGNMENT}")
+# DO NOT MERGE the two if statements as otherwise the automatic alignment will
+# not be taken into account
+
 if(${TM_ENABLE_ALIGNMENT} STREQUAL "auto")
   include(cmake/DetectSimdAndAlignment.cmake)
-  message(STATUS "SIMD: ${SIMD_LEVEL} (${SIMD_ARCH_FAMILY}), align=${SIMD_ALIGNMENT}")
+  message(
+    STATUS "SIMD: ${SIMD_LEVEL} (${SIMD_ARCH_FAMILY}), align=${SIMD_ALIGNMENT}")
 endif()
-if (${TM_ENABLE_ALIGNMENT} STREQUAL "none")
+
+if(${TM_ENABLE_ALIGNMENT} STREQUAL "none")
   set(ALIGN_BASE "0x00")
   set(ALIGN " ")
   set(ALIGN_BASE32 "0x00")
@@ -255,7 +300,7 @@ if(TM_USE_FFTW)
 endif()
 
 if(TM_USE_DDalphaAMG)
-  find_package(DDalphaAMG REQUIRED)
+  add_subdirectory(DDalphaAMG)
 endif()
 
 if(TM_ENABLE_WARNINGS)
@@ -289,8 +334,11 @@ if(TM_USE_MPI)
   endif()
 endif()
 
-if (TM_USE_HALFSPINOR AND NOT TM_USE_GAUGE_COPY)
-  message(FATAL_ERROR "The TM_USE_GAUGE_COPY option should also be set to ON when TM_USE_HALFSPINOR is ON")
+if(TM_USE_HALFSPINOR AND NOT TM_USE_GAUGE_COPY)
+  message(
+    FATAL_ERROR
+      "The TM_USE_GAUGE_COPY option should also be set to ON when TM_USE_HALFSPINOR is ON"
+  )
 endif()
 # keep the autotool config.h header.
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlqcd_config_internal.h.in"
