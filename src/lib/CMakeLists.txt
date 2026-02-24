@@ -407,8 +407,8 @@ if(CMAKE_MAJOR_VERSION LESS 4)
   flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
               COMPILE_FLAGS "-Ca -Ptmlqcd -i")
 else()
-  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c OPTIONS
-              "-Ca -Ptmlqcd -i")
+  flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
+              OPTIONS "-Ca -Ptmlqcd -i")
 endif()
 
 # create a target library with namespacing because cmake does not know name
@@ -425,7 +425,7 @@ set_target_properties(hmc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 # define a library and add the dependencies
 target_link_libraries(
   hmc
-  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:tmlqcd::DDalphaAMG>
+  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
          $<$<BOOL:${TM_USE_QUDA}>:QUDA::quda>
