@@ -159,7 +159,7 @@ void reduce_su3_ray(void *u_i /* in */, void *u_io /* in/out */, int *len /* in 
 
   if (*dt != mpi_su3) {
     fprintf(stderr, "\nInvalid datatype for reduce_su3_ray(); abort.\n");
-    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Abort(app()->mpi.comm, 1);
   }
   for (n = 0; n < *len; n++) {
     _su3_times_su3(tmp, *(u + n), *(v + n)) _su3_assign(*(v + n), tmp)
@@ -249,8 +249,8 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   dims[2] = N_PROC_Y;
   dims[3] = N_PROC_Z;
 
-  MPI_Comm_size(MPI_COMM_WORLD, &g_nproc);
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Comm_size(app()->mpi.comm, &g_nproc);
+  MPI_Comm_rank(app()->mpi.comm, &g_proc_id);
   MPI_Get_processor_name(processor_name, &namelen);
   MPI_Dims_create(g_nproc, nalldims, dims);
   if (g_proc_id == 0) {
@@ -273,7 +273,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
       fprintf(stderr, "Please check your number of processors and the Nr?Procs input variables\n");
       fprintf(stderr, "Aborting...!\n");
     }
-    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Abort(app()->mpi.comm, 1);
     MPI_Finalize();
     exit(-1);
   }
@@ -332,7 +332,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   halffield_buffer_z2 = (halfspinor *)malloc(T * LX * LY / 2 * sizeof(halfspinor));
 #endif
 
-  MPI_Cart_create(MPI_COMM_WORLD, nalldims, dims, periods, reorder, &g_cart_grid);
+  MPI_Cart_create(app()->mpi.comm, nalldims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
   MPI_Cart_coords(g_cart_grid, g_cart_id, nalldims, g_proc_coords);
   if (g_debug_level > 1) {

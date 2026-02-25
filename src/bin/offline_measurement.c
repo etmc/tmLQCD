@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
   free(input_filename);
 
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
   return (0);

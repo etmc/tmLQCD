@@ -98,7 +98,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   g_use_clover_flag = 0;
 
 #ifdef TM_USE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Comm_rank(app()->mpi.comm, &g_proc_id);
 #else
   g_proc_id = 0;
 #endif
@@ -341,7 +341,7 @@ int tmLQCD_finalise() {
   free_moment_field();
   free_chi_spinor_field();
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif
   return (0);
 }
