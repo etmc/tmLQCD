@@ -222,7 +222,7 @@ int write_binary_gauge_data(LimeWriter* limewriter, const int prec, DML_Checksum
               fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_cart_id, bytes,
                       (int)(4 * sizeof(su3) / 8));
 #ifdef TM_USE_MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Abort(app()->mpi.comm, 1);
               MPI_Finalize();
 #endif
               exit(500);

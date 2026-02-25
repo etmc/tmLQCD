@@ -350,7 +350,7 @@ static int MG_pre_solve(su3 **gf) {
     MG_init();
     mg_initialized = 1;
     if (g_proc_id == 0) printf("TM_USE_DDalphaAMG initialized\n");
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
   }
 
   if (mg_update_gauge == 1) {
@@ -1243,7 +1243,7 @@ int MG_solver(spinor *const phi_new, spinor *const phi_old, const double precisi
     if (g_proc_id == 0) printf("ERROR: solver didn't converge after two trials!! Aborting... \n");
     // TODO: handle abort
     DDalphaAMG_finalize();
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
     MPI_Finalize();
     exit(1);
   }
@@ -1319,7 +1319,7 @@ int MG_solver_nd(spinor *const up_new, spinor *const dn_new, spinor *const up_ol
     if (g_proc_id == 0) printf("ERROR: solver didn't converge after two trials!! Aborting... \n");
     // TODO: handle abort
     DDalphaAMG_finalize();
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
     MPI_Finalize();
     exit(1);
   }
@@ -1393,7 +1393,7 @@ int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new, spinor *const
     if (g_proc_id == 0) printf("ERROR: solver didn't converge after two trials!! Aborting... \n");
     // TODO: handle abort
     DDalphaAMG_finalize();
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
     MPI_Finalize();
     exit(1);
   }

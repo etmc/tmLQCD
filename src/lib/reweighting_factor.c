@@ -163,6 +163,6 @@ void reweighting_factor(const int N, const int nstore) {
   free(data);
   free(trlog);
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif  // TM_USE_MPI
 }
