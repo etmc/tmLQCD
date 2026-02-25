@@ -80,7 +80,7 @@ void square_and_prod_r(double *const x1, double *const x2, spinor *const S, spin
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&xkc, x1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&xkc, x1, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
 #endif
   kc = ks + kc;
@@ -88,7 +88,7 @@ void square_and_prod_r(double *const x1, double *const x2, spinor *const S, spin
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&kc, x2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, x2, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
 #endif
 }

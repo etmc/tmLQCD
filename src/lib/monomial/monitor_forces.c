@@ -89,9 +89,9 @@ void monitor_forces(hamiltonian_field_t* const hf) {
 
       // output for force monitoring
 #ifdef TM_USE_MPI
-      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+      MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, app()->mpi.comm);
       sum = sum2;
-      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+      MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, app()->mpi.comm);
       max = sum2;
 #endif
       if (g_proc_id == 0) {

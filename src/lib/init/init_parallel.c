@@ -71,7 +71,7 @@ void init_parallel_and_read_input(int argc, char *argv[], const char input_filen
 #endif  // QPHIX_QMP_COMMS
 
 #if defined(TM_USE_MPI) || defined(QPHIX_QMP_COMMS)
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Comm_rank(app()->mpi.comm, &g_proc_id);
 #else
   g_proc_id = 0;
 #endif

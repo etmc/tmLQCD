@@ -224,9 +224,9 @@ void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPr
                  g_proc_coords[2], g_proc_coords[3], g_proc_coords[0]);
           free(qmp_coords);
           fflush(stdout);
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
         } else {
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
         }
       }
     }
