@@ -189,7 +189,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
 
 #ifdef TM_USE_MPI
 #ifdef TM_USE_SHMEM
-  /* we need that the PE number in MPI_COMM_WORL  */
+  /* we need that the PE number in MPI_COMM_WORLD  */
   /* exactly correspond to the one in g_cart_grid */
   reorder = 0;
 #endif
