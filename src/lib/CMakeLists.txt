@@ -70,6 +70,11 @@ list(
 
 list(
   APPEND
+  APP_CONTEXT_SRC_C
+  app_context/app_context.c)
+
+list(
+  APPEND
   SOLVER_SRC_C
   solver/bicg_complex.c
   solver/dfl_projector.c
@@ -390,6 +395,7 @@ list(
   ${LINALG_SRC_C}
   ${IO_SRC_C}
   ${INIT_SRC_C}
+  ${APP_CONTEXT_SRC_C}
   ${SOLVER_SRC_C}
   ${TEST_SRC_C}
   ${MEAS_SRC_C}
