@@ -448,6 +448,7 @@ void _initQuda() {
   // initialize the QUDA library
 #ifdef TM_USE_MPI
   initQuda(-1);  // sets device numbers automatically
+  setMPICommHandleQuda(app()->mpi.comm); // pass the proper MPI communicator to QUDA
 #else
   initQuda(0);  // scalar build: use device 0
 #endif
