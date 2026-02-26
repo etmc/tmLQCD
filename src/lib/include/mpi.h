@@ -31,6 +31,10 @@
 // include *real* MPI header
 #include_next <mpi.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
  * @brief      MPI context
@@ -73,5 +77,9 @@ void app_context_init(const MPI_Comm comm);
  */
 void app_context_finalize(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
