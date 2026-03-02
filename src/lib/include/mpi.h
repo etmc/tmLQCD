@@ -24,62 +24,12 @@
  *
  *******************************************************************************/
 
-#ifndef MY_MPI_WRAPPER_H
-#define MY_MPI_WRAPPER_H
+#ifndef MPI_WRAPPER_H
+#define MPI_WRAPPER_H
 
 
-// include *real* MPI header
-#include_next <mpi.h>
+#include_next <mpi.h> // include *real* MPI header
+#include "app.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/**
- * @brief      MPI context
- *
- * @var        comm MPI communicator
- */
-typedef struct {
-    MPI_Comm comm;
-} MPIContext;
-
-
-/**
- * @brief      The global application context struct
- *
- * @var        mpi MPI context
- */
-typedef struct {
-    MPIContext mpi;
-} AppContext;
-
-
-/**
- * @brief      Return the global application context struct
- *
- * @return     Global application context struct
- */
-const AppContext* app(void);
-
-
-/**
- * @brief      Initialize application context
- *
- * @param[in]  comm  The MPI communicator to use throughout the application
- */
-void app_context_init(const MPI_Comm comm);
-
-
-/**
- * @brief      Finalize application context
- */
-void app_context_finalize(void);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
