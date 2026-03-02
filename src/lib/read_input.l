@@ -52,6 +52,7 @@ EQL {SPC}*={SPC}*
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #define INIT_GLOBALS
 #include "global.h"
 #undef INIT_GLOBALS
@@ -61,12 +62,14 @@ EQL {SPC}*={SPC}*
 #include "solver/solver_types.h"
 #include "meas/measurements.h"
 #include "integrator.h"
+#include "include/app.h"
 #include "operator.h"
 #include "phmc.h"
 #include <io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
 #include "misc_types.h"
+#include "alloc.h"
 
 #include <ctype.h>
 
@@ -86,6 +89,28 @@ static inline void rmQuotes(char *str){
   while( !( *str=='\0' || *str == '\"' || *str == '\n') ) *(strsave++)=*(str++);
   *strsave='\0';
 }
+
+
+static inline int strlist_count_tokens(char const * const input)
+{
+  int n = 0;
+  for (int i = 0; i < strlen(input); i++)
+    if (input[i] == ',') n++;
+  return n+1;
+}
+
+static inline void fail(const bool test, const char* fmt, ...)
+{
+  if (test) {
+    va_list args;
+    char msg[1024];
+    va_start(args, fmt);
+    vsnprintf(msg, 1024, fmt, args);
+    va_end(args);
+    yy_fatal_error(msg);
+  }
+}
+
 
 /* tokenize the comma-delimited list 'input' of the form
     'list = token1, token2, ...'
@@ -472,7 +497,61 @@ static inline double fltlist_next_token(int * const list_end){
     }
     free(input_copy);
   }
-  
+
+  static inline void parse_int_par_array(char const * const input, int * par_array, const int max_size) {
+    char paramname[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int element = 0;
+
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    int parval = (int) fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( element >= max_size ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of elements (%d) parsing %s!\n", max_size, paramname);
+        yy_fatal_error(error_message);
+      }
+
+      par_array[element] = parval;
+      if(myverbose){
+        printf("  %s, element %d set to %d line %d\n", paramname,
+                element, par_array[element], line_of_file);
+      }
+
+      element++;
+      parval = (int) fltlist_next_token(&list_end);
+    }
+    free(input_copy);
+  }
+
+  static inline void parse_dbl_par_array(char const * const input, double * par_array, const int max_size) {
+    char paramname[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int element = 0;
+
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    double parval = fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( element >= max_size ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of elements (%d) parsing %s!\n", max_size, paramname);
+        yy_fatal_error(error_message);
+      }
+
+      par_array[element] = parval;
+      if(myverbose){
+        printf("  %s, element %d set to %e line %d\n", paramname,
+                element, par_array[element], line_of_file);
+      }
+
+      element++;
+      parval = fltlist_next_token(&list_end);
+    }
+    free(input_copy);
+  }
+
 %}
 
 %option never-interactive
@@ -555,6 +634,11 @@ static inline double fltlist_next_token(int * const list_end){
 
 %x INITINTEGRATOR
 %x INTEGRATOR
+
+%x INITPTBC
+%x PTBC
+%x PTBCDEFECT
+%x PTBCINSTANCE
 
 %x DEFLATION
 %x INITDEFLATION
@@ -711,6 +795,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+
+^BeginPTBC                         BEGIN(INITPTBC);
 
 ^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
 
@@ -3071,6 +3157,143 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
+<INITPTBC>{SPC}* {
+  appm()->ptbc.active = false;
+  appm()->ptbc.n_instances = 0;
+  appm()->ptbc.n_defects = 0;
+  appm()->ptbc.instance_id = 0;
+  if(myverbose) printf("Initialising PTBC line %d\n", line_of_file);
+  BEGIN(PTBC);
+}
+<PTBC>{
+  {SPC}*BeginPTBCDefect{SPC}+{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] %d", name, &b);
+    fail(b<0 || b>MAX_N_DEFECTS, "PTBC Defect id = %d out of bounds!", b);
+    appm()->ptbc.defects[b].active = true;
+    appm()->ptbc.n_defects++;
+    fail(appm()->ptbc.n_defects>=MAX_N_DEFECTS, "To many PTBC defects! Limit is %d", MAX_N_DEFECTS);
+    if(myverbose) printf("  Initialising PTBC defect (index = %d) in line %d\n", b, line_of_file);
+    BEGIN(PTBCDEFECT);
+  }
+  <PTBCDEFECT>{
+    {SPC}*Extents{EQL}{STRLIST} {
+
+      PTBCDefect* cd = appm()->ptbc.defects + b;
+
+      int n_parameters = strlist_count_tokens(yytext);
+      fail(n_parameters != 3, "Coefficients must provide exactly 3 numbers, not %d!\n", n_parameters);
+
+      sscanf(yytext, " %[a-zA-Z] = %d, %d, %d", name, cd->Ld, cd->Ld+1, cd->Ld+2);
+      if(myverbose) printf("    Ld = [%d, %d, %d] line %d\n", cd->Ld[0], cd->Ld[1], cd->Ld[2], line_of_file);
+      BEGIN(PTBCDEFECT);
+    }
+    {SPC}*Along{EQL}T {
+      appm()->ptbc.defects[b].along = DIRECTION_T;
+      if(myverbose) printf("    PTBC defect along T direction line %d\n", line_of_file);
+      BEGIN(PTBCDEFECT);
+    }
+    {SPC}*Along{EQL}X {
+      appm()->ptbc.defects[b].along = DIRECTION_X;
+      if(myverbose) printf("    PTBC defect along X direction line %d\n", line_of_file);
+      BEGIN(PTBCDEFECT);
+    }
+    {SPC}*Along{EQL}Y {
+      appm()->ptbc.defects[b].along = DIRECTION_Y;
+      if(myverbose) printf("    PTBC defect along Y direction line %d\n", line_of_file);
+      BEGIN(PTBCDEFECT);
+    }
+    {SPC}*Along{EQL}Z {
+      appm()->ptbc.defects[b].along = DIRECTION_Z;
+      if(myverbose) printf("    PTBC defect along Z direction line %d\n", line_of_file);
+      BEGIN(PTBCDEFECT);
+    }
+    {SPC}*EndPTBCDefect{SPC}* {
+      if(myverbose) printf("  PTBC defect parsed line %d\n", line_of_file);
+      BEGIN(PTBC);
+    }
+  }
+  {SPC}*BeginPTBCInstance{SPC}+{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] %d", name, &b);
+    fail(b<0 || b>MAX_N_INSTANCES, "PTBC Instance id = %d out of bounds!", b);
+    appm()->ptbc.instances[b].active = true;
+    appm()->ptbc.instances[b].n_coeffs = -1;
+    appm()->ptbc.n_instances++;
+    fail(appm()->ptbc.n_instances>=MAX_N_INSTANCES, "To many PTBC instances! Limit is %d", MAX_N_INSTANCES);
+    if(myverbose) printf("  Initialising PTBC instance (index = %d) in line %d\n", b, line_of_file);
+    BEGIN(PTBCINSTANCE);
+  }
+  <PTBCINSTANCE>{
+    {SPC}*Coefficients{EQL}{STRLIST} {
+
+      PTBCInstance* ci = appm()->ptbc.instances + b;
+
+      int n_parameters = strlist_count_tokens(yytext);
+      if (ci->coefficients == NULL)
+        ci->coefficients = safe_malloc(n_parameters*sizeof(double*));
+
+      parse_dbl_par_array(yytext, ci->coefficients, n_parameters);
+
+      for (int i = 0; i < n_parameters; ++i) {
+        fail(ci->coefficients[i]<0 || ci->coefficients[i] > 1,
+          "Coefficient %d with value %e is out of bounds", i, ci->coefficients[i]);
+      }
+
+      if (ci->n_coeffs == -1) ci->n_coeffs = n_parameters;
+      fail(ci->n_coeffs != n_parameters, "Number of PTBC coefficients must be equal to number of defects!\n");
+
+      for (int i = 0; i < n_parameters; ++i) {
+        if(myverbose) printf("    Coefficients[%d] = %f line %d\n", i, ci->coefficients[i], line_of_file);
+      }
+
+      BEGIN(PTBCINSTANCE);
+    }
+    {SPC}*Defects{EQL}{STRLIST} {
+
+      PTBCInstance* ci = appm()->ptbc.instances + b;
+
+      int n_parameters = strlist_count_tokens(yytext);
+      if (ci->defects == NULL) {
+        ci->defects = safe_malloc(n_parameters*sizeof(PTBCDefect*));
+      }
+
+      int* ids = safe_malloc(n_parameters*sizeof(int*));
+      parse_int_par_array(yytext, ids, n_parameters);
+
+      for (int i = 0; i < n_parameters; ++i) {
+        if(myverbose) printf("    Defects = %d line %d\n", ids[i], line_of_file);
+        fail(ids[i]<0 || ids[i]>MAX_N_DEFECTS, "PTBC Defect id = %d out of bounds!", ids[i]);
+        ci->defects[i] = &(appm()->ptbc.defects[ids[i]]);
+      }
+
+      if (ci->n_coeffs == -1) ci->n_coeffs = n_parameters;
+
+      fail(ci->n_coeffs != n_parameters,
+        "Number of PTBC defects must be equal to number of coefficients!\n");
+
+      free(ids);
+      BEGIN(PTBCINSTANCE);
+    }
+    {SPC}*EndPTBCInstance{SPC}* {
+      if(myverbose) printf("  PTBC instance parsed line %d\n", line_of_file);
+      BEGIN(PTBC);
+    }
+  }
+  EndPTBC{SPC}* {
+    fail(app()->ptbc.n_instances == 1, "Number of PTBC chains must be larger than 1!\n");
+
+    for (int i = 0; i < app()->ptbc.n_instances; ++i) {
+      fail(app()->ptbc.instances[i].active == false, "PTBC instance %d is not active!\n", i);
+
+      for (int j = 0; j < app()->ptbc.instances[i].n_coeffs; ++j) {
+        fail(app()->ptbc.instances[i].defects[j]->active == false, "PTBC instance %d does not refer to a valid defect!\n", i);
+      }
+    }
+
+    if(myverbose) printf("PTBC parsed line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
+
 <SOURCETYPE>{
   Point {
     SourceInfo.type = SRC_TYPE_POINT;
@@ -3729,7 +3952,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,TUNEQUDAMGPARAMS>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,PTBC,INITPTBC,PTBCDEFECT,PTBCINSTANCE,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,TUNEQUDAMGPARAMS>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
