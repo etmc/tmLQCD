@@ -1,0 +1,124 @@
+/* Hand-written "config.h.in". Note that it's not this file which should be
+ * included, but rather the "tmlqcd_config.h" which renames a few of the defines
+ * into static const variables, following the convention used by the USQCD build
+ * systems, for example. */
+
+/* lapack available */
+#cmakedefine TM_LAPACK 
+
+/* Define to 1 if you have the `lime' library (-llime). */
+#cmakedefine TM_USE_LIME 
+
+/* Define to 1 if you have the `lemon' library (-llemon). */
+#cmakedefine TM_USE_LEMON 
+
+/* Compile with MPI support */
+#cmakedefine TM_USE_MPI
+
+/* Compile with OpenMP support */
+#cmakedefine TM_USE_OMP
+
+/* Compile with FFTW support */
+#cmakedefine TM_USE_FFTW 
+
+/* Fortran has not extra _ */
+#cmakedefine NOF77_
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@tmlqcd_DESCRIPTION@"
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "@tmlqcd_VERSION@"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@PROJECT_DESCRIPTION@ @PROJECT_VERSION@"
+
+/* X parallelisation */
+#cmakedefine TM_PARALLELX 
+
+/* XY parallelisation */
+#cmakedefine TM_PARALLELXY 
+
+/* XYZ parallelisation */
+#cmakedefine TM_PARALLELXYZ
+
+/* One dimensional parallelisation */
+#cmakedefine TM_PARALLELT
+
+/* Two dimensional parallelisation */
+#cmakedefine TM_PARALLELXT
+
+/* Three dimensional parallelisation */
+#cmakedefine TM_PARALLELXYT
+
+/* Four dimensional parallelisation */
+#cmakedefine TM_PARALLELXYZT
+
+/* Fixed volume at compiletime */
+#cmakedefine TM_FIXEDVOLUME
+
+/* Alignment for arrays -- necessary for SSE and automated vectorization */
+#define ALIGN_BASE @ALIGN_BASE@
+
+/* Alignment compiler hint macro */
+#define ALIGN @ALIGN@
+
+/* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
+#define ALIGN_BASE32 @ALIGN_BASE32@
+
+/* Alignment of 32bit fields, compiler hint macro */
+#define ALIGN32 @ALIGN32@
+
+/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
+   `char[]'. */
+//#cmakedefine YYTEXT_POINTER
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#define TM_FILE_OFFSET_BITS @TM_FILE_OFFSET_BITS@
+
+/* Construct an extra copy of the gauge fields */
+#cmakedefine TM_USE_GAUGE_COPY
+
+/* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
+#cmakedefine TM_LARGEFILE_SOURCE
+
+/* Use even/odd geometry in the gauge fields */
+#cmakedefine TM_NEW_GEOMETRY
+
+/* x86 64 Bit architecture */
+#cmakedefine TM_x86_64
+
+/* Define to 1 if Dirac operator with halfspinor should be used */
+#cmakedefine TM_USE_HALFSPINOR 
+
+/* Define to 1 if shmem API should be used */
+#cmakedefine TM_USE_SHMEM
+
+/* Define to 1 if KOJAK instrumentalisation should be done*/
+#cmakedefine TM_KOJAK_INST
+
+/* Define to 1 if persistent MPI calls for halfspinor should be used */
+#cmakedefine TM_PERSISTENT
+
+/* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
+#cmakedefine TM_NONBLOCKING
+
+/* Using QUDA GPU */
+#cmakedefine TM_USE_QUDA 
+
+/* Using DDalphaAMG */
+#cmakedefine TM_USE_DDalphaAMG
+
+/* Using QPHIX */
+#cmakedefine TM_USE_QPHIX 
+
+#ifdef TM_USE_QPHIX
+/* Structure of Array length to use with QPhiX */
+#define QPHIX_SOALEN @TM_QPHIX_SOALEN@
+#endif
+

@@ -1,0 +1,525 @@
+/***********************************************************************
+ *
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * invert for twisted mass QCD
+ *
+ * Author: Carsten Urbach
+ *         urbach@physik.fu-berlin.de
+ *
+ *******************************************************************************/
+
+#include "lime.h"
+#ifdef HAVE_CONFIG_H
+#include <tmlqcd_config.h>
+#endif
+#include <math.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#ifdef TM_USE_MPI
+#include <mpi.h>
+#endif
+#ifdef TM_USE_OMP
+#include <omp.h>
+#endif
+#include "geometry_eo.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
+#include "linalg_eo.h"
+#include "start.h"
+/*#include "eigenvalues.h"*/
+#include "measure_gauge_action.h"
+#ifdef TM_USE_MPI
+#include "xchange/xchange.h"
+#endif
+#include <io/gauge.h>
+#include <io/params.h>
+#include <io/spinor.h>
+#include <io/utils.h>
+#include "block.h"
+#include "boundary.h"
+#include "init/init.h"
+#include "invert_eo.h"
+#include "linalg/convert_eo_to_lexic.h"
+#include "little_D.h"
+#include "monomial/monomial.h"
+#include "mpi_init.h"
+#include "operator.h"
+#include "operator/D_psi.h"
+#include "operator/Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "phmc.h"
+#include "prepare_source.h"
+#include "ranlxd.h"
+#include "read_input.h"
+#include "reweighting_factor.h"
+#include "sighandler.h"
+#include "smearing/stout.h"
+#include "solver/dirac_operator_eigenvectors.h"
+#include "solver/generate_dfl_subspace.h"
+#include "solver/solver.h"
+#include "source_generation.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
+#ifdef TM_USE_QPHIX
+#include "qphix_interface.h"
+#endif
+#ifdef TM_USE_DDalphaAMG
+#include "DDalphaAMG_interface.h"
+#endif
+#include "expo.h"
+#include "meas/measurements.h"
+#include "misc_types.h"
+#include "source_generation.h"
+
+#define CONF_FILENAME_LENGTH 500
+
+extern int nstore;
+int check_geometry();
+
+static void usage(const tm_ExitCode_t exit_code);
+static void process_args(int argc, char *argv[], char **input_filename, char **filename);
+static void set_default_filenames(char **input_filename, char **filename);
+
+int main(int argc, char *argv[]) {
+  FILE *parameterfile = NULL;
+  int j, i, ix = 0, isample = 0, op_id = 0;
+  char datafilename[206];
+  char parameterfilename[206];
+  char conf_filename[CONF_FILENAME_LENGTH];
+  char *input_filename = NULL;
+  char *filename = NULL;
+  double plaquette_energy;
+  // struct stout_parameters params_smear;
+
+  init_critical_globals(TM_PROGRAM_INVERT);
+
+  DUM_DERI = 8;
+  DUM_MATRIX = DUM_DERI + 5;
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
+
+  // 4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  NO_OF_SPINORFIELDS_32 = 6;
+
+  verbose = 0;
+  g_use_clover_flag = 0;
+
+  process_args(argc, argv, &input_filename, &filename);
+  set_default_filenames(&input_filename, &filename);
+
+  init_parallel_and_read_input(argc, argv, input_filename);
+
+  /* this DBW2 stuff is not needed for the inversion ! */
+  if (g_dflgcr_flag == 1) {
+    even_odd_flag = 0;
+  }
+  g_rgi_C1 = 0;
+  if (Nsave == 0) {
+    Nsave = 1;
+  }
+
+  if (g_running_phmc) {
+    NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
+  }
+
+  tmlqcd_mpi_init(argc, argv);
+
+  g_dbw2rand = 0;
+
+  /* starts the single and double precision random number */
+  /* generator                                            */
+  start_ranlux(rlxd_level, random_seed ^ nstore);
+
+  /* we need to make sure that we don't have even_odd_flag = 1 */
+  /* if any of the operators doesn't use it                    */
+  /* in this way even/odd can still be used by other operators */
+  for (j = 0; j < no_operators; j++)
+    if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
+
+#ifndef TM_USE_MPI
+  g_dbw2rand = 0;
+#endif
+
+#ifdef TM_USE_GAUGE_COPY
+  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
+#else
+  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);
+#endif
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
+    exit(-1);
+  }
+  j = init_geometry_indices(VOLUMEPLUSRAND);
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
+    exit(-1);
+  }
+  if (no_monomials > 0) {
+    if (even_odd_flag) {
+      j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
+    } else {
+      j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+    }
+    if (j != 0) {
+      fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
+      exit(-1);
+    }
+  }
+  if (even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
+  } else {
+    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
+    exit(-1);
+  }
+
+  if (g_running_phmc) {
+    j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
+    if (j != 0) {
+      fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
+      exit(-1);
+    }
+  }
+
+  g_mu = g_mu1;
+
+  if (g_cart_id == 0) {
+    /*construct the filenames for the observables and the parameters*/
+    strncpy(datafilename, filename, 200);
+    strcat(datafilename, ".data");
+    strncpy(parameterfilename, filename, 200);
+    strcat(parameterfilename, ".para");
+
+    parameterfile = fopen(parameterfilename, "w");
+    write_first_messages(parameterfile, "invert", git_hash);
+    fclose(parameterfile);
+  }
+
+  /* define the geometry */
+  geometry();
+
+  /* define the boundary conditions for the fermion fields */
+  boundary(g_kappa);
+
+  phmc_invmaxev = 1.;
+
+  init_operators();
+
+  /* list and initialize measurements*/
+  if (g_proc_id == 0) {
+    printf("\n");
+    for (int j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
+    }
+  }
+  init_measurements();
+
+  /* this could be maybe moved to init_operators */
+#ifdef TM_USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(-1);
+  }
+  /* for mixed precision solvers, the 32 bit halfspinor field must always be there */
+  j = init_dirac_halfspinor32();
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
+  }
+#if (defined TM_PERSISTENT)
+  if (even_odd_flag) init_xchange_halffield();
+#endif
+#endif
+
+  for (j = 0; j < Nmeas; j++) {
+    int n_written =
+        snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if (n_written < 0 || n_written >= CONF_FILENAME_LENGTH) {
+      char error_message[500];
+      snprintf(error_message, 500,
+               "Encoding error or gauge configuration filename "
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n",
+               CONF_FILENAME_LENGTH);
+      fatal_error(error_message, "invert.c");
+    }
+    if (g_cart_id == 0) {
+      printf("#\n# Trying to read gauge field from file %s in %s precision.\n", conf_filename,
+             (gauge_precision_read_flag == 32 ? "single" : "double"));
+      fflush(stdout);
+    }
+    if ((i = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i,
+              conf_filename);
+      exit(-2);
+    }
+
+    if (g_cart_id == 0) {
+      printf("# Finished reading gauge field.\n");
+      fflush(stdout);
+    }
+#ifdef TM_USE_MPI
+    xchange_gauge(g_gauge_field);
+    update_tm_gauge_exchange(&g_gauge_state);
+#endif
+    /*Convert to a 32 bit gauge field, after xchange*/
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
+    update_tm_gauge_exchange(&g_gauge_state_32);
+
+    /*compute the energy of the gauge field*/
+    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+
+    if (g_cart_id == 0) {
+      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6. * VOLUME * g_nproc));
+      fflush(stdout);
+    }
+
+    if (use_stout_flag == 1) {
+      /*
+       *      struct stout_parameters params_smear;
+            params_smear.rho = stout_rho;
+            params_smear.iterations = stout_no_iter;
+      */
+      /*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear,
+       * (su3_tuple*)(g_gauge_field[0])) != 0) */
+      /*         exit(1) ; */
+      g_update_gauge_copy = 1;
+      plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+
+      if (g_cart_id == 0) {
+        printf("# The plaquette value after stouting is %e\n",
+               plaquette_energy / (6. * VOLUME * g_nproc));
+        fflush(stdout);
+      }
+    }
+
+    /* if any measurements are defined in the input file, do them here */
+    measurement *meas;
+    for (int imeas = 0; imeas < no_measurements; imeas++) {
+      meas = &measurement_list[imeas];
+      if (g_proc_id == 0) {
+        fprintf(stdout, "#\n# Beginning online measurement.\n");
+      }
+      meas->measurefunc(nstore, imeas, even_odd_flag);
+    }
+
+    if (reweighting_flag == 1) {
+      reweighting_factor(reweighting_samples, nstore);
+    }
+
+    /* Compute minimal eigenvalues, if wanted */
+    if (compute_evs != 0) {
+      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision, 0, compute_evs, nstore,
+                  even_odd_flag);
+    }
+    if (phmc_compute_evs != 0) {
+#ifdef TM_USE_MPI
+      MPI_Finalize();
+#endif
+      return (0);
+    }
+
+    //  set up blocks if Deflation is used
+    if (g_dflgcr_flag) init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+
+    if (SourceInfo.type == SRC_TYPE_VOL || SourceInfo.type == SRC_TYPE_PION_TS ||
+        SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
+      index_start = 0;
+      index_end = 1;
+    }
+
+    g_precWS = NULL;
+    if (use_preconditioning == 1) {
+      /* todo load fftw wisdom */
+#if (defined TM_USE_FFTW) && !(defined TM_USE_MPI)
+      loadFFTWWisdom(g_spinor_field[0], g_spinor_field[1], T, LX);
+#else
+      use_preconditioning = 0;
+#endif
+    }
+
+    if (g_cart_id == 0) {
+      fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
+    }
+    for (op_id = 0; op_id < no_operators; op_id++) {
+      boundary(operator_list[op_id].kappa);
+      g_kappa = operator_list[op_id].kappa;
+      g_mu = operator_list[op_id].mu;
+      g_c_sw = operator_list[op_id].c_sw;
+      // DFLGCR and DFLFGMRES
+      if (operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
+        generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+      }
+
+      if (use_preconditioning == 1 &&
+          PRECWSOPERATORSELECT[operator_list[op_id].solver] != PRECWS_NO) {
+        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
+               precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+        /* initial preconditioning workspace */
+        operator_list[op_id].precWS = (spinorPrecWS *)malloc(sizeof(spinorPrecWS));
+        spinorPrecWS_Init(operator_list[op_id].precWS, operator_list[op_id].kappa,
+                          operator_list[op_id].mu / 2. / operator_list[op_id].kappa,
+                          -(0.5 / operator_list[op_id].kappa - 4.),
+                          PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+        g_precWS = operator_list[op_id].precWS;
+
+        if (PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+          fitPrecParams(op_id);
+        }
+      }
+
+      for (isample = 0; isample < no_samples; isample++) {
+        for (ix = index_start; ix < index_end; ix++) {
+          if (g_cart_id == 0) {
+            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+          }
+          /* we use g_spinor_field[0-7] for sources and props for the moment */
+          /* 0-3 in case of 1 flavour  */
+          /* 0-7 in case of 2 flavours */
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location,
+                         random_seed);
+          // randmize initial guess for eigcg if needed-----experimental
+          if ((operator_list[op_id].solver == INCREIGCG) &&
+              (operator_list[op_id]
+                   .solver_params.eigcg_rand_guess_opt)) {  // randomize the initial guess
+            gaussian_volume_source(operator_list[op_id].prop0, operator_list[op_id].prop1, isample,
+                                   ix, 0);  // need to check this
+          }
+          operator_list[op_id].inverter(op_id, index_start, operator_list[op_id].write_prop_flag);
+        }
+      }
+
+      if (use_preconditioning == 1 && operator_list[op_id].precWS != NULL) {
+        /* free preconditioning workspace */
+        spinorPrecWS_Free(operator_list[op_id].precWS);
+        free(operator_list[op_id].precWS);
+      }
+
+      if (operator_list[op_id].type == OVERLAP) {
+        free_Dov_WS();
+      }
+    }
+    nstore += Nsave;
+  }
+
+#ifdef TM_USE_OMP
+  free_omp_accumulators();
+#endif
+  free_blocks();
+  free_dfl_subspace();
+  free_gauge_field();
+  free_gauge_field_32();
+  free_geometry_indices();
+  free_spinor_field();
+  free_spinor_field_32();
+  free_moment_field();
+  free_chi_spinor_field();
+  free(filename);
+  free(input_filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
+#ifdef TM_USE_QUDA
+  _endQuda();
+#endif
+#ifdef TM_USE_MPI
+  MPI_Barrier(app()->mpi.comm);
+  MPI_Finalize();
+#endif
+  return (0);
+}
+
+static void usage(tm_ExitCode_t exit_code) {
+  if (g_proc_id == 0) {
+    fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+    fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+    fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
+    fprintf(stdout, "Usage:   invert [options]\n");
+    fprintf(stdout, "Options: [-f input-filename]\n");
+    fprintf(stdout, "         [-o output-filename]\n");
+    fprintf(stdout, "         [-v] more verbosity\n");
+    fprintf(stdout, "         [-V] print version information and exit\n");
+    fprintf(stdout,
+            "         [-m] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout, "         [-h|-? this help]\n");
+  }
+  exit(exit_code);
+}
+
+static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
+  int c;
+  while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
+    switch (c) {
+      case 'f':
+        *input_filename = calloc(200, sizeof(char));
+        strncpy(*input_filename, optarg, 200);
+        break;
+      case 'o':
+        *filename = calloc(200, sizeof(char));
+        strncpy(*filename, optarg, 200);
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'V':
+        if (g_proc_id == 0) {
+          fprintf(stdout, "%s %s\n", TMLQCD_PACKAGE_STRING, git_hash);
+        }
+        exit(TM_EXIT_SUCCESS);
+        break;
+      case 'm':
+        if (!strcmp(optarg, "single")) {
+          g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
+        } else if (!strcmp(optarg, "multiple")) {
+          g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
+        } else {
+          tm_debug_printf(0, 0,
+                          "[invert process_args]: invalid input for -m command line argument\n");
+          usage(TM_EXIT_INVALID_CMDLINE_ARG);
+        }
+        break;
+      case 'h':
+      case '?':
+      default:
+        usage(TM_EXIT_SUCCESS);
+        break;
+    }
+  }
+}
+
+static void set_default_filenames(char **input_filename, char **filename) {
+  if (*input_filename == NULL) {
+    *input_filename = calloc(13, sizeof(char));
+    strcpy(*input_filename, "invert.input");
+  }
+
+  if (*filename == NULL) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename, "output");
+  }
+}
