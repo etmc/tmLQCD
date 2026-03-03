@@ -267,17 +267,14 @@ double cloverdet_acc(const int id, hamiltonian_field_t *const hf) {
   g_kappa = mnl->kappa;
   boundary(mnl->kappa);
 
-  if (g_debug_level > 2 || g_strict_residual_check ||
-      !(mnl->external_library == QUDA_LIB &&
-        mnl->solver_params.external_inverter == QUDA_INVERTER)) {
-    sw_term((const su3 **)hf->gaugefield, mnl->kappa, mnl->c_sw);
+  sw_term((const su3 **)hf->gaugefield, mnl->kappa, mnl->c_sw);
 
-    if (!mnl->even_odd_flag) {
-      N = VOLUME;
-    } else {
-      sw_invert(EE, mnl->mu);
-    }
+  if (!mnl->even_odd_flag) {
+    N = VOLUME;
+  } else {
+    sw_invert(EE, mnl->mu);
   }
+
   g_sloppy_precision_flag = 0;
 
   if (mnl->solver == MG || mnl->solver == BICGSTAB) {
