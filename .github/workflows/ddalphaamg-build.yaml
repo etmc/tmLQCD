@@ -97,7 +97,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: etmc/ddalphaamg
-          ref: fix_main_build
+          ref: master
           path: ddalphaamg
 
       - name: build_ddalphaamg
