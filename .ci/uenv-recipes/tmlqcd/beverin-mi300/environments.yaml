@@ -1,0 +1,25 @@
+gcc-env:
+  compiler: [gcc]
+  network:
+      mpi: cray-mpich@8.1.32 +rocm
+      specs: [ 'libfabric@2.3 +rocm' ]
+  unify: true
+  specs:
+  - python@3.12
+  - numdiff
+  - quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  - lemonio
+  - c-lime
+  - openblas
+  - hip@6.3.3 ^mesa@23.3.6
+  variants:
+  - +mpi
+  - +rocm
+  - amdgpu_target=gfx942
+  views:
+    default:
+      link: roots
+      uenv:
+        add_compilers: true
+        prefix_paths:
+          LD_LIBRARY_PATH: [lib, lib64]
