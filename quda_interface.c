@@ -483,7 +483,7 @@ void _loadCloverQuda(QudaInvertParam *inv_param) {
   } else {
     tm_stopwatch_push(&g_timers, "loadCloverQuda", "");
     if (first_call) {
-      first_call = 1;
+      first_call = 0;
     } else {
       freeCloverQuda();
     }
