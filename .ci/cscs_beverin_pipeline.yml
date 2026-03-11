@@ -12,7 +12,7 @@ build-quda/uenv/beverin-mi300:
   extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
     UENV_RECIPE: .ci/uenv-recipes/tmlqcd/beverin-mi300
-
+    SLURM_TIMELIMIT: "08:00:00"
 test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
   variables:
