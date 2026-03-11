@@ -20,6 +20,8 @@ test/beverin-mi300:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
+    F7T_CLIENT_ID: $F7T_TDS_CONSUMER_KEY
+    F7T_CLIENT_SECRET: $F7T_TDS_CONSUMER_SECRET
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "00:30:00"
