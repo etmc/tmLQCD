@@ -307,33 +307,29 @@ complex scalar_prod_nocom(spinor *const S, spinor *const R, const int N) {
 }
 
 double square_norm_nocom(spinor *const P, const int N) {
-  int ix;
-  static double ks, kc, ds, tr, ts, tt;
-  spinor *s;
-
-  ks = 0.0;
-  kc = 0.0;
+  double ks = 0.0;
+  double kc = 0.0;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */
-  for (ix = 0; ix < N; ix++) {
-    s = P + ix;
+  for (int ix = 0; ix < N; ix++) {
+    spinor *s = P + ix;
 
-    ds = (*s).s0.c0.re * (*s).s0.c0.re + (*s).s0.c0.im * (*s).s0.c0.im +
-         (*s).s0.c1.re * (*s).s0.c1.re + (*s).s0.c1.im * (*s).s0.c1.im +
-         (*s).s0.c2.re * (*s).s0.c2.re + (*s).s0.c2.im * (*s).s0.c2.im +
-         (*s).s1.c0.re * (*s).s1.c0.re + (*s).s1.c0.im * (*s).s1.c0.im +
-         (*s).s1.c1.re * (*s).s1.c1.re + (*s).s1.c1.im * (*s).s1.c1.im +
-         (*s).s1.c2.re * (*s).s1.c2.re + (*s).s1.c2.im * (*s).s1.c2.im +
-         (*s).s2.c0.re * (*s).s2.c0.re + (*s).s2.c0.im * (*s).s2.c0.im +
-         (*s).s2.c1.re * (*s).s2.c1.re + (*s).s2.c1.im * (*s).s2.c1.im +
-         (*s).s2.c2.re * (*s).s2.c2.re + (*s).s2.c2.im * (*s).s2.c2.im +
-         (*s).s3.c0.re * (*s).s3.c0.re + (*s).s3.c0.im * (*s).s3.c0.im +
-         (*s).s3.c1.re * (*s).s3.c1.re + (*s).s3.c1.im * (*s).s3.c1.im +
-         (*s).s3.c2.re * (*s).s3.c2.re + (*s).s3.c2.im * (*s).s3.c2.im;
+    double ds = (*s).s0.c0.re * (*s).s0.c0.re + (*s).s0.c0.im * (*s).s0.c0.im +
+                (*s).s0.c1.re * (*s).s0.c1.re + (*s).s0.c1.im * (*s).s0.c1.im +
+                (*s).s0.c2.re * (*s).s0.c2.re + (*s).s0.c2.im * (*s).s0.c2.im +
+                (*s).s1.c0.re * (*s).s1.c0.re + (*s).s1.c0.im * (*s).s1.c0.im +
+                (*s).s1.c1.re * (*s).s1.c1.re + (*s).s1.c1.im * (*s).s1.c1.im +
+                (*s).s1.c2.re * (*s).s1.c2.re + (*s).s1.c2.im * (*s).s1.c2.im +
+                (*s).s2.c0.re * (*s).s2.c0.re + (*s).s2.c0.im * (*s).s2.c0.im +
+                (*s).s2.c1.re * (*s).s2.c1.re + (*s).s2.c1.im * (*s).s2.c1.im +
+                (*s).s2.c2.re * (*s).s2.c2.re + (*s).s2.c2.im * (*s).s2.c2.im +
+                (*s).s3.c0.re * (*s).s3.c0.re + (*s).s3.c0.im * (*s).s3.c0.im +
+                (*s).s3.c1.re * (*s).s3.c1.re + (*s).s3.c1.im * (*s).s3.c1.im +
+                (*s).s3.c2.re * (*s).s3.c2.re + (*s).s3.c2.im * (*s).s3.c2.im;
 
-    tr = ds + kc;
-    ts = tr + ks;
-    tt = ts - ks;
+    double tr = ds + kc;
+    double ts = tr + ks;
+    double tt = ts - ks;
     ks = ts;
     kc = tr - tt;
   }
