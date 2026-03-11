@@ -15,8 +15,8 @@ variables:
 # These are the firecrest id and secret for the beverin pipeline
 .beverin-mi300-secrets:
   variables:
-    F7T_CLIENT_ID: $F7T_TDS_CLIENT_ID
-    F7T_CLIENT_SECRET: $F7T_TDS_CLIENT_SECRET
+    F7T_CLIENT_ID: $F7T_TDS_COMSUMER_KEY
+    F7T_CLIENT_SECRET: $F7T_TDS_COMSUMER_SECRET
 
 # Compiler flags for the GH200 nodes
 .daint-gh200-vars:
