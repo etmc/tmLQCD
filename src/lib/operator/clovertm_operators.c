@@ -64,7 +64,7 @@ su3 ***sw_inv;
 #define _PTSWITCH(s) s
 #define _PSWITCH(s) s
 
-#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include "assign_mul_one_sw_pm_imu_site_lexic_body.inc"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -74,7 +74,7 @@ su3 ***sw_inv;
 #define _PTSWITCH(s) s##32
 #define _PSWITCH(s) s##_32
 
-#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include "assign_mul_one_sw_pm_imu_site_lexic_body.inc"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -1039,7 +1039,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo, spinor *const k_s, spinor *cons
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "assign_mul_one_sw_pm_imu_inv_block_body.c"
+#include "assign_mul_one_sw_pm_imu_inv_block_body.inc"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -1049,7 +1049,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo, spinor *const k_s, spinor *cons
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "assign_mul_one_sw_pm_imu_inv_block_body.c"
+#include "assign_mul_one_sw_pm_imu_inv_block_body.inc"
 
 #undef _F_TYPE
 #undef _PSWITCH

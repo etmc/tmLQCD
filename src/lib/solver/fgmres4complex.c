@@ -53,7 +53,7 @@
 #define _PSWITCH(s) s
 #define _F_TYPE double
 
-#include "fgmres4complex_body.c"
+#include "fgmres4complex_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE
@@ -61,7 +61,7 @@
 #define _PSWITCH(s) s##_32
 #define _F_TYPE float
 
-#include "fgmres4complex_body.c"
+#include "fgmres4complex_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE

@@ -111,7 +111,7 @@ int mr(spinor* const P, spinor* const Q, const int max_iter, const double eps_sq
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "mrblk_body.c"
+#include "mrblk_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE
@@ -123,7 +123,7 @@ int mr(spinor* const P, spinor* const Q, const int max_iter, const double eps_sq
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "mrblk_body.c"
+#include "mrblk_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE

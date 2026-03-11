@@ -82,7 +82,7 @@ void Hopping_Matrix_32_orphaned(const int ieo, spinor32* const l, spinor32* cons
   su3_32* restrict u0 ALIGN32;
 #endif
 
-#include "operator/halfspinor_body_32.c"
+#include "operator/halfspinor_body_32.inc"
 #else
   printf("Error: Single precision Matrix only implemented with HALFSPINOR\n");
   exit(200);

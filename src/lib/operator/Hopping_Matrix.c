@@ -80,7 +80,7 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
     su3* restrict u0 ALIGN;
 #endif
 
-#include "operator/halfspinor_body.c"
+#include "operator/halfspinor_body.inc"
 
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
@@ -106,7 +106,7 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
   {
 #endif
 
-#include "operator/hopping_body_dbl.c"
+#include "operator/hopping_body_dbl.inc"
 
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */

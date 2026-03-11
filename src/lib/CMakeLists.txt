@@ -78,23 +78,23 @@ list(
   solver/chrono_guess.c
   solver/gcr4complex.c
   solver/jdher.c
-  # solver/gcr4complex_body.c
+  # solver/gcr4complex_body.inc
   solver/gmres_dr.c
-  # solver/fgmres4complex_body.c
+  # solver/fgmres4complex_body.inc
   solver/cg_her_bi.c
   solver/solver_field.c
   solver/quicksort.c
   solver/bicgstab2.c
   solver/cgs_real.c
-  # solver/M_plus_block_psi_body.c solver/little_mg_precon_body.c
-  # solver/little_project_eo_body.c
+  # solver/M_plus_block_psi_body.inc solver/little_mg_precon_body.inc
+  # solver/little_project_eo_body.inc
   solver/monomial_solve.c
   solver/cr.c
   solver/gram-schmidt.c
   solver/solver_types.c
   solver/cg_her.c
   solver/jdher_bi.c
-  # solver/mrblk_body.c
+  # solver/mrblk_body.inc
   solver/eigcg.c
   solver/poly_precon.c
   solver/Msap.c
@@ -138,7 +138,7 @@ list(
   linalg/mul_r_gamma5.c
   linalg/convert_eo_to_lexic.c
   linalg/print_spinor.c
-  # linalg/assign_add_mul_body.c
+  # linalg/assign_add_mul_body.inc
   linalg/mul_diff_mul_r.c
   linalg/square_norm_32.c
   linalg/mul.c
@@ -183,7 +183,7 @@ list(
   linalg/set_even_to_zero.c
   linalg/assign_mul_add.c
   linalg/square_and_prod_r.c
-  # linalg/scalar_prod_body.c
+  # linalg/scalar_prod_body.inc
   linalg/assign_mul_bra_add_mul_ket_add.c
   linalg/assign_add_mul_r_32.c
   linalg/scalar_prod.c
@@ -200,10 +200,10 @@ list(
   operator/clover_invert.c
   # operator/hopping_body_dbl.c
   operator/tm_operators_nd_32.c
-  # operator/halfspinor_body.c operator/Block_D_psi_body.c
-  # operator/mul_one_pm_imu_sub_mul_body.c
-  # operator/assign_mul_one_sw_pm_imu_site_lexic_body.c
-  # operator/assign_mul_one_sw_pm_imu_inv_block_body.c
+  # operator/halfspinor_body.inc operator/Block_D_psi_body.inc
+  # operator/mul_one_pm_imu_sub_mul_body.inc
+  # operator/assign_mul_one_sw_pm_imu_site_lexic_body.inc
+  # operator/assign_mul_one_sw_pm_imu_inv_block_body.inc
   operator/clover_accumulate_deriv.c
   operator/Hopping_Matrix.c
   operator/tm_operators.c
@@ -214,7 +214,7 @@ list(
   operator/clover_deriv.c
   operator/clover_det.c
   operator/clover_leaf.c
-  # operator/D_psi_body.c
+  # operator/D_psi_body.inc
   operator/clovertm_operators.c
   operator/Dov_psi.c
   operator/tm_operators_nd.c
@@ -225,7 +225,7 @@ list(
   operator/D_psi.c
   operator/tm_operators_32.c
   operator/Hopping_Matrix_32.c)
-# operator/halfspinor_body_32.c operator/mul_one_pm_imu_inv_body.c)
+# operator/halfspinor_body_32.c operator/mul_one_pm_imu_inv_body.inc)
 
 list(
   APPEND
@@ -295,7 +295,7 @@ list(
   xchange/xchange_2fields.c
   xchange/xchange_gauge.c
   xchange/xchange_halffield.c
-  # xchange/xchange_jacobi.c xchange/little_field_gather_body.c
+  # xchange/xchange_jacobi.c xchange/little_field_gather_body.inc
   xchange/little_field_gather.c
   xchange/xchange_deri.c
   xchange/xchange_field.c)
