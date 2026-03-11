@@ -400,7 +400,6 @@ include_directories(
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/lib/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<$<BOOL:${TMLQCD_USE_LEMON}>:${TMLQCD_LEMON_INCLUDE_DIRS}>
   ${TMLQCD_CLIME_INCLUDE_DIRS})
 
 # cmake 4.0 uses a different syntax for the option
