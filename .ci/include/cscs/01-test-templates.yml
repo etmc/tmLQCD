@@ -4,13 +4,9 @@ include:
 
 .test/base:
   stage: test
-  extends: .uenv-runner-daint-gh200
   image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   variables:
     WITH_UENV_VIEW: "default"
-    CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    LDFLAGS: "-fopenmp"
   before_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then

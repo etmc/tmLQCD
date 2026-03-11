@@ -14,7 +14,7 @@ build-quda/uenv/daint-gh200:
     UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
 
 test/daint-gh200:
-  extends: .test/hmc
+  extends: [.uenv-runner-daint-gh200, .test/hmc, .daint-gh200-vars]
   variables:
     INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs.input"
     REFPATH: "doc/sample-output/hmc-quda-cscs"
