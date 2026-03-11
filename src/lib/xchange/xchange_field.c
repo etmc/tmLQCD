@@ -105,11 +105,11 @@ void xchange_field(spinor* const l, const int ieo) {
     /* This is now depending on whether the field is */
     /* even or odd */
     if (ieo == 1) {
-      for (ix = 0; ix < T * LX * LY / 2; ix++) {
+      for (int ix = 0; ix < T * LX * LY / 2; ix++) {
         field_buffer_z[ix] = l[g_field_z_ipt_even[ix]];
       }
     } else {
-      for (ix = 0; ix < T * LX * LY / 2; ix++) {
+      for (int ix = 0; ix < T * LX * LY / 2; ix++) {
         field_buffer_z[ix] = l[g_field_z_ipt_odd[ix]];
       }
     }

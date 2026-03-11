@@ -69,7 +69,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 #endif
 
 #define _MUL_G5_CMPLX
-#include "operator/halfspinor_body.c"
+#include "operator/halfspinor_body.inc"
 #undef _MUL_G5_CMPLX
 
 #ifdef TM_USE_OMP

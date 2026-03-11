@@ -54,7 +54,7 @@
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "D_psi_body.c"
+#include "D_psi_body.inc"
 
 #undef _C_TYPE
 #undef _F_TYPE
@@ -66,7 +66,7 @@
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "D_psi_body.c"
+#include "D_psi_body.inc"
 
 #undef _C_TYPE
 #undef _F_TYPE
@@ -92,7 +92,7 @@ void D_psi_prec(spinor *const P, spinor *const Q) {
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "Block_D_psi_body.c"
+#include "Block_D_psi_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE
@@ -104,7 +104,7 @@ void D_psi_prec(spinor *const P, spinor *const Q) {
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "Block_D_psi_body.c"
+#include "Block_D_psi_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE

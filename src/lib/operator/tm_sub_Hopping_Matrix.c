@@ -70,7 +70,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor* const l, spinor* const p, spin
 
 #define _TM_SUB_HOP
     spinor* pn;
-#include "operator/halfspinor_body.c"
+#include "operator/halfspinor_body.inc"
 #undef _TM_SUB_HOP
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
