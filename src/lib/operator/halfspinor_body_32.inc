@@ -1,6 +1,6 @@
 /**********************************************************************
  * single precision version Copyright (C) 2013 Florian Burger
- * based on halfspinor_body.c by Carsten Urbach
+ * based on halfspinor_body.inc by Carsten Urbach
  *
  * This file is based on an implementation of the Dirac operator
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002

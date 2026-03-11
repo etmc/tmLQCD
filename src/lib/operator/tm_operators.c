@@ -514,7 +514,7 @@ void tm_sub_H_eo_gamma5(spinor *const l, spinor *const p, spinor *const k, const
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "mul_one_pm_imu_inv_body.c"
+#include "mul_one_pm_imu_inv_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE
@@ -526,7 +526,7 @@ void tm_sub_H_eo_gamma5(spinor *const l, spinor *const p, spinor *const k, const
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "mul_one_pm_imu_inv_body.c"
+#include "mul_one_pm_imu_inv_body.inc"
 
 #undef _F_TYPE
 #undef _C_TYPE
@@ -768,7 +768,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor *const l, spinor *const k, spinor *con
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include "mul_one_pm_imu_sub_mul_body.c"
+#include "mul_one_pm_imu_sub_mul_body.inc"
 
 #undef _C_TYPE
 #undef _F_TYPE
@@ -780,7 +780,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor *const l, spinor *const k, spinor *con
 #define _PSWITCH(s) s##_32
 #define _PTSWITCH(s) s##32
 
-#include "mul_one_pm_imu_sub_mul_body.c"
+#include "mul_one_pm_imu_sub_mul_body.inc"
 
 #undef _C_TYPE
 #undef _F_TYPE

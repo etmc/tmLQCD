@@ -41,7 +41,7 @@
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 
-#include "gcr4complex_body.c"
+#include "gcr4complex_body.inc"
 
 #undef _PSWITCH
 #undef _PTSWITCH
@@ -53,7 +53,7 @@
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
-#include "gcr4complex_body.c"
+#include "gcr4complex_body.inc"
 
 #undef _PSWITCH
 #undef _PTSWITCH

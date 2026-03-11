@@ -453,7 +453,7 @@ void little_project(_Complex double *const out, _Complex double *const in, const
 #define _MPI_C_TYPE MPI_DOUBLE_COMPLEX
 #define _F_TYPE double
 
-#include "little_project_eo_body.c"
+#include "little_project_eo_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE
@@ -465,7 +465,7 @@ void little_project(_Complex double *const out, _Complex double *const in, const
 #define _MPI_C_TYPE MPI_COMPLEX
 #define _F_TYPE float
 
-#include "little_project_eo_body.c"
+#include "little_project_eo_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE
@@ -552,7 +552,7 @@ void little_P_L_D(_Complex double *const out, _Complex double *const in) {
 #define _PSWITCH(s) s
 #define _F_TYPE double
 
-#include "little_mg_precon_body.c"
+#include "little_mg_precon_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE
@@ -560,7 +560,7 @@ void little_P_L_D(_Complex double *const out, _Complex double *const in) {
 #define _PSWITCH(s) s##_32
 #define _F_TYPE float
 
-#include "little_mg_precon_body.c"
+#include "little_mg_precon_body.inc"
 
 #undef _PSWITCH
 #undef _F_TYPE
