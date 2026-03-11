@@ -75,6 +75,5 @@ if (NOT TARGET tmlqcd::tmlqcd)
     set(TM_USE_GAUGE_COPY @TM_USE_GAUGE_COPY@)
   endif()
 
-  # Include SIRIUS target
   include("${CMAKE_CURRENT_LIST_DIR}/tmlQCDTargets.cmake")
 endif()
