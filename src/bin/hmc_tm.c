@@ -85,11 +85,11 @@ static void set_default_filenames(char **input_filename, char **filename);
 int main(int argc, char *argv[]) {
   FILE *parameterfile = NULL, *countfile = NULL;
   char *filename = NULL;
-  char datafilename[206];
-  char parameterfilename[206];
-  char gauge_filename[50];
-  char nstore_filename[50];
-  char tmp_filename[50];
+  char datafilename[256];
+  char parameterfilename[256];
+  char gauge_filename[64];
+  char nstore_filename[64];
+  char tmp_filename[64];
   char *input_filename = NULL;
   int status = 0, accept = 0;
   int j, ix, mu, trajectory_counter = 0;
@@ -611,11 +611,11 @@ static void process_args(int argc, char *argv[], char **input_filename, char **f
   while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
       case 'f':
-        *input_filename = calloc(200, sizeof(char));
+        *input_filename = calloc(256, sizeof(char));
         strncpy(*input_filename, optarg, 200);
         break;
       case 'o':
-        *filename = calloc(200, sizeof(char));
+        *filename = calloc(256, sizeof(char));
         strncpy(*filename, optarg, 200);
         break;
       case 'v':

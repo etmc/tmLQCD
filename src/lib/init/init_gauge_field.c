@@ -34,7 +34,6 @@ su3* gauge_field_copy = NULL;
 su3_32* gauge_field_copy_32 = NULL;
 
 int init_gauge_field(const int V, const int back) {
-  int i = 0;
   g_gauge_field_copy = NULL;
 
   if (g_exposu3_no_c == 0) init_exposu3();

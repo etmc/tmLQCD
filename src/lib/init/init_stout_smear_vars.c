@@ -27,7 +27,6 @@
 #include "expo.h"
 #include "global.h"
 #include "init_stout_smear_vars.h"
-#include "sse.h"
 #include "su3.h"
 
 su3* gauge_field_saved;
@@ -83,11 +82,11 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
   printf("Running init_stout_smear_vars\n");
   const int dim = 4;
 
-  int i, k, x, mu;
+  /* int i, k, x, mu; */
 
-  i = 0;
-  k = 0;
-  mu = 0;
+  /* i = 0; */
+  /* k = 0; */
+  /* mu = 0; */
 
   if (g_exposu3_no_c == 0) init_exposu3();
 
@@ -107,7 +106,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_gauge_field_smeared[0] = gauge_field_smeared;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_gauge_field_smeared[x] = g_gauge_field_smeared[x - 1] + 4;
   }
 
@@ -126,7 +125,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_gauge_field_saved[0] = gauge_field_saved;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_gauge_field_saved[x] = g_gauge_field_saved[x - 1] + 4;
   }
 
@@ -145,7 +144,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_C_smearing[0] = C_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_C_smearing[x] = g_C_smearing[x - 1] + 4;
   }
 
@@ -164,7 +163,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_Q_smearing[0] = Q_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_Q_smearing[x] = g_Q_smearing[x - 1] + 4;
   }
 
@@ -183,7 +182,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_Q_squared_smearing[0] = Q_squared_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_Q_squared_smearing[x] = g_Q_squared_smearing[x - 1] + 4;
   }
 
@@ -211,7 +210,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
   g_B1_smearing[0] = B1_smearing;
   g_B2_smearing[0] = B2_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_B1_smearing[x] = g_B1_smearing[x - 1] + 4;
     g_B2_smearing[x] = g_B2_smearing[x - 1] + 4;
   }
@@ -231,7 +230,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_Gamma_smearing[0] = Gamma_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_Gamma_smearing[x] = g_Gamma_smearing[x - 1] + 4;
   }
 
@@ -250,7 +249,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_Lambda_smearing[0] = Lambda_smearing;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_Lambda_smearing[x] = g_Lambda_smearing[x - 1] + 4;
   }
 
@@ -366,7 +365,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_stout_force_field[0] = stout_force_field;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_stout_force_field[x] = g_stout_force_field[x - 1] + 4;
   }
 
@@ -386,7 +385,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   g_previous_stout_force_field[0] = previous_stout_force_field;
 
-  for (x = 1; x < V; x++) {
+  for (int x = 1; x < V; x++) {
     g_previous_stout_force_field[x] = g_previous_stout_force_field[x - 1] + 4;
   }
 

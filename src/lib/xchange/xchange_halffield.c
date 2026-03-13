@@ -51,16 +51,15 @@ MPI_Request prequests[16];
 void init_xchange_halffield() {
 #ifdef TM_USE_MPI
 
-#ifdef TM_PARALLELT
-  int reqcount = 4;
-#elif defined TM_PARALLELXT
-  int reqcount = 8;
-#elif defined TM_PARALLELXYT
-  int reqcount = 12;
-#elif defined TM_PARALLELXYZT
-  int x0 = 0, x1 = 0, x2 = 0, ix = 0;
-  int reqcount = 16;
-#endif
+/* #ifdef TM_PARALLELT */
+/*   int reqcount = 4; */
+/* #elif defined TM_PARALLELXT */
+/*   int reqcount = 8; */
+/* #elif defined TM_PARALLELXYT */
+/*   int reqcount = 12; */
+/* #elif defined TM_PARALLELXYZT */
+/*   int reqcount = 16; */
+/* #endif */
 
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
@@ -148,7 +147,6 @@ void xchange_halffield() {
 #elif defined TM_PARALLELXYT
   int reqcount = 12;
 #elif defined TM_PARALLELXYZT
-  int x0 = 0, x1 = 0, x2 = 0, ix = 0;
   int reqcount = 16;
 #endif
   MPI_Startall(reqcount, prequests);
