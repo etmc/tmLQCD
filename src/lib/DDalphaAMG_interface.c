@@ -542,8 +542,8 @@ static int MG_solve_nd(spinor *up_new, spinor *dn_new, spinor *const up_old, spi
   int init_guess = 0;
   spinor *old1 = up_old;
   spinor *old2 = dn_old;
-  spinor *new1 = up_new, *new1tmp;
-  spinor *new2 = dn_new, *new2tmp;
+  spinor *new1 = up_new, *new1tmp = NULL;
+  spinor *new2 = dn_new, *new2tmp = NULL;
   spinor **solver_field = NULL, **oe_solver_field = NULL;
   int no_solver_field = 0;
 

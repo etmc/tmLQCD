@@ -139,10 +139,6 @@ void xchange_lexicfield(spinor* const l) {
 /* exchanges the field  l */
 void xchange_lexicfield(spinor* const l) {
 
-#ifdef TM_PARALLELXYZT
-  int x0 = 0, x1 = 0, x2 = 0, ix = 0;
-#endif
-
 #ifdef TM_USE_MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */
@@ -303,11 +299,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #else /* TM_NON_BLOCKING */
 /* exchanges the field  l */
 void xchange_lexicfield32(spinor32* const l) {
-
-#ifdef TM_PARALLELXYZT
-  int x0 = 0, x1 = 0, x2 = 0, ix = 0;
-#endif
-
 #ifdef TM_USE_MPI
   MPI_Status status;
   /* send the data to the neighbour on the left */

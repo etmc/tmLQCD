@@ -73,9 +73,9 @@ static void set_default_filenames(char **input_filename, char **filename);
 
 int main(int argc, char *argv[]) {
   FILE *parameterfile = NULL;
-  int j, i;
-  char datafilename[206];
-  char parameterfilename[206];
+  int err;
+  char datafilename[256];
+  char parameterfilename[256];
   char conf_filename[CONF_FILENAME_LENGTH];
   char *input_filename = NULL;
   char *filename = NULL;
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
   /* in this way even/odd can still be used by other operators */
-  for (j = 0; j < no_operators; j++)
+  for (int j = 0; j < no_operators; j++)
     if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
 #ifndef TM_USE_MPI
@@ -123,43 +123,42 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef TM_USE_GAUGE_COPY
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  err = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
-  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  err = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
-  if (j != 0) {
+  if (err != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
   }
-  j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
-  if (j != 0) {
+  if (init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand) != 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
   }
   if (no_monomials > 0) {
     if (even_odd_flag) {
-      j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
+      err = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
     } else {
-      j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+      err = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
-    if (j != 0) {
+    if (err != 0) {
       fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
       exit(-1);
     }
   }
   if (even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    err = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
   } else {
-    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    err = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
-  if (j != 0) {
+  if (err != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(-1);
   }
 
   if (g_running_phmc) {
-    j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if (j != 0) {
+    err = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
+    if (err != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
       exit(-1);
     }
@@ -206,14 +205,12 @@ int main(int argc, char *argv[]) {
 
   /* this could be maybe moved to init_operators */
 #ifdef TM_USE_HALFSPINOR
-  j = init_dirac_halfspinor();
-  if (j != 0) {
+  if (init_dirac_halfspinor() != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
   if (g_sloppy_precision_flag == 1) {
-    j = init_dirac_halfspinor32();
-    if (j != 0) {
+    if (init_dirac_halfspinor32() != 0) {
       fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
       exit(-1);
     }
@@ -223,12 +220,12 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-  for (j = 0; j < Nmeas; j++) {
+  for (int j = 0; j < Nmeas; j++) {
     int n_written =
         snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
     if (n_written < 0 || n_written > CONF_FILENAME_LENGTH) {
-      char error_message[500];
-      snprintf(error_message, 500,
+      char error_message[512];
+      snprintf(error_message, 512,
                "Encoding error or gauge configuration filename "
                "longer than %d characters! See offline_measurement.c CONF_FILENAME_LENGTH\n",
                CONF_FILENAME_LENGTH);
@@ -239,8 +236,8 @@ int main(int argc, char *argv[]) {
              (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if ((i = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i,
+    if ((err = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", err,
               conf_filename);
       exit(-2);
     }
@@ -321,11 +318,11 @@ static void usage(const tm_ExitCode_t exit_code) {
 }
 
 static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
-  int c;
+  int c = 0;
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
     switch (c) {
       case 'f':
-        *input_filename = calloc(200, sizeof(char));
+        *input_filename = calloc(256, sizeof(char));
         strncpy(*input_filename, optarg, 200);
         break;
       case 'v':

@@ -65,7 +65,7 @@ list(
   init/init_gauge_tmp.c
   init/init_critical_globals.c
   init/init_omp_accumulators.c
-  # init/init_stout_smear_vars.c
+  init/init_stout_smear_vars.c
   init/init_moment_field.c)
 
 list(
@@ -74,7 +74,8 @@ list(
   solver/bicg_complex.c
   solver/dfl_projector.c
   solver/gcr.c
-  # solver/gmres_precon.c
+  # this file is not used anywhere at the moment
+  #  solver/gmres_precon.c
   solver/chrono_guess.c
   solver/gcr4complex.c
   solver/jdher.c

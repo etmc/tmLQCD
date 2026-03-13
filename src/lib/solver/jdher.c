@@ -127,7 +127,7 @@ void jdher(int n, int lda, double tau, double tol, int kmax, int jmax, int jmin,
    * initialize with NULL, so we can free even unallocated ptrs */
   double *s = NULL, *resnrm = NULL, *resnrm_old = NULL, *dtemp = NULL, *rwork = NULL;
 
-  _Complex double *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res_ = NULL, *Res,
+  _Complex double *V = NULL, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res,
                   *eigwork = NULL, *temp1_ = NULL, *temp1;
 
   int *idx1 = NULL, *idx2 = NULL, *convind = NULL, *keepind = NULL, *solvestep = NULL,
