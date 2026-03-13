@@ -44,10 +44,6 @@
 #include "su3.h"
 #include "xchange_field.h"
 
-#if (defined TM_PARALLELXYZT)
-#pragma disjoint(*field_buffer_z2, *field_buffer_z)
-#endif
-
 /* this version uses non-blocking MPI calls */
 #if (defined TM_NON_BLOCKING)
 
@@ -65,10 +61,6 @@ void xchange_field(spinor* const l, const int ieo) {
 #elif defined TM_PARALLELXYZT
   int ix = 0;
   int reqcount = 16;
-#endif
-
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchangefield)
 #endif
 
 #ifdef TM_USE_MPI
@@ -259,9 +251,6 @@ void xchange_field(spinor* const l, const int ieo) {
 #endif
 
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchangefield)
-#endif
 }
 
 #elif (defined TM_USE_SHMEM) /* TM_NON_BLOCKING */
@@ -271,11 +260,7 @@ void xchange_field(spinor* const l, const int ieo) {
 void xchange_field(spinor* const l, const int ieo) {
 
 #ifdef TM_USE_MPI
-  int i, ix, mu, x0, x1, x2, x3, k;
-
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchangefield)
-#endif
+  int k;
 
   shmem_barrier_all();
 
@@ -285,13 +270,13 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   k = (T + 2) * LX * LY * LZ / 2;
-  for (x0 = 0; x0 < T; x0++) {
+  for (int x0 = 0; x0 < T; x0++) {
     shmem_double_put((double*)(l + k), (double*)(l + g_lexic2eo[g_ipt[x0][0][0][0]]), 12 * LZ * LY,
                      g_nb_x_dn);
     k += LZ * LY;
   }
   k = ((T + 2) * LX * LY * LZ + T * LY * LZ) / 2;
-  for (x0 = 0; x0 < T; x0++) {
+  for (int x0 = 0; x0 < T; x0++) {
     shmem_double_put((double*)(l + k), (double*)(l + g_lexic2eo[g_ipt[x0][LX - 1][0][0]]),
                      12 * LZ * LY, g_nb_x_up);
     k += LZ * LY;
@@ -300,16 +285,16 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   k = ((T + 2) * LX * LY * LZ + 2 * T * LY * LZ) / 2;
-  for (x0 = 0; x0 < T; x0++) {
-    for (x1 = 0; x1 < LX; x1++) {
+  for (int x0 = 0; x0 < T; x0++) {
+    for (int x1 = 0; x1 < LX; x1++) {
       shmem_double_put((double*)(l + k), (double*)(l + g_lexic2eo[g_ipt[x0][x1][0][0]]), 12 * LZ,
                        g_nb_y_dn);
       k += LZ;
     }
   }
   k = ((T + 2) * LX * LY * LZ + 2 * T * LY * LZ + T * LX * LZ) / 2;
-  for (x0 = 0; x0 < T; x0++) {
-    for (x1 = 0; x1 < LX; x1++) {
+  for (int x0 = 0; x0 < T; x0++) {
+    for (int x1 = 0; x1 < LX; x1++) {
       shmem_double_put((double*)(l + k), (double*)(l + g_lexic2eo[g_ipt[x0][x1][LY - 1][0]]),
                        12 * LZ, g_nb_y_up);
       k += LZ;
@@ -318,7 +303,7 @@ void xchange_field(spinor* const l, const int ieo) {
 #endif
 
 #if (defined TM_PARALLELXYZT)
-  x0 = (VOLUME / 2 + LX * LY * LZ + T * LY * LZ + T * LX * LZ);
+  int x0 = (VOLUME / 2 + LX * LY * LZ + T * LY * LZ + T * LX * LZ);
   if (ieo == 1) {
     for (k = 0; k < T * LX * LY / 2; k++) {
       shmem_double_put((double*)(l + x0), (double*)(l + g_field_z_ipt_even[k]), 24, g_nb_z_dn);
@@ -347,9 +332,6 @@ void xchange_field(spinor* const l, const int ieo) {
   shmem_barrier_all();
 #endif  // MPI
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchangefield)
-#endif
 }
 
 /* Here comes the naive version */
@@ -357,13 +339,6 @@ void xchange_field(spinor* const l, const int ieo) {
 #else /* TM_NON_BLOCKING TM_USE_SHMEM */
 /* exchanges the field  l */
 void xchange_field(spinor* const l, const int ieo) {
-
-#ifdef TM_PARALLELXYZT
-  int x0 = 0, x1 = 0, x2 = 0, ix = 0;
-#endif
-#ifdef TM_KOJAK_INST
-#pragma pomp inst begin(xchangefield)
-#endif
 
 #ifdef TM_USE_MPI
 
@@ -414,11 +389,11 @@ void xchange_field(spinor* const l, const int ieo) {
   /* This is now depending on whether the field is */
   /* even or odd */
   if (ieo == 1) {
-    for (ix = 0; ix < T * LX * LY / 2; ix++) {
+    for (int ix = 0; ix < T * LX * LY / 2; ix++) {
       field_buffer_z[ix] = l[g_field_z_ipt_even[ix]];
     }
   } else {
-    for (ix = 0; ix < T * LX * LY / 2; ix++) {
+    for (int ix = 0; ix < T * LX * LY / 2; ix++) {
       field_buffer_z[ix] = l[g_field_z_ipt_odd[ix]];
     }
   }
@@ -429,11 +404,11 @@ void xchange_field(spinor* const l, const int ieo) {
                12 * T * LX * LY, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &status);
 
   if (ieo == 1) {
-    for (ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
+    for (int ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
       field_buffer_z[ix - T * LX * LY / 2] = l[g_field_z_ipt_even[ix]];
     }
   } else {
-    for (ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
+    for (int ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
       field_buffer_z[ix - T * LX * LY / 2] = l[g_field_z_ipt_odd[ix]];
     }
   }
@@ -448,9 +423,6 @@ void xchange_field(spinor* const l, const int ieo) {
 #endif
 #endif  // MPI
   return;
-#ifdef TM_KOJAK_INST
-#pragma pomp inst end(xchangefield)
-#endif
 }
 
 #endif /* TM_NON_BLOCKING */

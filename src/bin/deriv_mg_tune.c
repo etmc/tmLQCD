@@ -387,11 +387,11 @@ static void process_args(int argc, char *argv[], char **input_filename, char **f
   while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
       case 'f':
-        *input_filename = calloc(200, sizeof(char));
+        *input_filename = calloc(256, sizeof(char));
         strncpy(*input_filename, optarg, 200);
         break;
       case 'o':
-        *filename = calloc(200, sizeof(char));
+        *filename = calloc(256, sizeof(char));
         strncpy(*filename, optarg, 200);
         break;
       case 'v':
@@ -425,12 +425,14 @@ static void process_args(int argc, char *argv[], char **input_filename, char **f
 
 static void set_default_filenames(char **input_filename, char **filename) {
   if (*input_filename == NULL) {
-    *input_filename = calloc(13, sizeof(char));
+    *input_filename = calloc(16, sizeof(char));
     strcpy(*input_filename, "hmc.input");
+    (*input_filename)[9] = '\0';
   }
 
   if (*filename == NULL) {
     *filename = calloc(7, sizeof(char));
     strcpy(*filename, "output");
+    (*filename)[6] = '\0';
   }
 }
