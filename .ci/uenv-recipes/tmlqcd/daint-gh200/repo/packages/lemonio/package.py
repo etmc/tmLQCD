@@ -18,7 +18,7 @@ class Lemonio(AutotoolsPackage, CMakePackage):
     version('master', branch='master')
 
     depends_on("libtool", type="build", when="@master build_system=cmake")
-    depends_on("cmake", type="build", when="master build_system=cmake")
+    depends_on("cmake@4", type="build", when="master build_system=cmake")
 
     depends_on('mpi')
 
