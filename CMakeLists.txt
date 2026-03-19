@@ -252,7 +252,8 @@ find_package(CLime REQUIRED)
 set(TM_USE_LIME ON)
 
 if(TM_USE_QUDA)
-  find_package(QUDA REQUIRED config)
+	enable_language(CUDA)
+	find_package(QUDA REQUIRED config)
 endif()
 
 if(TM_USE_SHMEM)
