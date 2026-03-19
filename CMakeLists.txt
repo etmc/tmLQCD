@@ -280,7 +280,9 @@ endif()
 # if AMD GPU access is not possible. So allow it
 
 if(TM_USE_HIP OR QUDA_TARGET_HIP)
-  enable_language(hip)
+  enable_language(HIP)
+  find_package(hipblas)
+  find_package(hipfft)
   if(TM_USE_CUDA_HIP)
     find_package(CUDA)
   endif()
