@@ -167,7 +167,7 @@ target_link_libraries(
 
 target_include_directories(
   DDalphaAMG
-  PUBLIC $<INSTALL_INTERFACE:include>
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
   $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/src>
   $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/DDalphaAMG>)
