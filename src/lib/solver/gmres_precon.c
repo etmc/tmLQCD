@@ -44,7 +44,6 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#include <complex.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,6 +75,7 @@ static double *s;
 
 int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_restarts,
                  const double eps_sq, const int rel_prec, const int N, matrix_mult f) {
+  int restart, i, j, k;
   double beta, eps, norm;
   complex tmp1, tmp2;
   spinor **solver_field = NULL;
@@ -93,22 +93,22 @@ int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_re
 
   /*   assign(solver_field[1], P, N); */
   zero_spinor_field(solver_field[1], N);
-  for (int restart = 0; restart < max_restarts; restart++) {
+  for (restart = 0; restart < max_restarts; restart++) {
     /* r_0=Q-AP  (b=Q, x+0=P) */
     f(solver_field[1], solver_field[1]);
     diff(solver_field[1], Q, solver_field[1], N);
     /* v_0=r_0/||r_0|| */
-    alpha[0] = sqrt(square_norm(solver_field[1], N, 1)) + 0.0I;
+    alpha[0].re = sqrt(square_norm(solver_field[1], N, 1));
 
     /*     if(alpha[0].re == 0.){  */
     /*        assign(P, solver_field[1], N);  */
     /*        return(restart*m);  */
     /*     }  */
 
-    if (creal(alpha[0]) != 0.) {
-      mul_r(V[0], 1. / creal(alpha[0]), solver_field[1], N);
+    if (alpha[0].re != 0.) {
+      mul_r(V[0], 1. / alpha[0].re, solver_field[1], N);
 
-      for (int j = 0; j < m; j++) {
+      for (j = 0; j < m; j++) {
         /* solver_field[1]=A*v_j */
 
         f(solver_field[1], V[j]);
@@ -116,13 +116,13 @@ int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_re
         /* Set h_ij and omega_j */
         /* solver_field[0] <- omega_j */
         assign(solver_field[0], solver_field[1], N);
-        for (int i = 0; i <= j; i++) {
+        for (i = 0; i <= j; i++) {
           H[i][j] = scalar_prod(V[i], solver_field[0], N, 1);
           assign_diff_mul(solver_field[0], V[i], H[i][j], N);
         }
 
         _complex_set(H[j + 1][j], sqrt(square_norm(solver_field[0], N, 1)), 0.);
-        for (int i = 0; i < j; i++) {
+        for (i = 0; i < j; i++) {
           tmp1 = H[i][j];
           tmp2 = H[i + 1][j];
           _mult_real(H[i][j], tmp2, s[i]);
@@ -133,7 +133,7 @@ int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_re
 
         /* Set beta, s, c, alpha[j],[j+1] */
         beta = sqrt(_complex_square_norm(H[j][j]) + _complex_square_norm(H[j + 1][j]));
-        s[j] = creal(H[j + 1][j]) / beta;
+        s[j] = H[j + 1][j].re / beta;
         _mult_real(c[j], H[j][j], 1. / beta);
         _complex_set(H[j][j], beta, 0.);
         _mult_real(alpha[j + 1], alpha[j], s[j]);
@@ -146,19 +146,19 @@ int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_re
                  alpha[j + 1].re * alpha[j + 1].re);
           fflush(stdout);
         }
-        if (((creal(alpha[j + 1]) <= eps) && (rel_prec == 0)) ||
-            (creal((alpha[j + 1]) <= eps * norm) && (rel_prec == 1))) {
-          _mult_real(alpha[j], alpha[j], 1. / creal(H[j][j]));
+        if (((alpha[j + 1].re <= eps) && (rel_prec == 0)) ||
+            ((alpha[j + 1].re <= eps * norm) && (rel_prec == 1))) {
+          _mult_real(alpha[j], alpha[j], 1. / H[j][j].re);
           assign_add_mul(solver_field[1], V[j], alpha[j], N);
-          for (int i = j - 1; i >= 0; i--) {
-            for (int k = i + 1; k <= j; k++) {
+          for (i = j - 1; i >= 0; i--) {
+            for (k = i + 1; k <= j; k++) {
               _mult_assign_complex(tmp1, H[i][k], alpha[k]);
               _diff_complex(alpha[i], tmp1);
             }
-            _mult_real(alpha[i], alpha[i], 1. / creal(H[i][i]));
+            _mult_real(alpha[i], alpha[i], 1. / H[i][i].re);
             assign_add_mul(solver_field[1], V[i], alpha[i], N);
           }
-          for (int i = 0; i < m; i++) {
+          for (i = 0; i < m; i++) {
             alpha[i].im = 0.;
           }
           assign(P, solver_field[1], N);
@@ -168,24 +168,24 @@ int gmres_precon(spinor *const P, spinor *const Q, const int m, const int max_re
         /* if not */
         else {
           if (j != m - 1) {
-            mul_r(V[(j + 1)], 1. / creal(H[j + 1][j]), solver_field[0], N);
+            mul_r(V[(j + 1)], 1. / H[j + 1][j].re, solver_field[0], N);
           }
         }
       }
 
       j = m - 1;
       /* prepare for restart */
-      _mult_real(alpha[j], alpha[j], 1. / creal(H[j][j]));
+      _mult_real(alpha[j], alpha[j], 1. / H[j][j].re);
       assign_add_mul(solver_field[1], V[j], alpha[j], N);
-      for (int i = j - 1; i >= 0; i--) {
-        for (int k = i + 1; k <= j; k++) {
+      for (i = j - 1; i >= 0; i--) {
+        for (k = i + 1; k <= j; k++) {
           _mult_assign_complex(tmp1, H[i][k], alpha[k]);
           _diff_complex(alpha[i], tmp1);
         }
-        _mult_real(alpha[i], alpha[i], 1. / creal(H[i][i]));
+        _mult_real(alpha[i], alpha[i], 1. / H[i][i].re);
         assign_add_mul(solver_field[1], V[i], alpha[i], N);
       }
-      for (int i = 0; i < m; i++) {
+      for (i = 0; i < m; i++) {
         alpha[i].im = 0.;
       }
     }
@@ -234,7 +234,6 @@ static void init_pgmres(const int _M, const int _V) {
 }
 
 complex scalar_prod_nocom(spinor *const S, spinor *const R, const int N) {
-#ifdef __STDC_NO_COMPLEX__
   int ix;
   static double ks, kc, ds, tr, ts, tt;
   spinor *s, *r;
@@ -305,91 +304,39 @@ complex scalar_prod_nocom(spinor *const S, spinor *const R, const int N) {
 
   c.im = kc;
   return (c);
-#else
-  double complex ks, kc;
-
-  ks = 0.0 + 0.0I;
-  kc = 0.0 + 0.0I;
-  for (int ix = 0; ix < N; ix++) {
-    spinor *s = (spinor *)S + ix;
-    spinor *r = (spinor *)R + ix;
-    double complex ds = (*r).s0.c0 * (*r).s0.c0 +
-      (*r).s0.c1 * (*r).s0.c1 +
-      (*r).s0.c2 * (*r).s0.c2 +
-      (*r).s1.c0 * (*r).s1.c0 +
-      (*r).s1.c1 * (*r).s1.c1 +
-      (*r).s1.c2 * (*r).s1.c2 +
-      (*r).s2.c0 * (*r).s2.c0 +
-      (*r).s2.c1 * (*r).s2.c1 +
-      (*r).s2.c2 * (*r).s2.c2 +
-      (*r).s3.c0 * (*r).s3.c0 +
-      (*r).s3.c1 * (*r).s3.c1 +
-      (*r).s3.c2 * (*r).s3.c2;
-
-    double complex tr = ds + kc;
-    double complex ts = tr + ks;
-    double complex tt = ts - ks;
-    ks = ts;
-    kc = tr - tt;
-  }
-  return  ks + kc;
-#endif
 }
 
-
 double square_norm_nocom(spinor *const P, const int N) {
-  double ks = 0.0;
-  double kc = 0.0;
+  int ix;
+  static double ks, kc, ds, tr, ts, tt;
+  spinor *s;
 
-#ifdef __STDC_NO_COMPLEX__
+  ks = 0.0;
+  kc = 0.0;
+
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */
-  for (int ix = 0; ix < N; ix++) {
-    spinor *s = P + ix;
+  for (ix = 0; ix < N; ix++) {
+    s = P + ix;
 
-    double ds = (*s).s0.c0.re * (*s).s0.c0.re + (*s).s0.c0.im * (*s).s0.c0.im +
-                (*s).s0.c1.re * (*s).s0.c1.re + (*s).s0.c1.im * (*s).s0.c1.im +
-                (*s).s0.c2.re * (*s).s0.c2.re + (*s).s0.c2.im * (*s).s0.c2.im +
-                (*s).s1.c0.re * (*s).s1.c0.re + (*s).s1.c0.im * (*s).s1.c0.im +
-                (*s).s1.c1.re * (*s).s1.c1.re + (*s).s1.c1.im * (*s).s1.c1.im +
-                (*s).s1.c2.re * (*s).s1.c2.re + (*s).s1.c2.im * (*s).s1.c2.im +
-                (*s).s2.c0.re * (*s).s2.c0.re + (*s).s2.c0.im * (*s).s2.c0.im +
-                (*s).s2.c1.re * (*s).s2.c1.re + (*s).s2.c1.im * (*s).s2.c1.im +
-                (*s).s2.c2.re * (*s).s2.c2.re + (*s).s2.c2.im * (*s).s2.c2.im +
-                (*s).s3.c0.re * (*s).s3.c0.re + (*s).s3.c0.im * (*s).s3.c0.im +
-                (*s).s3.c1.re * (*s).s3.c1.re + (*s).s3.c1.im * (*s).s3.c1.im +
-                (*s).s3.c2.re * (*s).s3.c2.re + (*s).s3.c2.im * (*s).s3.c2.im;
+    ds = (*s).s0.c0.re * (*s).s0.c0.re + (*s).s0.c0.im * (*s).s0.c0.im +
+         (*s).s0.c1.re * (*s).s0.c1.re + (*s).s0.c1.im * (*s).s0.c1.im +
+         (*s).s0.c2.re * (*s).s0.c2.re + (*s).s0.c2.im * (*s).s0.c2.im +
+         (*s).s1.c0.re * (*s).s1.c0.re + (*s).s1.c0.im * (*s).s1.c0.im +
+         (*s).s1.c1.re * (*s).s1.c1.re + (*s).s1.c1.im * (*s).s1.c1.im +
+         (*s).s1.c2.re * (*s).s1.c2.re + (*s).s1.c2.im * (*s).s1.c2.im +
+         (*s).s2.c0.re * (*s).s2.c0.re + (*s).s2.c0.im * (*s).s2.c0.im +
+         (*s).s2.c1.re * (*s).s2.c1.re + (*s).s2.c1.im * (*s).s2.c1.im +
+         (*s).s2.c2.re * (*s).s2.c2.re + (*s).s2.c2.im * (*s).s2.c2.im +
+         (*s).s3.c0.re * (*s).s3.c0.re + (*s).s3.c0.im * (*s).s3.c0.im +
+         (*s).s3.c1.re * (*s).s3.c1.re + (*s).s3.c1.im * (*s).s3.c1.im +
+         (*s).s3.c2.re * (*s).s3.c2.re + (*s).s3.c2.im * (*s).s3.c2.im;
 
-    double tr = ds + kc;
-    double ts = tr + ks;
-    double tt = ts - ks;
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
     ks = ts;
     kc = tr - tt;
   }
   kc = ks + kc;
-#else
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */
-  for (int ix = 0; ix < N; ix++) {
-    spinor *s = P + ix;
-    double complex ds =  (*s).s0.c0 * conj((*s).s0.c0) +
-      (*s).s0.c1 * conj((*s).s0.c1) +
-      (*s).s0.c2 * conj((*s).s0.c2) +
-      (*s).s1.c0 * conj((*s).s1.c0) +
-      (*s).s1.c1 * conj((*s).s1.c1) +
-      (*s).s1.c2 * conj((*s).s1.c2) +
-      (*s).s2.c0 * conj((*s).s2.c0) +
-      (*s).s2.c1 * conj((*s).s2.c1) +
-      (*s).s2.c2 * conj((*s).s2.c2) +
-      (*s).s3.c0 * conj((*s).s3.c0) +
-      (*s).s3.c1 * conj((*s).s3.c1) +
-      (*s).s3.c2 * conj((*s).s3.c2);
-    
-    double tr = creal(ds) + kc;
-    double ts = tr + ks;
-    double tt = ts - ks;
-    ks = ts;
-    kc = tr - tt;
-  }
-#endif
-
   return kc;
 }
