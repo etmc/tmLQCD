@@ -10,6 +10,7 @@ gcc-env:
   - lemonio
   - c-lime
   - openblas
+  - cmake@4
   - cuda
   variants:
   - +mpi
