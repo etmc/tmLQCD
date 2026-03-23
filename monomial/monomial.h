@@ -30,34 +30,37 @@
 
 #include <complex.h>
 
-#define DET 0
-#define DETRATIO 1
-#define GAUGE 2
-#define POLY 3
-#define NDPOLY 4
-#define SFGAUGE 5
-#define NDDETRATIO 6
-#define POLYDETRATIO 7
-#define CLOVERTRLOG 8
-#define CLOVERDET 9
-#define CLOVERDETRATIO 10
-#define NDCLOVER 11
-#define CLOVERNDTRLOG 12
-#define NDRAT 13
-#define NDCLOVERRAT 14
-#define NDRATCOR 15
-#define NDCLOVERRATCOR 16
-#define RAT 17
-#define RATCOR 18
-#define CLOVERRAT 19
-#define CLOVERRATCOR 20
-#define CLOVERDETRATIORW 21
-#define NDCLOVERDETRATIO 22
+typedef enum {
+  DET,
+  DETRATIO ,
+  GAUGE,
+  POLY,
+  NDPOLY,
+  SFGAUGE,
+  NDDETRATIO,
+  POLYDETRATIO,
+  CLOVERTRLOG,
+  CLOVERDET,
+  CLOVERDETRATIO,
+  NDCLOVER,
+  CLOVERNDTRLOG,
+  NDRAT,
+  NDCLOVERRAT,
+  NDRATCOR,
+  NDCLOVERRATCOR,
+  RAT,
+  RATCOR,
+  CLOVERRAT,
+  CLOVERRATCOR,
+  CLOVERDETRATIORW,
+  NDCLOVERDETRATIO,
+} monomial_t;
 
 #define max_no_monomials 30
 
+
 typedef struct {
-  int type;
+  monomial_t type;
   int gtype;
   int initialised;
   int timescale;
