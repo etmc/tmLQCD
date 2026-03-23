@@ -155,10 +155,10 @@ cmake_dependent_option(
   "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
-  DDalphaAMG_ENABLE_SCHWARZ_RES "Enable paramount output support" OFF 
+  DDalphaAMG_ENABLE_SCHWARZ_RES "Enable paramount output support" OFF
   "TM_USE_DDalphaAMG" OFF)
 
-cmake_dependent_option(DDalphaAMG_ENABLE_OMP  "Enable OpenMP support" ON
+cmake_dependent_option(DDalphaAMG_ENABLE_OMP "Enable OpenMP support" ON
                        "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
@@ -241,9 +241,10 @@ if(TM_USE_HDF5)
 endif()
 
 if(TM_USE_LEMON)
-  FetchContent_Declare(lemon
+  FetchContent_Declare(
+    lemon
     GIT_REPOSITORY https://github.com/etmc/lemon
-    GIT_TAG        187de3435d604251e078eb083016131f035d6a51
+    GIT_TAG 187de3435d604251e078eb083016131f035d6a51
     FIND_PACKAGE_ARGS NAMES lemon)
   FetchContent_MakeAvailable(lemon)
 endif()
@@ -252,8 +253,7 @@ find_package(CLime REQUIRED)
 set(TM_USE_LIME ON)
 
 if(TM_USE_QUDA)
-	enable_language(CUDA)
-	find_package(QUDA REQUIRED config)
+  find_package(QUDA REQUIRED config)
 endif()
 
 if(TM_USE_SHMEM)
@@ -386,14 +386,14 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion)
 
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlQCD-config.cmake.in"
-  "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake" @ONLY)
+               "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake" @ONLY)
 
 install(FILES "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake"
-  "${PROJECT_BINARY_DIR}/tmlQCDConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD")
+              "${PROJECT_BINARY_DIR}/tmlQCDConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD")
 
 install(FILES "${PROJECT_BINARY_DIR}/libtmlQCD.pc"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/cmake"
