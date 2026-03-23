@@ -101,7 +101,19 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
 Note that the command assumes that QUDA is compiled with `CUDA` support. AMD GPU
 are also supported after replacing `-DTM_USE_CUDA=ON` with
 `-DTM_USE_HIP=ON` and compiling `QUDA` with `HIP` support. The ROCM architecture is defined by the variable
-`CMAKE_HIP_ARCHITECTURES=gfxxxx`.
+`CMAKE_HIP_ARCHITECTURES=gfxxxx`.  An extra parameter `-DCMAKE_CXX_COMPILER=clang++` is needed because `QUDA` use the `ROCM clang++` 
+compiler internally and the build will fail if `gcc` or any other compiler is used during 
+link time. This option only affects the linking behavior not the compilation. The cmake command line for HIP/ROCM support is then
+```bash
+cmake -DCMAKE_INSTALL_PREFIX=/my_path \
+    -DCMAKE_PREFIX_PATH="/my_c_line_path;/my_lemon_path;/my_quda_path" \
+    -DTM_USE_MPI=ON \
+    -DTM_USE_LEMON=ON \
+    -DTM_USE_QUDA \
+    -DTM_USE_HIP=ON \
+    -DCMAKE_HIP_ARCHITECTURES=gfx90a \
+    -DCMAKE_CXX_COMPILER=/opr/rocm/bin/clang++ ..
+'''
 
 `QPhiX` and/or `DDalphaAMG` support can be added with
 
@@ -120,8 +132,8 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
       -DTM_USE_OMP=ON ..
 '''
 
-`QPhiX` cmake config support is incomplete and requires both the QPhiX
-and QMP installation directories to work properly.
+`QPhiX` cmake config support is incomplete and requires both the `QPhiX`
+and `QMP` installation directories to work properly.
 
 `CMake` has several relevant specific options that control the build. Compiler
 options are defined by the variable `CMAKE_C_FLAGS` and `CMAKE_CXX_FLAGS`. CUDA and HIP compilations options are controlled by their
