@@ -27,12 +27,12 @@ include:
               -DTM_USE_OMP=ON \
               -DTM_USE_QUDA=ON \
               -DTM_USE_LEMON=ON \
-              -DTM_ENABLE_ALIGNMENT=32 \
               -DTM_USE_GAUGE_COPY=ON \
               -DTM_USE_HALFSPINOR=ON \
               -DCMAKE_INSTALL_PREFIX=../install_dir ..
         make
         make install
+        cd ..
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done

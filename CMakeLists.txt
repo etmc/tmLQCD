@@ -4,7 +4,7 @@ project(
   tmlqcd
   DESCRIPTION "tmlQCD"
   HOMEPAGE_URL "https://github.com/etmc/tmLQCD"
-  VERSION "6.0.0"
+  VERSION "6.0.2"
   LANGUAGES C CXX)
 
 # include our cmake snippets
@@ -388,11 +388,14 @@ write_basic_package_version_file(
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlQCD-config.cmake.in"
                "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake" @ONLY)
 
+configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlQCD.pc.in"
+               "${PROJECT_BINARY_DIR}/tmlQCD.pc" @ONLY)
+
 install(FILES "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake"
               "${PROJECT_BINARY_DIR}/tmlQCDConfigVersion.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD")
 
-install(FILES "${PROJECT_BINARY_DIR}/libtmlQCD.pc"
+install(FILES "${PROJECT_BINARY_DIR}/tmlQCD.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 install(
