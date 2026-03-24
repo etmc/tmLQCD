@@ -7,14 +7,14 @@ stages:
   - build
   - test
 
-build-quda/uenv/daint-gh200:
+build-quda/uenv/beverin-mi300:
   stage: build
-  extends: .uenv-builder-daint-gh200
+  extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
-    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
-
-test/daint-gh200:
-  extends: [.uenv-runner-daint-gh200, .test/hmc, .daint-gh200-vars]
+    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/beverin-mi300
+    SLURM_TIMELIMIT: "08:00:00"
+test/beverin-mi300:
+  extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
   variables:
     INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs.input"
     REFPATH: "doc/sample-output/hmc-quda-cscs"
