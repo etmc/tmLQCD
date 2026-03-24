@@ -52,8 +52,8 @@ BeginMonomial CLOVERDET
   # nominator shift
   rho = 0.1
   kappa = 0.138
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-14
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdet
   solver = ddalphaamg
 EndMonomial
@@ -67,8 +67,8 @@ BeginMonomial CLOVERDETRATIO
   rho2 = 0.1
   CSW = 1.00
   kappa = 0.138
-  AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-16
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdetratio
   solver = ddalphaamg
 EndMonomial
@@ -91,7 +91,7 @@ BeginOperator CLOVER
   2KappaMu = 0.01
   CSW = 1.00
   kappa = 0.138
-  SolverPrecision = 1e-16
+  SolverPrecision = 1e-24
   MaxSolverIterations = 1000
   useevenodd = no
   solver = ddalphaamg
