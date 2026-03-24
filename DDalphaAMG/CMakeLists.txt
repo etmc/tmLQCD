@@ -167,7 +167,7 @@ target_link_libraries(
 
 target_include_directories(
   DDalphaAMG
-  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/DDalphaAMG>
   $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/src>
   $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/DDalphaAMG>)
@@ -188,8 +188,8 @@ target_compile_definitions(
   $<$<CONFIG:Debug>:DEBUG>
   SSE)
 
-install(FILES "${CMAKE_SOURCE_DIR}/deps/DDalphaAMG/DDalphaAMG.h"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
+install(FILES "${CMAKE_SOURCE_DIR}/deps/lib/DDalphaAMG.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/DDalphaAMG")
 
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/DDalphaAMGonfigVersion.cmake"
@@ -203,14 +203,14 @@ install(TARGETS DDalphaAMG
 install(EXPORT DDalphaAMG_targets
   FILE DDalphaAMG-Targets.cmake
   NAMESPACE DDalphaAMG::
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DDalphaAMG")
 
 configure_file("${PROJECT_SOURCE_DIR}/cmake/DDalphaAMG-Config.cmake.in"
   "${PROJECT_BINARY_DIR}/DDalphaAMG-Config.cmake" @ONLY)
 
 install(FILES "${PROJECT_BINARY_DIR}/DDalphaAMG-Config.cmake"
   "${PROJECT_BINARY_DIR}/DDalphaAMG-ConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD")
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DDalphaAMG")
 
 
 # add_library(tmlqcd::DDalphaAMG alias DDalphaAMG)

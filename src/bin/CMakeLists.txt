@@ -42,3 +42,5 @@ if(TM_ENABLE_TESTS)
                  LINKER_LANGUAGE "CXX")
   endforeach()
 endif()
+
+install(TARGETS ${tmlqcd_prog} RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

@@ -2,10 +2,10 @@ name: tmlqcd
 store: /user-environment
 spack:
   repo: https://github.com/spack/spack.git
-  commit: releases/v1.0
+  commit: releases/v1.1
   packages:
     repo: https://github.com/spack/spack-packages.git
-    commit: releases/v2025.11
+    #commit: 
 modules: true
 description: "tmLQCD is a freely available software suite providing a set of tools to be used in lattice QCD simulations."
 version: 2
