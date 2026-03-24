@@ -2,14 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.cmake import CmakePackage
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 from spack.package import *
 
-class Tmlqcd(CmakePackage, CudaPackage, ROCmPackage):
-"""Base class for building tmlQCD."""
+
+class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
+    """Base class for building tmlQCD."""
 
     homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
     url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
@@ -47,8 +49,8 @@ class Tmlqcd(CmakePackage, CudaPackage, ROCmPackage):
     variant("half_spinor", default=True, description="Use a Dirac operator with half-spinor")
     variant("shared", default=False, description="Enable shared library")
     variant("shmem", default=False, description="Use shmem API")
-    variant("quda", default=True, description="Enable the QUDA library", when="+cuda",)
-    variant("quda", default=True, description="Enable the QUDA library", when="+rocm",)
+    variant("quda", default=True, description="Enable the QUDA library", when="+cuda")
+    variant("quda", default=True, description="Enable the QUDA library", when="+rocm")
     variant(
         "QPhiX", default=False, description="Enable the QPhiX library for Intel Xeon and Xeon Phis"
     )
@@ -77,7 +79,7 @@ class Tmlqcd(CmakePackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
     depends_on("pkgconfig", type="build")
 
-     # dependencies
+    # dependencies
     depends_on("mpi", when="+mpi")
     depends_on("lemon-io", when="+lemon")
 
@@ -93,6 +95,7 @@ class Tmlqcd(CmakePackage, CudaPackage, ROCmPackage):
 
     depends_on("fftw-api@3", when="+fftw")
 
+
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
@@ -101,7 +104,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("TM_USE_LEMON", "lemon"),
             self.define_from_variant("TM_USE_MPI", "mpi"),
             self.define_from_variant("TM_USE_QUDA", "quda"),
-            self.define_from_variant("TM_USE_CUDA","cuda"),
+            self.define_from_variant("TM_USE_CUDA", "cuda"),
             self.define_from_variant("TM_USE_HIP", "cuda"),
             self.define_from_variant("TM_USE_FFTW", "fftw"),
             self.define_from_variant("TM_FIXEDVOLUME", "fixed_volume"),
