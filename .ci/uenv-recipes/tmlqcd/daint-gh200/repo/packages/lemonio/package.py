@@ -17,9 +17,9 @@ class Lemonio(CMakePackage):
     license("GPL-3.0-or-later")
 
     version("master", branch="master")
-
+    variant("shared", default=False, description="Build shared library")
     depends_on("libtool", type="build", when="@master build_system=cmake")
-    depends_on("cmake@4", type="build", when="master build_system=cmake")
+    depends_on("cmake@3.28:", type="build", when="@master build_system=cmake")
 
     depends_on("mpi")
 
