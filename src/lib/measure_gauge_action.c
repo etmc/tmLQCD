@@ -39,6 +39,7 @@
 #include "measure_gauge_action.h"
 #include "su3.h"
 #include "su3adj.h"
+#include <ptbc.h>
 
 double measure_plaquette(const su3 *const *const gf) {
   static double res;
@@ -74,7 +75,10 @@ double measure_plaquette(const su3 *const *const gf) {
           w = &gf[ix2][mu1];
           _su3_times_su3(pr2, *v, *w);
           _trace_su3_times_su3d(ac, pr1, pr2);
-          tr = ac + kc;
+
+          // compute local parallel tempering factor: fac_1 * fac_2 * fac_3 *  fac_4
+          double const ptbc_fac = get_ptbc_coeff(ix, mu1) * get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, mu1);
+          tr = ac * ptbc_fac + kc;
           ts = tr + ks;
           tt = ts - ks;
           ks = ts;
@@ -136,7 +140,10 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
         w = &gf[ix2][0];
         _su3_times_su3(pr2, *v, *w);
         _trace_su3_times_su3d(ac, pr1, pr2);
-        ac *= (1 + lambda);
+
+        // parallel tempering factor = fac_1 * fac_2 * fac_3 *  fac_4 computed in 2 parts
+        double const ptbc_fac = get_ptbc_coeff(ix, 0) * get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, 0);
+        ac *= (1 + lambda) * ptbc_fac;
         tr = ac + kc;
         ts = tr + ks;
         tt = ts - ks;
@@ -145,9 +152,13 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
       }
       // magnetic part
       for (int mu1 = 1; mu1 < 3; mu1++) {
+        double const ptbc_fac1 = get_ptbc_coeff(ix, mu1);
+
         ix1 = g_iup[ix][mu1];
-        for (int mu2 = mu1 + 1; mu2 < 4; mu2++) {
+        for (int mu2 = mu1 + 1; mu2 < 4; mu2++) {        
           ix2 = g_iup[ix][mu2];
+          double const ptbc_fac2 = get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, mu1);
+
           v = &gf[ix][mu1];
           w = &gf[ix1][mu2];
           _su3_times_su3(pr1, *v, *w);
@@ -155,7 +166,7 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
           w = &gf[ix2][mu1];
           _su3_times_su3(pr2, *v, *w);
           _trace_su3_times_su3d(ac, pr1, pr2);
-          ac *= (1 - lambda);
+          ac *= (1 - lambda) * ptbc_fac1 * ptbc_fac2;
           tr = ac + kc;
           ts = tr + ks;
           tt = ts - ks;
