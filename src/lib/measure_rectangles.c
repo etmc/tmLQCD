@@ -45,6 +45,7 @@
 #include "measure_rectangles.h"
 #include "su3.h"
 #include "su3adj.h"
+#include <ptbc.h>
 
 double measure_rectangles(const su3 **const gf) {
   static double res;
@@ -81,6 +82,7 @@ double measure_rectangles(const su3 **const gf) {
             */
             j = g_iup[i][mu];
             k = g_iup[j][nu];
+            double const ptbc_fac0 = get_ptbc_coeff(i, mu) * get_ptbc_coeff(j, nu) * get_ptbc_coeff(k, nu);
             v = &gf[i][mu];
             w = &gf[j][nu];
             _su3_times_su3(tmp, *v, *w);
@@ -95,6 +97,7 @@ double measure_rectangles(const su3 **const gf) {
             */
             j = g_iup[i][nu];
             k = g_iup[j][nu];
+            double const ptbc_fac1 = get_ptbc_coeff(i, nu) * get_ptbc_coeff(j, nu) * get_ptbc_coeff(k, mu);
             v = &gf[i][nu];
             w = &gf[j][nu];
             _su3_times_su3(tmp, *v, *w);
@@ -105,7 +108,7 @@ double measure_rectangles(const su3 **const gf) {
             _trace_su3_times_su3d(ac, pr1, pr2);
             /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
             /* Kahan summation */
-            tr = ac + kc;
+            tr = ac * ptbc_fac0 * ptbc_fac1 + kc;
             ts = tr + ks;
             tt = ts - ks;
             ks = ts;
