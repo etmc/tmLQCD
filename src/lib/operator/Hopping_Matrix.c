@@ -106,6 +106,7 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
   {
 #endif
 
+#include "hopping.h"
 #include "operator/hopping_body_dbl.inc"
 
 #ifdef TM_USE_OMP

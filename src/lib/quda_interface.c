@@ -2546,8 +2546,8 @@ void compute_gauge_derivative_quda(monomial *const mnl, hamiltonian_field_t *con
   reset_quda_gauge_state(&quda_gauge_state);
 
   tm_stopwatch_push(&g_timers, "computeGaugeForceQuda", "");
-  computeGaugeForceQuda((void *)mom_quda, (void *)gauge_quda, path_buf, (int *)path_length, loop_coeff,
-                        num_paths, max_length, 1.0, &f_gauge_param);
+  computeGaugeForceQuda((void *)mom_quda, (void *)gauge_quda, path_buf, (int *)path_length,
+                        loop_coeff, num_paths, max_length, 1.0, &f_gauge_param);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
   free(path_buf);
@@ -2907,7 +2907,7 @@ void quda_mg_tune_params(void *spinorOut, void *spinorIn, const int max_iter) {
   int cur_tuning_lvl = mg_n_level - 1;
   int cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
   int steps_done_in_cur_dir = 0;
-  int i = 0; 
+  int i = 0;
   tm_QudaMGTuningDirection_t cur_tuning_dir = TM_MG_TUNE_MU_FACTOR;
 
   // when tuning over multiple configurations, we tune on the first config based
