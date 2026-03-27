@@ -26,6 +26,8 @@
  *
  **********************************************************************/
 
+#include "hopping.h"
+
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
   int icx, icy, icz, ioff, ioff2;
   int ix, iy, iz;
