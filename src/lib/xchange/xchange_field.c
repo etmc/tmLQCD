@@ -336,7 +336,7 @@ void xchange_field(spinor* const l, const int ieo) {
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */
-#else /* TM_NON_BLOCKING TM_USE_SHMEM */
+#else   /* TM_NON_BLOCKING TM_USE_SHMEM */
 /* exchanges the field  l */
 void xchange_field(spinor* const l, const int ieo) {
 

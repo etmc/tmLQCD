@@ -394,16 +394,16 @@ endif()
 # space at all
 
 if(BUILD_SHARED_LIBS)
-  add_library(hmc SHARED "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
+  add_library(tmlqcd SHARED "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
 else()
-  add_library(hmc STATIC "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
+  add_library(tmlqcd STATIC "${ALL_SRC};${FLEX_tmlqcd_input_read_OUTPUTS}")
 endif()
 
-set_target_properties(hmc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
+set_target_properties(tmlqcd PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 
 # define a library and add the dependencies
 target_link_libraries(
-  hmc
+  tmlqcd
   PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
@@ -427,16 +427,16 @@ target_link_libraries(
          m)
 
 target_compile_definitions(
-  hmc PUBLIC HAVE_CONFIG_H $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
+  tmlqcd PUBLIC HAVE_CONFIG_H $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
 
 target_include_directories(
-  hmc
+  tmlqcd
   PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 install(
-  TARGETS hmc
+  TARGETS tmlqcd
   EXPORT tmlqcd_targets
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 

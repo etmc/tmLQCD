@@ -1,4 +1,4 @@
-list(APPEND tmlqcd_prog "benchmark;deriv_mg_tune;hmc_tm;offline_measurement")
+list(APPEND tmlqcd_prog "invert;benchmark;deriv_mg_tune;hmc_tm;offline_measurement")
 
 include_directories(
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
@@ -10,7 +10,7 @@ include_directories(
 foreach(_prog ${tmlqcd_prog})
   add_executable(${_prog} "${_prog}.c")
 
-  target_link_libraries(${_prog} PUBLIC hmc)
+  target_link_libraries(${_prog} PUBLIC tmlqcd)
   set_target_properties(
     ${_prog}
     PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"

@@ -1,6 +1,1 @@
-#ifndef _GIT_HASH_H
-#define _GIT_HASH_H
-
 const char git_hash[] = "@TM_SHA@";
-
-#endif /* _GIT_HASH_H */

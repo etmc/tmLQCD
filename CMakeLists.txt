@@ -158,7 +158,7 @@ cmake_dependent_option(
   DDalphaAMG_ENABLE_SCHWARZ_RES "Enable paramount output support" OFF
   "TM_USE_DDalphaAMG" OFF)
 
-cmake_dependent_option(DDalphaAMG_ENABLE_OMP "Enable OpenMP support" ON
+cmake_dependent_option(DDalphaAMG_ENABLE_OMP "Enable OpenMP support" ${TM_USE_OMP}
                        "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
@@ -178,7 +178,7 @@ find_package(FLEX REQUIRED)
 set(PACKAGE_NAME ${PROJECT_DESCRIPTION})
 set(PACKAGE_VERSION ${PROJECT_VERSION})
 set(PACKAGE_TARNAME "tmlqcd")
-set(PACKAGE_BUGREPORT "curbach@gmx.de")
+set(PACKAGE_BUGREPORT "https://github.com/etmc/tmLQCD")
 set(PACKAGE_STRING "${PROJECT_DESCRIPTION} ${PROJECT_VERSION}")
 
 set(ALIGN " ")
