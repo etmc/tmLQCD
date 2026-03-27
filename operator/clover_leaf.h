@@ -29,13 +29,13 @@ extern su3 **swm, **swp;
 extern const double tiny_t;
 
 void sw_term(const su3** const gf, const double kappa, const double c_sw);
-double sw_trace(const int ieo, const double mu);
+double sw_trace(const int ieo, const double mu, const int single_flavor);
 double sw_trace_nd(const int ieo, const double mu, const double eps);
 void sw_invert(const int ieo, const double mu);
 void sw_invert_nd(const double mshift);
 void sw_invert_epsbar(const double epsbar);
 void sw_invert_mubar(const double mubar);
-void sw_deriv(const int ieo, const double mu);
+void sw_deriv(const int ieo, const double mu, const int single_flavor);
 void sw_deriv_nd(const int ieo);
 void sw_spinor_eo(const int ieo, const spinor* const kk, const spinor* const ll, const double fac);
 void sw_spinor(const spinor* const kk, const spinor* const ll, const double fac);

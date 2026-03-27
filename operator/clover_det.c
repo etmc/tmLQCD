@@ -100,12 +100,14 @@ void six_det(_Complex double* const rval, _Complex double a[6][6]) {
   *rval = det;
 }
 
-double sw_trace(const int ieo, const double mu) {
+double sw_trace(const int ieo, const double mu, const int single_flavor) {
   tm_stopwatch_push(&g_timers, __func__, "");
   double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
+
+  const double fac = (single_flavor ? 0.5 : 1.);
 
 #ifdef TM_USE_OMP
 #pragma omp parallel
@@ -171,10 +173,10 @@ double sw_trace(const int ieo, const double mu) {
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-  return (mres);
+  return (fac * mres);
 #else
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-  return (res);
+  return (fac * res);
 #endif
 }
 

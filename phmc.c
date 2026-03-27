@@ -235,22 +235,29 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
                  mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                  1,  // we only support even-odd here
                  mnl->solver_params.refinement_precision, mnl->solver_params.sloppy_precision,
-                 mnl->solver_params.compression_type, 0);
+                 mnl->solver_params.compression_type, mnl->single_flavor);
     if (fabs(mnl->EVMax - 1) < 2 * DBL_EPSILON) {
       eval_min /= mnl->StildeMax;
     }
 #else
     if (g_proc_id == 0) {
-      fprintf(stderr,
-              "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
-              "usage.\n");
+      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+    }
+#ifdef TM_USE_MPI
+    MPI_Finalize();
+#endif
+    exit(-2);
+#endif
+  } else {
+    if (mnl->single_flavor) {
+      if (g_proc_id == 0) {
+        fprintf(stderr, "Error: CPU version of eigenvalue computation not yet implemented for single quark flavor.");
+      }
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(-2);
     }
-#endif
-  } else {
     eval_min = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
   }
 
@@ -262,22 +269,29 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
                  mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                  1,  // we only support even-odd here
                  mnl->solver_params.refinement_precision, mnl->solver_params.sloppy_precision,
-                 mnl->solver_params.compression_type, 0);
+                 mnl->solver_params.compression_type, mnl->single_flavor);
     if (fabs(mnl->EVMax - 1.) < 2 * DBL_EPSILON) {
       eval_max /= mnl->StildeMax;
     }
 #else
     if (g_proc_id == 0) {
-      fprintf(stderr,
-              "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
-              "usage.\n");
+      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+    }
+#ifdef TM_USE_MPI
+    MPI_Finalize();
+#endif
+    exit(-2);
+#endif
+  } else {
+    if (mnl->single_flavor) {
+      if (g_proc_id == 0) {
+        fprintf(stderr, "Error: CPU version of eigenvalue computation not yet implemented for single quark flavor.");
+      }
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
-      exit(-2);
+      exit (-2);
     }
-#endif
-  } else {
     eval_max = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
 

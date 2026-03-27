@@ -124,6 +124,7 @@ typedef struct {
   double *MDPolyCoefs, *PtildeCoefs;
   /* rational approximation */
   rational_t rat;
+  int single_flavor;
   /* chronological solver fields */
   spinor **csg_field;
   spinor **csg_field2;
