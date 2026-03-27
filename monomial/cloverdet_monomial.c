@@ -187,7 +187,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t *const hf) {
       // we again compute only the insertion matrices for S_det
       // the result is added to swp and swm
       // even sites only!
-      sw_deriv(EE, mnl->mu);
+      sw_deriv(EE, mnl->mu, 0);
     } else {
       /* \delta Q sandwitched by Y^\dagger and X */
       deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);

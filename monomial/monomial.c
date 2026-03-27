@@ -96,6 +96,14 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
   monomial_list[no_monomials].HB_maxiter = _default_max_solver_iterations;
+  if (monomial_list[no_monomials].type == RAT || 
+      monomial_list[no_monomials].type == RATCOR || 
+      monomial_list[no_monomials].type == CLOVERRAT || 
+      monomial_list[no_monomials].type == CLOVERRATCOR) {
+    monomial_list[no_monomials].single_flavor = 1;
+  } else {
+    monomial_list[no_monomials].single_flavor = 0; // NOTE: the special case of CLOVERTRLOG requires knowledge of the "parent" monomial and is dealt with in init_monomials()
+  }
   if ((monomial_list[no_monomials].type == NDRAT) ||
       (monomial_list[no_monomials].type == NDRATCOR) ||
       (monomial_list[no_monomials].type == NDCLOVERRAT) ||
@@ -107,7 +115,7 @@ int add_monomial(const int type) {
   }
   monomial_list[no_monomials].solver_params.mcg_delta = _default_mixcg_innereps;
   monomial_list[no_monomials].solver_params.solution_type = TM_SOLUTION_M_MDAG;
-  // the defaut is 1 because the QPhiX interface is generalised in such a way
+  // the default is 1 because the QPhiX interface is generalised in such a way
   // that normal solves correspond to solves with one shift, this does not
   // affect the used parameters in any way!
   monomial_list[no_monomials].solver_params.no_shifts = 1;
@@ -578,6 +586,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[no_monomials - 1].derivativefunction = NULL;
       monomial_list[no_monomials - 1].timescale = 0;
       monomial_list[no_monomials - 1].even_odd_flag = even_odd_flag;
+      if (monomial_list[clover_monomials[j]].type == CLOVERRAT) monomial_list[no_monomials - 1].single_flavor = 1; // only if the parent monomial is a CLOVERRAT (with "AddTrLog = yes") it is for a single flavor.
       if (g_proc_id == 0 && g_debug_level > 1) {
         printf("# Initialised monomial %s of type CLOVERTRLOG, no_monomials= %d\n",
                monomial_list[no_monomials - 1].name, no_monomials);

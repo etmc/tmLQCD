@@ -65,14 +65,14 @@ void reweighting_factor(const int N, const int nstore) {
 
         sw_term((const su3**)hf.gaugefield, mnl->kappa, c_sw);
         if (mnl->type == CLOVERDETRATIORW) {
-          trlog[j] = -sw_trace(0, mnl->mu);
+          trlog[j] = -sw_trace(0, mnl->mu, 0);
         } else {
           trlog[j] = -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
         }
 
         sw_term((const su3**)hf.gaugefield, mnl->kappa2, c_sw);
         if (mnl->type == CLOVERDETRATIORW) {
-          trlog[j] -= -sw_trace(0, mnl->mu2);
+          trlog[j] -= -sw_trace(0, mnl->mu2, 0);
         } else {
           trlog[j] -= -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
         }

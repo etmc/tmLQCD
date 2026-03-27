@@ -143,7 +143,7 @@ void rat_derivative(const int id, hamiltonian_field_t* const hf) {
     }
   }
   if (mnl->type == CLOVERRAT && mnl->trlog) {
-    sw_deriv(EE, 0.);
+    sw_deriv(EE, 0., 1);
   }
   if (mnl->type == CLOVERRAT) {
     sw_all(hf, mnl->kappa, mnl->c_sw);
@@ -173,8 +173,11 @@ void rat_heatbath(const int id, hamiltonian_field_t* const hf) {
   }
   // we measure before the trajectory!
   if ((mnl->rec_ev != 0) && (hf->traj_counter % mnl->rec_ev == 0)) {
-    // if(mnl->type != CLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
-    // else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
+    if(mnl->type != CLOVERRAT) {
+      phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    } else {
+      phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
+    }
   }
 
   // the Gaussian distributed random fields

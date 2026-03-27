@@ -1423,10 +1423,15 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       inv_param.mu = 0.0;
       inv_param.tm_rho = -g_mu3 / 2. / kappa;
     } else {
+      inv_param.mu = 0.0;
+      inv_param.tm_rho = 0.0;
+      inv_param.clover_rho = 0.0;
+//      inv_param.twist_flavor = QUDA_TWIST_SINGLET;
+//      inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
       inv_param.twist_flavor = QUDA_TWIST_NO;
       inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
     }
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = c_sw * kappa;

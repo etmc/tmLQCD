@@ -60,7 +60,7 @@
 //
 // this function depends on mu
 
-void sw_deriv(const int ieo, const double mu) {
+void sw_deriv(const int ieo, const double mu, const int single_flavor) {
   tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
@@ -79,6 +79,8 @@ void sw_deriv(const int ieo, const double mu) {
       ioff = (VOLUME + RAND) / 2;
     }
     if (fabs(mu) > 0.) fac = 0.5;
+    if (single_flavor) fac = 0.5;
+    if (single_flavor && (fabs(mu) > 0.)) fatal_error("single_flavor flag and |mu|>0 are incompatible.", __func__);
 
 #ifndef TM_USE_OMP
     icy = 0;
