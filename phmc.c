@@ -211,17 +211,15 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
   double atime, etime;
   _Complex double eval_min = 0.0;
   _Complex double eval_max = 0.0;
-  int max_iter_ev, no_eigenvalues;
+  int max_iter_ev = 1000;
+  int no_eigenvalues;
   char buf[100];
   char *phmcfilename = buf;
   FILE *countfile;
   monomial *mnl = &monomial_list[id];
-  ;
 
   sprintf(phmcfilename, "monomial-%.2d.data", id);
   atime = gettime();
-
-  max_iter_ev = 1000;
 
   if ((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Computing eigenvalues for heavy doublet\n");
