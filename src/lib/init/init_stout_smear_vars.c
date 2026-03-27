@@ -84,9 +84,6 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
 
   /* int i, k, x, mu; */
 
-  /* i = 0; */
-  /* k = 0; */
-  /* mu = 0; */
 
   if (g_exposu3_no_c == 0) init_exposu3();
 
