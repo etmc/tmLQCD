@@ -96,7 +96,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
   {
 #endif
 #define _MUL_G5_CMPLX
-#include "hopping_body_dbl.c"
+#include "hopping_body_dbl.inc"
 #undef _MUL_G5_CMPLX
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
