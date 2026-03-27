@@ -91,7 +91,6 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("quda+mpi", when="+mpi")
         depends_on("quda+cuda", when="+cuda")
         depends_on("quda+rocm", when="+rocm")
-        depends_on("quda+nvshmem", when="+shmem")
 
     depends_on("fftw-api@3", when="+fftw")
 
