@@ -72,6 +72,7 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     # conflicts
     conflicts("+cuda", when="cuda_arch=none")
     conflicts("+rocm", when="amdgpu_target=none")
+conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
 
     # hard dependencies
     depends_on("c-lime")
