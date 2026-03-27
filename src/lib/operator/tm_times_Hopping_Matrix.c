@@ -79,6 +79,8 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 }
 
 #elif (!defined _NO_COMM && !defined TM_USE_HALFSPINOR)
+#include "hopping.h"
+
 void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
                              double complex const cfactor) {
 #ifdef TM_USE_GAUGE_COPY
