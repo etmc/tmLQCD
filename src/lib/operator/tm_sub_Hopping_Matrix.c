@@ -98,7 +98,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor* const l, spinor* p, spinor* co
 #define _TM_SUB_HOP
     spinor* pn;
 
-#include "operator/hopping_body_dbl.c"
+#include "operator/hopping_body_dbl.inc"
 
 #undef _TM_SUB_HOP
 #ifdef TM_USE_OMP

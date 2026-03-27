@@ -23,6 +23,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************/
+#include "hopping.h"
 
 int ioff;
 int* hi;
