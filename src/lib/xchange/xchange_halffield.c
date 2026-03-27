@@ -50,17 +50,6 @@ MPI_Request prequests[16];
 /* 2. */
 void init_xchange_halffield() {
 #ifdef TM_USE_MPI
-
-  /* #ifdef TM_PARALLELT */
-  /*   int reqcount = 4; */
-  /* #elif defined TM_PARALLELXT */
-  /*   int reqcount = 8; */
-  /* #elif defined TM_PARALLELXYT */
-  /*   int reqcount = 12; */
-  /* #elif defined TM_PARALLELXYZT */
-  /*   int reqcount = 16; */
-  /* #endif */
-
   /* send the data to the neighbour on the right in t direction */
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Send_init((void*)(sendBuffer), LX * LY * LZ * 12 / 2, MPI_DOUBLE, g_nb_t_up, 81, g_cart_grid,
