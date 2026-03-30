@@ -1426,8 +1426,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       inv_param.mu = 0.0;
       inv_param.tm_rho = 0.0;
       inv_param.clover_rho = 0.0;
-//      inv_param.twist_flavor = QUDA_TWIST_SINGLET;
-//      inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
       inv_param.twist_flavor = QUDA_TWIST_NO;
       inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
     }
