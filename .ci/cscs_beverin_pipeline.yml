@@ -43,7 +43,7 @@ build-tmlqcd/uenv/beverin-mi300:
 test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
   variables:
-    INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs.input"
+    INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs-beverin.input"
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
