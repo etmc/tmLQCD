@@ -24,6 +24,8 @@
  *
  **********************************************************************/
 
+#include "hopping.h"
+
 int ioff;
 int* hi;
 su3* restrict ALIGN up;
