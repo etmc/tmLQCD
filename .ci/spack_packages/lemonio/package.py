@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 
 
 from spack.package import *
 
-class Lemonio(AutotoolsPackage):
+class Lemonio(CMakePackage):
     """LEMON: Lightweight Parallel I/O library for Lattice QCD."""
 
     homepage = "https://github.com/etmc/lemon"
@@ -16,13 +17,13 @@ class Lemonio(AutotoolsPackage):
 
     version('master', branch='master')
 
-    depends_on("autoconf", type="build", when="@master build_system=autotools")
-    depends_on("automake", type="build", when="@master build_system=autotools")
-    depends_on("libtool", type="build", when="@master build_system=autotools")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on('mpi')
+    generator("ninja")
 
     def configure_args(self):
         args = []
-        args.append('CC={0}'.format(self.spec['mpi'].mpicc))
         return args
