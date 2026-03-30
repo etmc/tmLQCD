@@ -1,24 +1,28 @@
 gcc-env:
-  compiler: [gcc]
+  compiler: [gcc, llvm-amdgpu]
   network:
-      mpi: cray-mpich@8.1.32 +rocm
+      mpi: cray-mpich@8.1.32+rocm
       specs: [ 'libfabric@2.3 +rocm' ]
-  unify: true
+  unify: when_possible
+  duplicates:
+    strategy: full
   specs:
-  - python@3.12
-  - numdiff
-  - quda@develop +qdp +multigrid +twisted_clover +twisted_mass
-  - lemonio
-  - c-lime
-  - openblas
+  # add GPU-specific packages here
   - hip@6.3.3 ^mesa@23.3.6
+  - llvm-amdgpu
+  # tmlqcd and quda are not required, since we build their newest commits in the
+  # next step. Although, we want all dependencies
+  - tmlqcd +lemon +quda
+  - numdiff
   variants:
   - +mpi
   - +rocm
   - amdgpu_target=gfx942
+  - amdgpu_target_sram_ecc=gfx942
   views:
     default:
       link: roots
+      exclude: ["llvm"]
       uenv:
         add_compilers: true
         prefix_paths:
