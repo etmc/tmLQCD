@@ -8,36 +8,26 @@ include:
   variables:
     WITH_UENV_VIEW: "default"
   before_script:
+    - echo "before VARIABLE = $VARIABLE"
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
-        export CC="$(which mpicc)"
-        export CXX="$(which mpicxx)"
-        mkdir -p install_dir
-        autoconf
-        ./configure \
-          --enable-quda_experimental \
-          --enable-mpi \
-          --enable-omp \
-          --with-mpidimension=4 \
-          --disable-sse2 \
-          --disable-sse3 \
-          --enable-alignment=32 \
-          --with-qudadir="/user-environment/env/default" \
-          --with-limedir="/user-environment/env/default" \
-          --with-lemondir="/user-environment/env/default" \
-          --with-lapack="-lopenblas -L/user-environment/env/default/lib" \
-          --with-cudadir="/user-environment/env/default/lib64" \
-          --prefix="$(pwd)/install_dir"
-        make
-        make install
+        ls -la
+        tar xf ./builddir.tar -C /
         touch preparation-done-${CI_JOB_ID}
       fi
-    - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
+    - |
+      while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
+      stagedir=$(find /dev/shm/spack-stage -type d -name spack-stage-sirius-*)
+      echo "stagedir: $stagedir"
 
 
 .test/hmc:
   extends: .test/base
   script:
+    - echo "script VARIABLE = $VARIABLE"
+    - ls -la
+    - which numdiff
+    - which hmc_tm
     - ./install_dir/bin/hmc_tm -f "${INPUT_FILE}"
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
