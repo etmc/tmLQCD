@@ -9,7 +9,7 @@
 variables:
   UENV_NAME: tmlqcd
   UENV_VERSION: experimental
-  UENV_TAG: v0.0.6
+  UENV_TAG: v0.0.8
 
 
 # These are the firecrest id and secret for the beverin pipeline
