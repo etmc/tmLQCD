@@ -31,9 +31,9 @@ build-tmlqcd/uenv/beverin-mi300:
     ROCM_ARCH: gfx942
     REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
   script:
-    - echo "YAML VARIABLE = $VARIABLE"
     - |
       #
+      echo "YAML VARIABLE = $VARIABLE"
       git clone --filter=tree:0 $(jq -r .spack.repo /user-environment/meta/configure.json) /dev/shm/spack-clone
       git -C /dev/shm/spack-clone checkout $(jq -r .spack.commit /user-environment/meta/configure.json)
       source /dev/shm/spack-clone/share/spack/setup-env.sh
