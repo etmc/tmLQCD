@@ -31,6 +31,9 @@ class Quda(CMakePackage, CudaPackage, ROCmPackage):
 
     version("1.1.0", sha256="b4f635c993275010780ea09d8e593e0713a6ca1af1db6cc86c64518714fcc745")
 
+    # don't expose ${ROCM_PATH}/include/hipfft explicitly, spack finds it alone
+    patch("quda-hipfft-public-to-private.patch", when="@:")
+
     # build dependencies
     generator("ninja")
     depends_on("cmake@3.18:", type="build")
