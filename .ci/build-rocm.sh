@@ -5,14 +5,18 @@ set -xeuo pipefail
 echo "VARIABLE = $VARIABLE"
 
 export SPACK_SYSTEM_CONFIG_PATH=/user-environment/config
+export SPACK_PYTHON=$(which python3.6) # must be <=3.12, system python is 3.6
 export CICD_SRC_DIR=$PWD
 export QUDA_SRC_DIR=$PWD/deps/src/quda
-export SPACK_PYTHON=$(which python3.6) # must be <=3.12, system python is 3.6
 
 # QUDA git, branch and commit
 export QUDA_GIT_REPO="${QUDA_GIT_REPO:=https://github.com/lattice/quda.git}"
 export QUDA_GIT_BRANCH="${QUDA_GIT_BRANCH:=develop}"
 export QUDA_GIT_COMMIT="${QUDA_GIT_COMMIT:=$(git ls-remote ${QUDA_GIT_REPO} refs/heads/${QUDA_GIT_BRANCH} | awk '{print $1}')}"
+
+# obtain QUDA
+git clone -b ${QUDA_GIT_BRANCH} ${QUDA_GIT_REPO} ${QUDA_SRC_DIR}
+git -C ${QUDA_SRC_DIR} checkout ${QUDA_GIT_COMMIT}
 
 # make sure we keep the stage direcorty
 spack config --scope=user add config:build_stage:/dev/shm/spack-stage
@@ -24,7 +28,7 @@ spack env create -d ./spack-env
 # add local repository with current tmlqcd recipe
 spack -e ./spack-env repo add $REPO
 
-spack -e ./spack-env config add "packages:all:variants:[amdgpu_target=${ROCM_ARCH},amdgpu_target_sram_ecc=${ROCM_ARCH},+rocm]"
+spack -e ./spack-env config add "packages:all:variants:[amdgpu_target=${ROCM_ARCH},amdgpu_target_sram_ecc=${ROCM_ARCH},+rocm,+mpi]"
 
 spack -e ./spack-env add $SPEC
 

@@ -21,7 +21,7 @@ build-base/uenv/beverin-mi300:
 build-tmlqcd/uenv/beverin-mi300:
   stage: build
   extends: [.uenv-runner-beverin-mi300, .beverin-mi300-secrets]
-  needs: ["build-base/uenv/beverin-mi300"]
+  needs: [build-base/uenv/beverin-mi300]
   image: $UENV_NAME/$UENV_VERSION:$CI_PIPELINE_ID
   artifacts:
     paths:
@@ -42,6 +42,7 @@ build-tmlqcd/uenv/beverin-mi300:
 
 test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
+  needs: [build-tmlqcd/uenv/beverin-mi300]
   variables:
     INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs-beverin.input"
     REFPATH: "doc/sample-output/hmc-quda-cscs"
