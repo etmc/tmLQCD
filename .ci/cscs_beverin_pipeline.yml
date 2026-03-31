@@ -30,15 +30,12 @@ build-tmlqcd/uenv/beverin-mi300:
     SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     ROCM_ARCH: gfx942
     REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
+    SLURM_TIMELIMIT: "01:00:00"
   script:
     - echo "YAML VARIABLE = $VARIABLE"
     - git clone --filter=tree:0 $(jq -r .spack.repo /user-environment/meta/configure.json) /dev/shm/spack-clone
     - git -C /dev/shm/spack-clone checkout $(jq -r .spack.commit /user-environment/meta/configure.json)
     - source /dev/shm/spack-clone/share/spack/setup-env.sh
-    - pwd
-    - ls -la
-    - find
-    - ls -la ./.ci/build-rocm.sh
     - bwrap --dev-bind / / --tmpfs ~ -- ./.ci/build-rocm.sh
 
 
