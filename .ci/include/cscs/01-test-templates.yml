@@ -17,18 +17,18 @@ include:
       fi
     - |
       while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
-      stagedir=$(find /dev/shm/spack-stage -type d -name spack-stage-sirius-*)
+      stagedir=$(find /dev/shm/spack-stage -type d -name spack-stage-tmlqcd-*)
       echo "stagedir: $stagedir"
 
 
 .test/hmc:
   extends: .test/base
   script:
+    - echo "script VARIABLE = $VARIABLE"
+    - ls -la
+    - which numdiff
+    - which hmc_tm
     - |
-      echo "script VARIABLE = $VARIABLE"
-      ls -la
-      which numdiff
-      which hmc_tm
       hmc_tm -f "${INPUT_FILE}"
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
@@ -38,3 +38,4 @@ include:
           numdiff -r 5e-4 ${f} ${REFPATH}/${f};
         done
       fi
+    - echo "done"
