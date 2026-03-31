@@ -11,8 +11,8 @@ gcc-env:
   - hip@6.3.3 ^mesa@23.3.6
   - llvm-amdgpu
   # tmlqcd and quda are not required, since we build their newest commits in the
-  # next step. Although, we want all dependencies
-  - tmlqcd +lemon +quda
+  # build stage. Although, we want all their dependencies in the base uenv.
+  - tmlqcd@cmake_support +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
   - numdiff
   variants:
   - +mpi

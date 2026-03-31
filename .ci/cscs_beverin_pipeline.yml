@@ -27,7 +27,7 @@ build-tmlqcd/uenv/beverin-mi300:
     paths:
       - builddir.tar
   variables:
-    SPEC: "tmlqcd@cicd ~openmp +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
+    SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     ROCM_ARCH: gfx942
     REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
   script:
