@@ -22,7 +22,7 @@ build-tmlqcd/uenv/beverin-mi300:
   stage: build
   extends: [.uenv-runner-beverin-mi300, .beverin-mi300-secrets]
   needs: [build-base/uenv/beverin-mi300]
-  image: $UENV_NAME/$UENV_VERSION:$CI_PIPELINE_ID
+  image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   artifacts:
     paths:
       - builddir.tar
