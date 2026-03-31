@@ -15,11 +15,15 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
     url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
-    git = "https://github.com/etmc/tmLQCD.git"
+    git = "https://github.com/mtaillefumier/tmLQCD.git"
     license("GPL-3.0-or-later")
 
     maintainers("mtaillefumier")
     version("master", branch="master")
+
+    # todo: remove this version as soon as
+    # https://github.com/etmc/tmLQCD/pull/664 is merged
+    version("cmake_support", branch="cmake_support")
 
     variant("lemon", default=False, description="Enable the lemon backend")
     variant("mpi", default=True, description="Enable mpi support")
@@ -84,6 +88,8 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("lemonio", when="+lemon")
 
+    depends_on("llvm-openmp", when="+rocm+openmp")
+
     with when("+quda"):
         depends_on(
             "quda+shared+twisted_mass+twisted_clover+clover+ndeg_twisted_clover+ndeg_twisted_mass+wilson+qdp+multigrid"
@@ -98,7 +104,6 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
 
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
-        spec = self.spec
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("TM_USE_LEMON", "lemon"),
@@ -113,7 +118,20 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("TM_USE_HALFSPINOR", "half_spinor"),
         ]
 
-        args.append("-DCMAKE_C_COMPILER={0}".format(self.spec["hip"].hipcc))
-        args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
+        # Use hipcc is case of a ROCm build
+        if "+rocm" in self.spec:
+            hip = self.spec["hip"]
+            args.append(self.define("CMAKE_C_COMPILER", hip.hipcc))
+            args.append(self.define("CMAKE_CXX_COMPILER", hip.hipcc))
+
+            # help hipcc find openmp
+            if "+openmp" in self.spec:
+                omp = self.spec["llvm-openmp"]
+                args.append(self.define("OpenMP_C_FLAGS", "-fopenmp"))
+                args.append(self.define("OpenMP_CXX_FLAGS", "-fopenmp"))
+                args.append(self.define("OpenMP_C_LIB_NAMES", "omp"))
+                args.append(self.define("OpenMP_CXX_LIB_NAMES", "omp"))
+                args.append(self.define("OpenMP_omp_LIBRARY", "{0}/libomp.so".format(omp.prefix.lib)))
+                args.append(self.define("OpenMP_CXX_INCLUDE_DIR", omp.prefix.include))
 
         return args
