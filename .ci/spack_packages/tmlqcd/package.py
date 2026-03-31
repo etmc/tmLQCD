@@ -15,6 +15,8 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
     url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
+
+    # todo: change this back to etmc as soon as cmake PR is merged
     git = "https://github.com/mtaillefumier/tmLQCD.git"
     license("GPL-3.0-or-later")
 
