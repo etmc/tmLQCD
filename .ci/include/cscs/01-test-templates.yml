@@ -11,7 +11,6 @@ include:
     - echo "before VARIABLE = $VARIABLE"
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
-        ls -la
         tar xf ./builddir.tar -C /
         touch preparation-done-${CI_JOB_ID}
       fi
@@ -24,15 +23,16 @@ include:
     - echo "script VARIABLE = $VARIABLE"
     - which numdiff
     - |
-      stagedir="$(find /dev/shm/spack-stage -type d -name "spack-stage-tmlqcd-cicd-*")"
-      bindir="$(find $stagedir/spack-build-*/src/bin -type d -name bin)"
+      bindir=$(echo /dev/shm/spack-stage/groman/spack-stage-tmlqcd-cicd-*/spack-build-*/src/bin)
+      libdir=$(dirname $(echo /dev/shm/spack-stage/groman/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
       export PATH=:${bindir}:$PATH
+      export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH
       if [ $SLURM_LOCALID -eq 0 ]; then
-        echo "stagedir = $stagedir"
         echo "bindir = $bindir"
+        echo "libdir = $libdir"
         which hmc_tm
         ldd $(which hmc_tm)
-        echo "executing ${COMMAND}"
+        echo "executing command: ${COMMAND}"
       fi
 
       ${COMMAND}

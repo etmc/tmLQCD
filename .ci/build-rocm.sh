@@ -47,7 +47,8 @@ spack -e ./spack-env concretize
 spack -e ./spack-env install
 
 # the tar pipe below expects a relative path
-builddir=$(spack -e ./spack-env location -b tmlqcd)
+builddir_tmlqcd=$(spack -e ./spack-env location -b tmlqcd)
+builddir_quda=$(spack -e ./spack-env location -b quda)
 
 # create a symlink to spack build directory (keep in artifacts)
-tar -cf builddir.tar $builddir
+tar -cf builddir.tar $builddir_tmlqcd $builddir_quda
