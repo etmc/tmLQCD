@@ -74,8 +74,7 @@ list(
   solver/bicg_complex.c
   solver/dfl_projector.c
   solver/gcr.c
-  # this file is not used anywhere at the moment
-  #  solver/gmres_precon.c
+  # this file is not used anywhere at the moment solver/gmres_precon.c
   solver/chrono_guess.c
   solver/gcr4complex.c
   solver/jdher.c
@@ -404,7 +403,7 @@ set_target_properties(tmlqcd PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 # define a library and add the dependencies
 target_link_libraries(
   tmlqcd
-  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:DDalphaAMG>
+  PUBLIC $<$<BOOL:${TM_USE_DDalphaAMG}>:DDalphaAMG::DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
          $<$<BOOL:${TM_USE_QUDA}>:QUDA::quda>
@@ -427,7 +426,8 @@ target_link_libraries(
          m)
 
 target_compile_definitions(
-  tmlqcd PUBLIC HAVE_CONFIG_H $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
+  tmlqcd PUBLIC HAVE_CONFIG_H
+                $<$<BOOL:${TM_USE_HIP}>:${TM_GPU_PLATFORM_DFLAGS}>)
 
 target_include_directories(
   tmlqcd

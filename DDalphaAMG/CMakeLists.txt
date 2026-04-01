@@ -91,10 +91,10 @@ foreach(f IN LISTS DDalphaAMG_SRC_GENERIC)
   add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
     COMMAND
-    sed -f "${DDalphaAMG_SRC_DIR}/float.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
-    > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}"
+      sed -f "${DDalphaAMG_SRC_DIR}/float.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
+      > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}"
     COMMAND ${CMAKE_COMMAND} -E touch
-    "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
+            "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
     DEPENDS "${DDalphaAMG_SRC_DIR}/src/${f}" "${DDalphaAMG_SRC_DIR}/float.sed"
     VERBATIM)
   list(APPEND SED_MARKERS "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done")
@@ -104,10 +104,10 @@ foreach(f IN LISTS DDalphaAMG_SRC_GENERIC)
   add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
     COMMAND
-    sed -f "${DDalphaAMG_SRC_DIR}/double.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
-    > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}"
+      sed -f "${DDalphaAMG_SRC_DIR}/double.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
+      > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}"
     COMMAND ${CMAKE_COMMAND} -E touch
-    "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
+            "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
     DEPENDS "${DDalphaAMG_SRC_DIR}/src/${f}" "${DDalphaAMG_SRC_DIR}/double.sed"
     VERBATIM)
   list(APPEND SED_MARKERS "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done")
@@ -120,10 +120,10 @@ foreach(f IN LISTS DDalphaAMG_HEADER_GENERIC)
   add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
     COMMAND
-    sed -f "${DDalphaAMG_SRC_DIR}/float.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
-    > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}"
+      sed -f "${DDalphaAMG_SRC_DIR}/float.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
+      > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}"
     COMMAND ${CMAKE_COMMAND} -E touch
-    "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
+            "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done"
     DEPENDS "${DDalphaAMG_SRC_DIR}/src/${f}" "${DDalphaAMG_SRC_DIR}/float.sed"
     VERBATIM)
   list(APPEND SED_MARKERS "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_float}.sed-done")
@@ -133,10 +133,10 @@ foreach(f IN LISTS DDalphaAMG_HEADER_GENERIC)
   add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
     COMMAND
-    sed -f "${DDalphaAMG_SRC_DIR}/double.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
-    > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}"
+      sed -f "${DDalphaAMG_SRC_DIR}/double.sed" "${DDalphaAMG_SRC_DIR}/src/${f}"
+      > "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}"
     COMMAND ${CMAKE_COMMAND} -E touch
-    "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
+            "${CMAKE_BINARY_DIR}/DDalphaAMG/${f_double}.sed-done"
     DEPENDS "${DDalphaAMG_SRC_DIR}/src/${f}" "${DDalphaAMG_SRC_DIR}/double.sed"
     VERBATIM)
 
@@ -145,17 +145,20 @@ foreach(f IN LISTS DDalphaAMG_HEADER_GENERIC)
 endforeach()
 
 foreach(outfile IN LISTS DDalphaAMG_SRC_SINGLE_DOUBLE
-    DDalphaAMG_HEADER_SINGLE_DOUBLE)
+                         DDalphaAMG_HEADER_SINGLE_DOUBLE)
   set_source_files_properties("${CMAKE_BINARY_DIR}/DDalphaAMG/${outfile}"
-    PROPERTIES GENERATED TRUE)
+                              PROPERTIES GENERATED TRUE)
 endforeach()
 
 add_custom_target(run_sed ALL DEPENDS ${SED_MARKERS})
 
 add_library(DDalphaAMG ${DDalphaAMG_SRC_GENERAL}
-  ${DDalphaAMG_SRC_SINGLE_DOUBLE})
+                       ${DDalphaAMG_SRC_SINGLE_DOUBLE})
 
-target_compile_options(DDalphaAMG
+add_library(DDalphaAMG::DDalphaAMG ALIAS DDalphaAMG)
+
+target_compile_options(
+  DDalphaAMG
   PRIVATE "$<$<COMPILE_LANG_AND_ID:C,GNU>:-O3;-ffast-math;-mavx2;-mfma>")
 
 add_dependencies(DDalphaAMG run_sed)
@@ -163,54 +166,55 @@ add_dependencies(DDalphaAMG run_sed)
 target_link_libraries(
   DDalphaAMG
   PUBLIC MPI::MPI_C $<$<BOOL:${DDalphaAMG_ENABLE_HDF5}>:hdf5:hdf5>
-  $<$<BOOL:${DDalphaAMG_ENABLE_OMP}>:OpenMP::OpenMP_C> tmlqcd::clime)
+         $<$<BOOL:${DDalphaAMG_ENABLE_OMP}>:OpenMP::OpenMP_C> tmlqcd::clime)
 
 target_include_directories(
   DDalphaAMG
   PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/DDalphaAMG>
-  $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/src>
-  $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/DDalphaAMG>)
+         $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/src>
+         $<BUILD_INTERFACE:${DDalphaAMG_SRC_DIR}/include>
+         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/DDalphaAMG>)
 
 target_compile_definitions(
   DDalphaAMG
   PUBLIC
-  $<$<BOOL:${DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT}>:PARAMOUNTOUTPUT>
-  $<$<BOOL:${DDalphaAMG_ENABLE_FGMRES_RESTEST}>:FGMRES_RESTEST>
-  $<$<BOOL:${DDalphaAMG_ENABLE_PROFILING}>:PROFILING>
-  $<$<BOOL:${DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI}>:SINGLE_ALLREDUCE_ARNOLDI>
-  $<$<BOOL:${DDalphaAMG_ENABLE_COARSE_RES}>:COARSE_RES>
-  $<$<BOOL:${DDalphaAMG_ENABLE_SCHWARZ_RES}>:SCHWARZ_RES>
-  $<$<BOOL:${DDalphaAMG_ENABLE_OMP}>:OPENMP>
-  $<$<BOOL:${DDalphaAMG_ENABLE_TRACK_RES}>:TRACK_RES>
-  $<$<BOOL:${DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS}>:TESTVECTOR_ANALYSIS>
-  $<$<BOOL:${DDalphaAMG_ENABLE_HDF5}>:HAVE_HDF5>
-  $<$<CONFIG:Debug>:DEBUG>
-  SSE)
+    $<$<BOOL:${DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT}>:PARAMOUNTOUTPUT>
+    $<$<BOOL:${DDalphaAMG_ENABLE_FGMRES_RESTEST}>:FGMRES_RESTEST>
+    $<$<BOOL:${DDalphaAMG_ENABLE_PROFILING}>:PROFILING>
+    $<$<BOOL:${DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI}>:SINGLE_ALLREDUCE_ARNOLDI>
+    $<$<BOOL:${DDalphaAMG_ENABLE_COARSE_RES}>:COARSE_RES>
+    $<$<BOOL:${DDalphaAMG_ENABLE_SCHWARZ_RES}>:SCHWARZ_RES>
+    $<$<BOOL:${DDalphaAMG_ENABLE_OMP}>:OPENMP>
+    $<$<BOOL:${DDalphaAMG_ENABLE_TRACK_RES}>:TRACK_RES>
+    $<$<BOOL:${DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS}>:TESTVECTOR_ANALYSIS>
+    $<$<BOOL:${DDalphaAMG_ENABLE_HDF5}>:HAVE_HDF5>
+    $<$<CONFIG:Debug>:DEBUG>
+    SSE)
 
 install(FILES "${CMAKE_SOURCE_DIR}/deps/lib/DDalphaAMG.h"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/DDalphaAMG")
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/DDalphaAMG")
 
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/DDalphaAMGonfigVersion.cmake"
   VERSION "0.0.0"
   COMPATIBILITY SameMajorVersion)
 
-install(TARGETS DDalphaAMG
+install(
+  TARGETS DDalphaAMG
   EXPORT DDalphaAMG_targets
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
-install(EXPORT DDalphaAMG_targets
+install(
+  EXPORT DDalphaAMG_targets
   FILE DDalphaAMG-Targets.cmake
   NAMESPACE DDalphaAMG::
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DDalphaAMG")
 
 configure_file("${PROJECT_SOURCE_DIR}/cmake/DDalphaAMG-Config.cmake.in"
-  "${PROJECT_BINARY_DIR}/DDalphaAMG-Config.cmake" @ONLY)
+               "${PROJECT_BINARY_DIR}/DDalphaAMG-Config.cmake" @ONLY)
 
 install(FILES "${PROJECT_BINARY_DIR}/DDalphaAMG-Config.cmake"
-  "${PROJECT_BINARY_DIR}/DDalphaAMG-ConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DDalphaAMG")
-
+              "${PROJECT_BINARY_DIR}/DDalphaAMG-ConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DDalphaAMG")
 
 # add_library(tmlqcd::DDalphaAMG alias DDalphaAMG)
