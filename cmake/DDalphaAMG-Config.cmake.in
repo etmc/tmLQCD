@@ -1,0 +1,50 @@
+cmake_minimum_required(VERSION 3.23)
+
+if (NOT TARGET DDalphaAMG::DDalphaAMG)
+  
+  find_dependency(MPI REQUIRED)
+
+  if (@DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT@)
+    set(DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT @DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT@)
+  endif()
+  if (@DDalphaAMG_ENABLE_FGMRES_RESTEST@)
+    set(DDalphaAMG_ENABLE_FGMRES_RESTEST @DDalphaAMG_ENABLE_FGMRES_RESTEST@)
+  endif()
+  if (@DDalphaAMG_ENABLE_FGMRES_RESTEST@)
+    set(DDalphaAMG_ENABLE_FGMRES_RESTEST @DDalphaAMG_ENABLE_FGMRES_RESTEST@)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_PROFILING@)
+    set(DDalphaAMG_ENABLE_PROFILING @DDalphaAMG_ENABLE_PROFILING@)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_TRACK_RES@)
+    set(DDalphaAMG_ENABLE_TRACK_RES @DDalphaAMG_ENABLE_TRACK_RES@)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS@)
+    set(DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS @DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS@)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_SCHWARZ_RES@)
+    set(DDalphaAMG_ENABLE_SCHWARZ_RES @DDalphaAMG_ENABLE_SCHWARZ_RES@)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_COARSE_RES@)
+    set(DDalphaAMG_ENABLE_COARSE_RES @DDalphaAMG_ENABLE_COARSE_RES@)
+  endif()
+  if (@DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI@)
+    set(DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI @DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI@)
+  endif()
+  if (@DDalphaAMG_ENABLE_OMP@)
+    set(DDalphaAMG_ENABLE_OMP @DDalphaAMG_ENABLE_OMP@)
+    find_dependency(OpenMP REQUIRED)
+  endif()
+
+  if (@DDalphaAMG_ENABLE_HDF5@)
+    set(DDalphaAMG_ENABLE_HDF5 @DDalphaAMG_ENABLE_HDF5@)
+  endif()
+
+
+  include("${CMAKE_CURRENT_LIST_DIR}/DDalphaAMG-Targets.cmake")
+endif()

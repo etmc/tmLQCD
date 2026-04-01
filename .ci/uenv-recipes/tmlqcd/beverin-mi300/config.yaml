@@ -1,0 +1,10 @@
+name: tmlqcd
+store: /user-environment
+spack:
+  repo: https://github.com/spack/spack.git
+  commit: releases/v1.1
+  packages:
+    repo: https://github.com/spack/spack-packages.git
+    commit: 5f20b9190596e0b875141e8cee03f0d3847ad65c
+description: "tmLQCD dependencies for CSCS CI."
+version: 2

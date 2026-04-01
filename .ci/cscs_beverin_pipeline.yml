@@ -1,0 +1,52 @@
+include:
+  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+  - local: '/.ci/include/cscs/00-variables.yml'
+  - local: '/.ci/include/cscs/01-test-templates.yml'
+
+
+stages:
+  - prepare
+  - build
+  - test
+
+
+build-base/uenv/beverin-mi300:
+  stage: prepare
+  extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
+  variables:
+    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/beverin-mi300
+    SLURM_TIMELIMIT: "08:00:00"
+
+
+build-tmlqcd/uenv/beverin-mi300:
+  stage: build
+  extends: [.uenv-runner-beverin-mi300, .beverin-mi300-secrets]
+  needs: [build-base/uenv/beverin-mi300]
+  image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
+  artifacts:
+    paths:
+      - builddir.tar
+  variables:
+    SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
+    ROCM_ARCH: gfx942
+    REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
+    SLURM_TIMELIMIT: "01:00:00"
+  script:
+    - echo "YAML VARIABLE = $VARIABLE"
+    - git clone --filter=tree:0 $(jq -r .spack.repo /user-environment/meta/configure.json) /dev/shm/spack-clone
+    - git -C /dev/shm/spack-clone checkout $(jq -r .spack.commit /user-environment/meta/configure.json)
+    - source /dev/shm/spack-clone/share/spack/setup-env.sh
+    - bwrap --dev-bind / / --tmpfs ~ -- ./.ci/build-rocm.sh
+
+
+test/beverin-mi300:
+  extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
+  needs: [build-tmlqcd/uenv/beverin-mi300]
+  variables:
+    INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs-beverin.input"
+    REFPATH: "doc/sample-output/hmc-quda-cscs"
+    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
+    SLURM_JOB_NUM_NODES: 2
+    SLURM_NTASKS: 8
+    SLURM_TIMELIMIT: "00:30:00"
