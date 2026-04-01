@@ -211,17 +211,15 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
   double atime, etime;
   _Complex double eval_min = 0.0;
   _Complex double eval_max = 0.0;
-  int max_iter_ev, no_eigenvalues;
+  int max_iter_ev = 1000;
+  int no_eigenvalues;
   char buf[100];
   char *phmcfilename = buf;
   FILE *countfile;
   monomial *mnl = &monomial_list[id];
-  ;
 
   sprintf(phmcfilename, "monomial-%.2d.data", id);
   atime = gettime();
-
-  max_iter_ev = 1000;
 
   if ((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Computing eigenvalues for heavy doublet\n");
@@ -235,7 +233,7 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
                  mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                  1,  // we only support even-odd here
                  mnl->solver_params.refinement_precision, mnl->solver_params.sloppy_precision,
-                 mnl->solver_params.compression_type, 0);
+                 mnl->solver_params.compression_type, mnl->single_flavor);
     if (fabs(mnl->EVMax - 1) < 2 * DBL_EPSILON) {
       eval_min /= mnl->StildeMax;
     }
@@ -244,13 +242,24 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
       fprintf(stderr,
               "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
               "usage.\n");
+    }
+#ifdef TM_USE_MPI
+    MPI_Finalize();
+#endif
+    exit(-2);
+#endif
+  } else {
+    if (mnl->single_flavor) {
+      if (g_proc_id == 0) {
+        fprintf(stderr,
+                "Error: CPU version of eigenvalue computation not yet implemented for single quark "
+                "flavor.");
+      }
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(-2);
     }
-#endif
-  } else {
     eval_min = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
   }
 
@@ -262,7 +271,7 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
                  mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                  1,  // we only support even-odd here
                  mnl->solver_params.refinement_precision, mnl->solver_params.sloppy_precision,
-                 mnl->solver_params.compression_type, 0);
+                 mnl->solver_params.compression_type, mnl->single_flavor);
     if (fabs(mnl->EVMax - 1.) < 2 * DBL_EPSILON) {
       eval_max /= mnl->StildeMax;
     }
@@ -271,13 +280,24 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
       fprintf(stderr,
               "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
               "usage.\n");
+    }
+#ifdef TM_USE_MPI
+    MPI_Finalize();
+#endif
+    exit(-2);
+#endif
+  } else {
+    if (mnl->single_flavor) {
+      if (g_proc_id == 0) {
+        fprintf(stderr,
+                "Error: CPU version of eigenvalue computation not yet implemented for single quark "
+                "flavor.");
+      }
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(-2);
     }
-#endif
-  } else {
     eval_max = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
 
