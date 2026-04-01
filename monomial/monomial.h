@@ -32,7 +32,7 @@
 
 typedef enum {
   DET,
-  DETRATIO ,
+  DETRATIO,
   GAUGE,
   POLY,
   NDPOLY,
@@ -57,7 +57,6 @@ typedef enum {
 } monomial_t;
 
 #define max_no_monomials 30
-
 
 typedef struct {
   monomial_t type;

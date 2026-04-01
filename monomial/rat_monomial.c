@@ -173,10 +173,13 @@ void rat_heatbath(const int id, hamiltonian_field_t* const hf) {
   }
   // we measure before the trajectory!
   if ((mnl->rec_ev != 0) && (hf->traj_counter % mnl->rec_ev == 0)) {
-    if(mnl->type != CLOVERRAT) {
-      phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    if (mnl->type != CLOVERRAT) {
+      phmc_compute_ev(hf->traj_counter - 1, id, &Qtm_pm_ndbipsi);
     } else {
-      phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi); // not that this one is technically not correct, but works anyways as the eval computation is (only) implemented using QUDA.
+      phmc_compute_ev(
+          hf->traj_counter - 1, id,
+          &Qsw_pm_ndbipsi);  // not that this one is technically not correct, but works anyways as
+                             // the eval computation is (only) implemented using QUDA.
     }
   }
 

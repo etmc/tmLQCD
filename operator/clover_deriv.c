@@ -80,7 +80,8 @@ void sw_deriv(const int ieo, const double mu, const int single_flavor) {
     }
     if (fabs(mu) > 0.) fac = 0.5;
     if (single_flavor) fac = 0.5;
-    if (single_flavor && (fabs(mu) > 0.)) fatal_error("single_flavor flag and |mu|>0 are incompatible.", __func__);
+    if (single_flavor && (fabs(mu) > 0.))
+      fatal_error("single_flavor flag and |mu|>0 are incompatible.", __func__);
 
 #ifndef TM_USE_OMP
     icy = 0;

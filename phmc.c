@@ -239,7 +239,9 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
     }
 #else
     if (g_proc_id == 0) {
-      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+      fprintf(stderr,
+              "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
+              "usage.\n");
     }
 #ifdef TM_USE_MPI
     MPI_Finalize();
@@ -249,7 +251,9 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
   } else {
     if (mnl->single_flavor) {
       if (g_proc_id == 0) {
-        fprintf(stderr, "Error: CPU version of eigenvalue computation not yet implemented for single quark flavor.");
+        fprintf(stderr,
+                "Error: CPU version of eigenvalue computation not yet implemented for single quark "
+                "flavor.");
       }
 #ifdef TM_USE_MPI
       MPI_Finalize();
@@ -273,7 +277,9 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
     }
 #else
     if (g_proc_id == 0) {
-      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+      fprintf(stderr,
+              "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA "
+              "usage.\n");
     }
 #ifdef TM_USE_MPI
     MPI_Finalize();
@@ -283,12 +289,14 @@ void phmc_compute_ev(const int trajectory_counter, const int id, matrix_mult_bi 
   } else {
     if (mnl->single_flavor) {
       if (g_proc_id == 0) {
-        fprintf(stderr, "Error: CPU version of eigenvalue computation not yet implemented for single quark flavor.");
+        fprintf(stderr,
+                "Error: CPU version of eigenvalue computation not yet implemented for single quark "
+                "flavor.");
       }
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
-      exit (-2);
+      exit(-2);
     }
     eval_max = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
