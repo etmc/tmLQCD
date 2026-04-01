@@ -43,10 +43,10 @@ test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-vars, .beverin-mi300-secrets]
   needs: [build-tmlqcd/uenv/beverin-mi300]
   variables:
-    INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs-beverin.input"
+    COMMAND: "hmc_tm -f doc/sample-input/sample-hmc-quda-cscs-beverin.input"
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
-    QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
+    QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "00:30:00"

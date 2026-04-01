@@ -8,28 +8,35 @@ include:
   variables:
     WITH_UENV_VIEW: "default"
   before_script:
+    - echo "before VARIABLE = $VARIABLE"
     - |
-      echo "before VARIABLE = $VARIABLE"
       if test "${SLURM_PROCID}" -eq "0"; then
         ls -la
         tar xf ./builddir.tar -C /
         touch preparation-done-${CI_JOB_ID}
       fi
-    - |
-      while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
-      stagedir=$(find /dev/shm/spack-stage -type d -name spack-stage-tmlqcd-*)
-      echo "stagedir: $stagedir"
+    - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
 
 
 .test/hmc:
   extends: .test/base
   script:
     - echo "script VARIABLE = $VARIABLE"
-    - ls -la
     - which numdiff
-    - which hmc_tm
     - |
-      hmc_tm -f "${INPUT_FILE}"
+      stagedir="$(find /dev/shm/spack-stage -type d -name "spack-stage-tmlqcd-cicd-*")"
+      bindir="$(find $stagedir/spack-build-*/src/bin -type d -name bin)"
+      export PATH=:${bindir}:$PATH
+      if [ $SLURM_LOCALID -eq 0 ]; then
+        echo "stagedir = $stagedir"
+        echo "bindir = $bindir"
+        which hmc_tm
+        ldd $(which hmc_tm)
+        echo "executing ${COMMAND}"
+      fi
+
+      ${COMMAND}
+
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
         numdiff -r 1.2e-6 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
