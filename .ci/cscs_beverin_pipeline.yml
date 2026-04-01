@@ -49,4 +49,4 @@ test/beverin-mi300:
     QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
-    SLURM_TIMELIMIT: "00:30:00"
+    SLURM_TIMELIMIT: "01:00:00"
