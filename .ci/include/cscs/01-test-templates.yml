@@ -10,7 +10,7 @@ include:
   before_script:
     - echo "before VARIABLE = $VARIABLE"
     - |
-      if test "${SLURM_PROCID}" -eq "0"; then
+      if test "${SLURM_LOCALID}" -eq "0"; then
         tar xf ./builddir.tar -C /
         touch preparation-done-${CI_JOB_ID}
       fi
