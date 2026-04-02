@@ -64,7 +64,7 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX=/my_path -DCMAKE_PREFIX_PATH=/my_c_line_path ..
 make -j
 make install
-'''
+```
 
 These instructions assume that the `c-lime` package is installed in `/my_c_line_path`. By default `CMAKE_PREFIX_PATH` variable is a list
 of paths separated by a semi-colunm containing the path of all installed to
@@ -75,7 +75,7 @@ over spatial and temporal dimensions. The command line is then
 
 ```bash
 cmake -DCMAKE_INSTALL_PREFIX=/my_path -DCMAKE_PREFIX_PATH=/my_c_line_path -DTM_USE_MPI=ON ..
-'''
+```
 
 We can combine it with the lemon-io library (isntalled in `/my_lemon_path`)
 
@@ -84,7 +84,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
       -DCMAKE_PREFIX_PATH="/my_c_line_path;/my_lemon_path" \
       -DTM_USE_MPI=ON \
       -DTM_USE_LEMON=ON ..
-'''
+```
 
 `QUDA` support (installed in `/my_quda_path`) can be added with
 
@@ -96,7 +96,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
       -DTM_USE_QUDA \
       -DTM_USE_CUDA=ON \
       -DCMAKE_CUDA_ARCHITECTURES=90 ..
-'''
+```
 
 Note that the command assumes that QUDA is compiled with `CUDA` support. AMD GPU
 are also supported after replacing `-DTM_USE_CUDA=ON` with
@@ -113,7 +113,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
     -DTM_USE_HIP=ON \
     -DCMAKE_HIP_ARCHITECTURES=gfx90a \
     -DCMAKE_CXX_COMPILER=/opr/rocm/bin/clang++ ..
-'''
+```
 
 `QPhiX` and/or `DDalphaAMG` support can be added with
 
@@ -130,7 +130,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/my_path \
       -DTM_USE_DDalphaAMG=ON \
       -DQMP_DIR=/my_qmp_dir \
       -DTM_USE_OMP=ON ..
-'''
+```
 
 `QPhiX` cmake config support is incomplete and requires both the `QPhiX`
 and `QMP` installation directories to work properly.
