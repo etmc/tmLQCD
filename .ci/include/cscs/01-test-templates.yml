@@ -27,15 +27,11 @@ include:
       libdir=$(dirname $(echo /dev/shm/spack-stage/*/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
       export PATH=:${bindir}:$PATH
       export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH
-      if test "${SLURM_PROCID}" -eq "0"; then
-        echo "bindir = $bindir"
-        echo "libdir = $libdir"
-        ls -la $bindir
-        ls -la $libdir
-        which hmc_tm
-        ldd $(which hmc_tm)
-        echo "executing command: ${COMMAND}"
-      fi
+      echo "bindir = $bindir"
+      echo "libdir = $libdir"
+      which hmc_tm
+      ldd $(which hmc_tm)
+      echo "executing command: ${COMMAND}"
 
       ${COMMAND}
 
