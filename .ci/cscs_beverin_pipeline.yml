@@ -21,19 +21,19 @@ build-base/uenv/beverin-mi300:
 
 build-tmlqcd/uenv/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .build/base, .beverin-mi300-secrets]
-  needs: [build-base/uenv/beverin-mi300]
+  needs: build-base/uenv/beverin-mi300
   variables:
     SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
-    REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
+    REPO: .ci/uenv-recipes/tmlqcd/beverin-mi300/repo
     VARIANTS: "amdgpu_target=gfx942,amdgpu_target_sram_ecc=gfx942,+rocm,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
 
 test/beverin-mi300:
-  extends: [.uenv-runner-beverin-mi300, .test/hmc, .beverin-mi300-secrets]
-  needs: [build-tmlqcd/uenv/beverin-mi300]
+  extends: [.uenv-runner-beverin-mi300, .test/base, .beverin-mi300-secrets]
+  needs: build-tmlqcd/uenv/beverin-mi300
   variables:
-    REFPATH: "doc/sample-output/hmc-quda-cscs"
+    REFPATH: doc/sample-output/hmc-quda-cscs
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
@@ -41,3 +41,12 @@ test/beverin-mi300:
     SLURM_TIMELIMIT: "01:00:00"
   script:
     - hmc_tm -f doc/sample-input/sample-hmc-quda-cscs-beverin.input
+    - |
+      if test "${SLURM_PROCID}" -eq "0"; then
+        echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
+        numdiff -r 1.2e-6 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
+        for i in $(seq 0 2 18); do
+          f=onlinemeas.$(printf %06d $i);
+          numdiff -r 5e-4 ${f} ${REFPATH}/${f};
+        done
+      fi
