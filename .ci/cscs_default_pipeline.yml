@@ -21,19 +21,19 @@ build-base/uenv/daint-gh200:
 
 build-tmlqcd/uenv/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .build/base]
-  needs: build-base/uenv/daint-gh200
+  needs: [build-base/uenv/daint-gh200]
   variables:
     SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
-    REPO: .ci/uenv-recipes/tmlqcd/daint-gh200/repo
+    REPO: "./.ci/uenv-recipes/tmlqcd/daint-gh200/repo/"
     VARIANTS: "cuda_arch=90,+cuda,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
 
 test/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .test/base]
-  needs: build-tmlqcd/uenv/daint-gh200
+  needs: [build-tmlqcd/uenv/daint-gh200]
   variables:
-    REFPATH: doc/sample-output/hmc-quda-cscs
+    REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_GDR: 0 # enable GPU-Direct RDMA
     SLURM_JOB_NUM_NODES: 2
