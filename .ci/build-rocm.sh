@@ -2,8 +2,6 @@
 
 set -xeuo pipefail
 
-echo "VARIABLE = $VARIABLE"
-
 export SPACK_SYSTEM_CONFIG_PATH=/user-environment/config
 export SPACK_PYTHON=$(which python3.6) # must be <=3.12, system python is 3.6
 export CICD_SRC_DIR=$PWD

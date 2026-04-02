@@ -8,33 +8,18 @@ include:
   variables:
     WITH_UENV_VIEW: "default"
   before_script:
-    - echo "before VARIABLE = $VARIABLE"
     - |
       if test "${SLURM_LOCALID}" -eq "0"; then
         tar xf ./builddir.tar -C /
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
-
-
-.test/hmc:
-  extends: .test/base
-  script:
-    - echo "script VARIABLE = $VARIABLE"
-    - which numdiff
+    - bindir=$(echo /dev/shm/spack-stage/*/spack-stage-tmlqcd-cicd-*/spack-build-*/src/bin)
+    - libdir=$(dirname $(echo /dev/shm/spack-stage/*/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
+    - export PATH=:${bindir}:$PATH
+    - export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH
+  after_script:
     - |
-      bindir=$(echo /dev/shm/spack-stage/*/spack-stage-tmlqcd-cicd-*/spack-build-*/src/bin)
-      libdir=$(dirname $(echo /dev/shm/spack-stage/*/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
-      export PATH=:${bindir}:$PATH
-      export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH
-      echo "bindir = $bindir"
-      echo "libdir = $libdir"
-      which hmc_tm
-      ldd $(which hmc_tm)
-      echo "executing command: ${COMMAND}"
-
-      ${COMMAND}
-
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
         numdiff -r 1.2e-6 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
@@ -43,4 +28,9 @@ include:
           numdiff -r 5e-4 ${f} ${REFPATH}/${f};
         done
       fi
-    - echo "done"
+
+
+.test/hmc:
+  extends: .test/base
+  script:
+    - ${COMMAND}
