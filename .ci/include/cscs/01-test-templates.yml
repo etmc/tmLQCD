@@ -8,32 +8,31 @@ include:
   image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   variables:
     WITH_UENV_VIEW: "default"
-    CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    LDFLAGS: "-fopenmp"
+#    CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
+#    CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
+#    LDFLAGS: "-fopenmp"
   before_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
-        mkdir -p install_dir
-        autoconf
-        ./configure \
-          --enable-quda_experimental \
-          --enable-mpi \
-          --enable-omp \
-          --with-mpidimension=4 \
-          --disable-sse2 \
-          --disable-sse3 \
-          --enable-alignment=32 \
-          --with-qudadir="/user-environment/env/default" \
-          --with-limedir="/user-environment/env/default" \
-          --with-lemondir="/user-environment/env/default" \
-          --with-lapack="-lopenblas -L/user-environment/env/default/lib" \
-          --with-cudadir="/user-environment/env/default/lib64" \
-          --prefix="$(pwd)/install_dir"
+        mkdir -p build_dir
+        cd build_dir
+        cmake -DCMAKE_PREFIX_PATH="/user-environment/env/default" \
+              -DTM_USE_MPI=ON \
+              -DTM_USE_CUDA=ON \
+              -DCMAKE_C_CFLAGS="-O3 -mtune=neoverse-v2 -mcpu=neoverse-v2" \
+              -DCMAKE_CXX_FLAGS="-O3 -mtune=neoverse-v2 -mcpu=neoverse-v2" \
+              -DCMAKE_CUDA_ARCHITECTURES=90a \
+              -DTM_USE_OMP=ON \
+              -DTM_USE_QUDA=ON \
+              -DTM_USE_LEMON=ON \
+              -DTM_USE_GAUGE_COPY=ON \
+              -DTM_USE_HALFSPINOR=ON \
+              -DCMAKE_INSTALL_PREFIX=../install_dir ..
         make
         make install
+        cd ..
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done

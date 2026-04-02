@@ -40,19 +40,16 @@ jobs:
           repository: usqcd-software/c-lime
           path: lime
 
-      - name: autogen_lime
+      - name: create_builddir_lime
         working-directory: ${{github.workspace}}/lime
-        run: ./autogen.sh
-      
-      - name: create_lime_builddir
-        run: mkdir ${{github.workspace}}/lime/build
+        run: mkdir build
 
       - name: build_lime
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
             CFLAGS="-march=haswell -mtune=haswell -O2" \
-            ../configure --prefix=$(pwd)/install_dir
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir .. >> config.log
           make -j
           make install
 
@@ -69,23 +66,20 @@ jobs:
           repository: etmc/lemon
           path: lemon
 
-      - name: create_lemon_builddir
-        run: mkdir ${{github.workspace}}/lemon/build
-
-      - name: autogen_lemon
+      - name: create_builddir_lemon
         working-directory: ${{github.workspace}}/lemon
-        run: autoreconf -i -f
+        run: |
+          mkdir build
 
       - name: build_lemon
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
             CFLAGS="-march=haswell -mtune=haswell -O2" \
-            ../configure \
-            --prefix=$(pwd)/install_dir
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir ..
           make -j
-          make install
-
+          make install > config.log
+      
       - name: Archive lemon config.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -111,34 +105,27 @@ jobs:
         shell: bash
         run: mkdir ${{github.workspace}}/main/build
 
-      - name: autogen_tmlqcd
-        working-directory: ${{github.workspace}}/main
-        run: autoconf
-
       - name: configure_and_build
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
             LDFLAGS="-fopenmp" \
-            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-            ../configure \
-            --enable-mpi \
-            --with-mpidimension=4 \
-            --enable-omp \
-            --disable-sse2 \
-            --disable-sse3 \
-            --with-limedir=${{github.workspace}}/lime/build/install_dir \
-            --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-            --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
-            --with-lapack="-lblas -llapack" || cat config.log
+            CFLAGS="-O3 -ffast-math -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CXXFLAGS="-O3 -ffast-math -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/ddalphaamg" \
+            -DTM_USE_MPI=ON \
+            -DTM_USE_OMP=ON \
+            -DTM_USE_LEMON=ON \
+            -DTM_USE_DDalphaAMG=ON \
+            .. > config.log
+            cat config.log
           make -j
 
       - name: nf2_ddalphaamg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          mpirun -np 2 ./hmc_tm \
+          mpirun -np 2 src/bin/hmc_tm \
             -f ../doc/sample-input/sample-hmc-ddalphaamg-tmcloverdetratio.input
 
       - name: Archive nf2_ddalphaamg_hmc_tmcloverdetratio output
@@ -152,10 +139,10 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           refpath=${{github.workspace}}/main/doc/sample-output/hmc-ddalphaamg-tmcloverdetratio
-          numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
+          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
-            numdiff -r 1e-5 ${f} ${refpath}/${f}; \
+            numdiff -r 1e-6 ${f} ${refpath}/${f}; \
           done
 
 
