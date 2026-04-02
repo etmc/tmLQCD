@@ -4,7 +4,7 @@ project(
   tmlqcd
   DESCRIPTION "tmlQCD"
   HOMEPAGE_URL "https://github.com/etmc/tmLQCD"
-  VERSION "6.0.2"
+  VERSION "6.1.0"
   LANGUAGES C CXX)
 
 # include our cmake snippets
