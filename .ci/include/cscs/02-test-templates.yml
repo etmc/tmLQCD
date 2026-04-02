@@ -18,6 +18,10 @@ include:
     - libdir=$(dirname $(echo /dev/shm/spack-stage/*/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
     - export PATH=:${bindir}:$PATH
     - export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH
+
+
+.test/hmc:
+  extends: .test/base
   after_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
@@ -28,9 +32,3 @@ include:
           numdiff -r 5e-4 ${f} ${REFPATH}/${f};
         done
       fi
-
-
-.test/hmc:
-  extends: .test/base
-  script:
-    - ${COMMAND}
