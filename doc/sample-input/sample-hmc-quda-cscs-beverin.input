@@ -1,8 +1,8 @@
 L=24
 T=48
 
-NrXProcs = 1
-NrYProcs = 1
+NrXProcs = 2
+NrYProcs = 2
 NrZprocs = 1
 
 ompnumthreads=32
