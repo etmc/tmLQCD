@@ -7,5 +7,5 @@ spack:
     repo: https://github.com/spack/spack-packages.git
     #commit: 
 modules: true
-description: "tmLQCD is a freely available software suite providing a set of tools to be used in lattice QCD simulations."
+description: "tmLQCD dependencies for CSCS CI on MI300A."
 version: 2

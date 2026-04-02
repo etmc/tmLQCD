@@ -16,17 +16,3 @@ variables:
   variables:
     F7T_CLIENT_ID: $F7T_TDS_CONSUMER_KEY
     F7T_CLIENT_SECRET: $F7T_TDS_CONSUMER_SECRET
-
-# Compiler flags for the GH200 nodes
-.daint-gh200-vars:
-  variables:
-    CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
-    LDFLAGS: "-fopenmp"
-
-# Compiler flags for the Mi300A nodes
-.beverin-mi300-vars:
-  variables:
-    CFLAGS: "-O3 -fopenmp -mtune=znver4 -mcpu=znver4"
-    CXXFLAGS: "-O3 -fopenmp -mtune=znver4 -mcpu=znver4"
-    LDFLAGS: "-fopenmp"
