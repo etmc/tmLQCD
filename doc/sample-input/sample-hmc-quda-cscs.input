@@ -83,8 +83,8 @@ BeginMonomial CLOVERDET
   CSW = 1.7112
   rho = 0.45
   MaxSolverIterations = 5000
-  AcceptancePrecision =  1.e-23
-  ForcePrecision = 1.e-19
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdetlight
   solver= cg
   UseExternalInverter = quda
@@ -100,8 +100,8 @@ BeginMonomial CLOVERDETRATIO
   rho2 = 0.45
   CSW = 1.7112
   MaxSolverIterations = 1000
-  AcceptancePrecision =  1.e-23
-  ForcePrecision = 1.e-19
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdetratio1light
 
   solver= cg
@@ -119,8 +119,8 @@ BeginMonomial CLOVERDETRATIO
   rho2 = 0.030
   CSW = 1.7112
   MaxSolverIterations = 1000
-  AcceptancePrecision =  1.e-23
-  ForcePrecision = 1.e-20
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdetratio2light
   solver = mg
   UseExternalInverter = quda
@@ -142,8 +142,8 @@ BeginMonomial CLOVERDETRATIO
   rho2 = 0.0030
   CSW = 1.7112
   MaxSolverIterations = 1000
-  AcceptancePrecision =  1.e-23
-  ForcePrecision = 1.e-20
+  AcceptancePrecision =  1.e-24
+  ForcePrecision = 1.e-22
   Name = cloverdetratio3light
   solver = mg
   UseExternalInverter = quda
@@ -156,8 +156,8 @@ BeginMonomial NDCLOVERRAT
   Timescale = 1
   kappa =    0.1400083
   CSW = 1.7112
-  AcceptancePrecision =  1e-23
-  ForcePrecision = 1e-19
+  AcceptancePrecision =  1e-24
+  ForcePrecision = 1e-22
   StildeMin = 0.0000376
   StildeMax = 4.7
   Name = ndcloverrat1
@@ -179,8 +179,8 @@ BeginMonomial NDCLOVERRAT
   Timescale = 2
   kappa =    0.1400083
   CSW = 1.7112
-  AcceptancePrecision =  1e-23
-  ForcePrecision = 1e-19
+  AcceptancePrecision =  1e-24
+  ForcePrecision = 1e-22
   StildeMin = 0.0000376
   StildeMax = 4.7
   Name = ndcloverrat2
@@ -202,8 +202,8 @@ BeginMonomial NDCLOVERRAT
   Timescale = 3
   kappa =    0.1400083
   CSW = 1.7112
-  AcceptancePrecision =  1e-23
-  ForcePrecision = 1e-19
+  AcceptancePrecision =  1e-24
+  ForcePrecision = 1e-22
   StildeMin = 0.0000376
   StildeMax = 4.7
   Name = ndcloverrat3
@@ -225,8 +225,8 @@ BeginMonomial NDCLOVERRATCOR
   Timescale = 1
   kappa =    0.1400083
   CSW = 1.7112
-  AcceptancePrecision =  1e-23
-  ForcePrecision = 1e-19
+  AcceptancePrecision =  1e-24
+  ForcePrecision = 1e-22
   StildeMin = 0.0000376
   StildeMax = 4.7
   Name = ndcloverratcor
@@ -264,7 +264,7 @@ BeginOperator CLOVER
   CSW = 1.7112
   kappa =    0.1400083
   2KappaMu = 0.0023801411000
-  SolverPrecision = 1e-20
+  SolverPrecision = 1e-24
   useevenodd = yes
   useexternalinverter = quda
   usesloppyprecision = single
