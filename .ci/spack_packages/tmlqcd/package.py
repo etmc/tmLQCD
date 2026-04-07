@@ -16,16 +16,11 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
     url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
 
-    # todo: change this back to etmc as soon as cmake PR is merged
-    git = "https://github.com/mtaillefumier/tmLQCD.git"
+    git = "https://github.com/etmc/tmLQCD.git"
     license("GPL-3.0-or-later")
 
-    maintainers("mtaillefumier")
+    maintainers("mtaillefumier", "chaoos")
     version("master", branch="master")
-
-    # todo: remove this version as soon as
-    # https://github.com/etmc/tmLQCD/pull/664 is merged
-    version("cmake_support", branch="cmake_support")
 
     variant("lemon", default=False, description="Enable the lemon backend")
     variant("mpi", default=True, description="Enable mpi support")
