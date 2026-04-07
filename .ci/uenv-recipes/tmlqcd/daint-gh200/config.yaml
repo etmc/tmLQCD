@@ -7,5 +7,5 @@ spack:
     repo: https://github.com/spack/spack-packages.git
     #commit: 
 modules: true
-description: "tmLQCD dependencies for CSCS CI on MI300A."
+description: "tmLQCD dependencies for CSCS CI on GH200."
 version: 2
