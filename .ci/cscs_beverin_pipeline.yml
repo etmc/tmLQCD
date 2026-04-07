@@ -11,36 +11,36 @@ stages:
   - test
 
 
-build-base/uenv/daint-gh200:
+build-base/uenv/beverin-mi300:
   stage: prepare
-  extends: .uenv-builder-daint-gh200
+  extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
-    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
-    SLURM_TIMELIMIT: "04:00:00"
+    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/beverin-mi300
+    SLURM_TIMELIMIT: "08:00:00"
 
 
-build-tmlqcd/uenv/daint-gh200:
-  extends: [.uenv-runner-daint-gh200, .build/base]
-  needs: [build-base/uenv/daint-gh200]
+build-tmlqcd/uenv/beverin-mi300:
+  extends: [.uenv-runner-beverin-mi300, .build/base, .beverin-mi300-secrets]
+  needs: [build-base/uenv/beverin-mi300]
   variables:
     SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
-    REPO: "./.ci/uenv-recipes/tmlqcd/daint-gh200/repo/"
-    VARIANTS: "cuda_arch=90,+cuda,+mpi"
+    REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
+    VARIANTS: "amdgpu_target=gfx942,amdgpu_target_sram_ecc=gfx942,+rocm,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
 
-test/daint-gh200:
-  extends: [.uenv-runner-daint-gh200, .test/base]
-  needs: [build-tmlqcd/uenv/daint-gh200]
+test/beverin-mi300:
+  extends: [.uenv-runner-beverin-mi300, .test/base, .beverin-mi300-secrets]
+  needs: [build-tmlqcd/uenv/beverin-mi300]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
-    QUDA_ENABLE_GDR: 0 # enable GPU-Direct RDMA
+    QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "01:00:00"
   script:
-    - hmc_tm -f doc/sample-input/sample-hmc-quda-cscs.input
+    - hmc_tm -f doc/sample-input/sample-hmc-quda-cscs-beverin.input
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
