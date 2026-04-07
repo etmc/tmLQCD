@@ -12,7 +12,7 @@ gcc-env:
   - llvm-amdgpu
   # tmlqcd and quda are not required, since we build their newest commits in the
   # build stage. Although, we want all their dependencies in the base uenv.
-  - tmlqcd@cmake_support +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  - tmlqcd@master +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
   - numdiff
   variants:
   - +mpi
