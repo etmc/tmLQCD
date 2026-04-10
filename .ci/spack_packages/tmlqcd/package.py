@@ -15,10 +15,11 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://www.itkp.uni-bonn.de/~urbach/software.html"
     url = "https://github.com/etmc/tmLQCD/archive/refs/tags/rel-5-1-6.tar.gz"
+
     git = "https://github.com/etmc/tmLQCD.git"
     license("GPL-3.0-or-later")
 
-    maintainers("mtaillefumier")
+    maintainers("mtaillefumier", "chaoos")
     version("master", branch="master")
 
     variant("lemon", default=False, description="Enable the lemon backend")
@@ -72,7 +73,7 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     # conflicts
     conflicts("+cuda", when="cuda_arch=none")
     conflicts("+rocm", when="amdgpu_target=none")
-conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
 
     # hard dependencies
     depends_on("c-lime")
@@ -82,11 +83,13 @@ conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
 
     # dependencies
     depends_on("mpi", when="+mpi")
-    depends_on("lemon-io", when="+lemon")
+    depends_on("lemonio", when="+lemon")
+
+    depends_on("llvm-openmp", when="+rocm+openmp")
 
     with when("+quda"):
         depends_on(
-            "quda+twisted_mass+twisted_clover+clover+ndeg_twisted_clover+ndeg_twisted_mass+wilson+qdp+staggered+usqcd+multigrid"
+            "quda+shared+twisted_mass+twisted_clover+clover+ndeg_twisted_clover+ndeg_twisted_mass+wilson+qdp+multigrid"
         )
 
         depends_on("quda+mpi", when="+mpi")
@@ -98,19 +101,34 @@ conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
 
 class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
-        spec = self.spec
         args = [
-            self.define_from_variant("DBUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("TM_USE_LEMON", "lemon"),
             self.define_from_variant("TM_USE_MPI", "mpi"),
             self.define_from_variant("TM_USE_QUDA", "quda"),
             self.define_from_variant("TM_USE_CUDA", "cuda"),
-            self.define_from_variant("TM_USE_HIP", "cuda"),
+            self.define_from_variant("TM_USE_HIP", "rocm"),
             self.define_from_variant("TM_USE_FFTW", "fftw"),
-            self.define_from_variant("TM_FIXEDVOLUME", "fixed_volume"),
             self.define_from_variant("TM_USE_OMP", "openmp"),
             self.define_from_variant("TM_USE_SHMEM", "shmem"),
             self.define_from_variant("TM_USE_GAUGE_COPY", "gauge_copy"),
             self.define_from_variant("TM_USE_HALFSPINOR", "half_spinor"),
         ]
+
+        # Use hipcc is case of a ROCm build
+        if "+rocm" in self.spec:
+            hip = self.spec["hip"]
+            args.append(self.define("CMAKE_C_COMPILER", hip.hipcc))
+            args.append(self.define("CMAKE_CXX_COMPILER", hip.hipcc))
+
+            # help hipcc find openmp
+            if "+openmp" in self.spec:
+                omp = self.spec["llvm-openmp"]
+                args.append(self.define("OpenMP_C_FLAGS", "-fopenmp"))
+                args.append(self.define("OpenMP_CXX_FLAGS", "-fopenmp"))
+                args.append(self.define("OpenMP_C_LIB_NAMES", "omp"))
+                args.append(self.define("OpenMP_CXX_LIB_NAMES", "omp"))
+                args.append(self.define("OpenMP_omp_LIBRARY", "{0}/libomp.so".format(omp.prefix.lib)))
+                args.append(self.define("OpenMP_CXX_INCLUDE_DIR", omp.prefix.include))
+
         return args
