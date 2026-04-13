@@ -219,7 +219,7 @@ int read_binary_gauge_data(LimeReader *limereader, DML_Checksum *checksum, param
                 "LIME read error occurred with status = %d while reading in gauge_read_binary.c!\n",
                 status);
 #ifdef TM_USE_MPI
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Abort(app()->mpi.comm, 1);
             MPI_Finalize();
 #endif
             return (-2);

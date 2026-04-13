@@ -131,7 +131,7 @@ double measure_rectangles() {
   fclose(debugfile);
   ga = (kc + ks) / 3.0;
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   return gas;
 #else
   return ga;

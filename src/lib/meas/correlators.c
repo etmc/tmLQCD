@@ -125,7 +125,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
         t0 = (int)(measurement_list[id].max_source_slice * tmp);
       }
 #ifdef TM_USE_MPI
-      MPI_Bcast(&t0, 1, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&t0, 1, MPI_INT, 0, app()->mpi.comm);
 #endif
       if (g_debug_level > 1 && g_proc_id == 0) {
         printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t * T);
@@ -252,7 +252,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       free(sCpp);
       free(sCpa);
       free(sCp4);
-      MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(app()->mpi.comm);
 #else
       free(Cpp);
       free(Cpa);

@@ -71,7 +71,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) *const S,
 
 #ifdef TM_USE_MPI
   if (parallel == 1) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, app()->mpi.comm);
     return (mres);
   }
 #endif
@@ -113,7 +113,7 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) *const S,
 
 #ifdef TM_USE_MPI
   if (parallel == 1) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, app()->mpi.comm);
     return (mres);
   }
 #endif

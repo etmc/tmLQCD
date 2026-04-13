@@ -174,7 +174,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
      the other sites */
   ranlxd(yy, 1);
 #ifdef TM_USE_MPI
-  MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, app()->mpi.comm);
 #endif
 
   /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever
@@ -277,7 +277,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
 
 #ifdef TM_USE_MPI
     tmp = ret_gauge_diff;
-    MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, app()->mpi.comm);
 #endif
     /* compute the total H */
     tmp = enep;
