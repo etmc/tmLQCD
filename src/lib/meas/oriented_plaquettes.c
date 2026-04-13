@@ -80,7 +80,7 @@ void measure_oriented_plaquettes(const su3 **const gf, double *plaq) {
   }
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(plaq, mplaq, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(plaq, mplaq, 6, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   for (int j = 0; j < 6; j++) plaq[j] = mplaq[j];
 #endif
   tm_stopwatch_pop(&g_timers, 0, 2, "");

@@ -218,7 +218,7 @@ void random_spinor_field_lexic(spinor *const k, const int repro, const enum RN_T
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     if (g_proc_id != 0) {
       rlxd_reset(rlxd_state);
     }
@@ -289,7 +289,7 @@ void random_spinor_field_eo(spinor *const k, const int repro, const enum RN_TYPE
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     if (g_proc_id != 0) {
       rlxd_reset(rlxd_state);
     }
@@ -432,7 +432,7 @@ void random_gauge_field(const int repro, su3 **const gf) {
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     rlxd_reset(rlxd_state);
 #endif
     for (t0 = 0; t0 < g_nproc_t * T; t0++) {
@@ -506,7 +506,7 @@ double random_su3adj_field(const int repro, su3adj **const momenta) {
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     rlxd_reset(rlxd_state);
 #endif
     for (int t0 = 0; t0 < g_nproc_t * T; t0++) {
@@ -589,7 +589,7 @@ double random_su3adj_field(const int repro, su3adj **const momenta) {
     kc = 0.5 * (ks + kc);
   }
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   return ks;
 #endif
   return kc;
@@ -838,7 +838,7 @@ void start_ranlux(int level, int seed) {
 #ifdef TM_USE_MPI
   unsigned int *seeds = calloc(g_nproc, sizeof(unsigned int));
   if (seeds == NULL) fatal_error("Memory allocation for seeds buffer failed!", "start_ranlux");
-  MPI_Gather(&loc_seed, 1, MPI_UNSIGNED, seeds, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+  MPI_Gather(&loc_seed, 1, MPI_UNSIGNED, seeds, 1, MPI_UNSIGNED, 0, app()->mpi.comm);
   if (g_proc_id == 0) {
     for (int i = 0; i < g_nproc; ++i) {
       for (int j = i + 1; j < g_nproc; ++j) {

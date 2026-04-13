@@ -129,7 +129,7 @@ double measure_rectangles(const su3 **const gf) {
 #else
 #endif
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   res = mres;
 #endif
 

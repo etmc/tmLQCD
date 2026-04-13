@@ -357,7 +357,7 @@ int main(int argc, char *argv[]) {
   _endQuda();
 #endif
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
 

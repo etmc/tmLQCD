@@ -57,7 +57,7 @@ void spinor_write_stdout(spinor* const s) {
             fflush(stdout);
           }
 #ifdef TM_USE_MPI
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
 #endif
         }
       }

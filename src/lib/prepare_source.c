@@ -91,7 +91,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
               }
             }
 #ifdef TM_USE_MPI
-            MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&t, 1, MPI_INT, 0, app()->mpi.comm);
 #endif
             SourceInfo.t = t;
           }
@@ -180,7 +180,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           t = (int)(u * g_nproc_t * T);
         }
 #ifdef TM_USE_MPI
-        MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&t, 1, MPI_INT, 0, app()->mpi.comm);
 #endif
         SourceInfo.t = t;
       }
@@ -206,7 +206,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           }
         }
 #ifdef TM_USE_MPI
-        MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&t, 1, MPI_INT, 0, app()->mpi.comm);
 #endif
         SourceInfo.t = t;
       }
@@ -315,7 +315,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         if (read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
           fprintf(stderr, "Error reading source! Aborting...\n");
 #ifdef TM_USE_MPI
-          MPI_Abort(MPI_COMM_WORLD, 1);
+          MPI_Abort(app()->mpi.comm, 1);
           MPI_Finalize();
 #endif
           exit(-1);

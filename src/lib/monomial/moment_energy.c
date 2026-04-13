@@ -69,7 +69,7 @@ double moment_energy(su3adj **const momenta) {
   kc = 0.5 * (ks + kc);
 #ifdef TM_USE_MPI
   ks = kc;
-  MPI_Allreduce(&ks, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&ks, &kc, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 #endif
   etime = gettime();
   if (g_proc_id == 0) {

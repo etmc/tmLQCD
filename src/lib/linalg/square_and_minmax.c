@@ -75,12 +75,12 @@ void square_and_minmax(double *const sum, double *const min, double *const max,
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
-  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min = kc;
 
-  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max = kc;
 
 #endif
@@ -129,12 +129,12 @@ void square_and_minmax_rel(double *const sum, double *const min, double *const m
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
-  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min = kc;
 
-  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max = kc;
 
 #endif
@@ -256,18 +256,18 @@ void square_and_minmax_abs(double *const sum, double *const min, double *const m
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
-  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min = kc;
 
-  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max = kc;
 
-  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min_abs = kc;
 
-  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max_abs = kc;
 
 #endif
@@ -428,18 +428,18 @@ void square_and_minmax_rel_abs(double *const sum, double *const min, double *con
 
 #if defined TM_USE_MPI
 
-  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 
-  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min = kc;
 
-  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max = kc;
 
-  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, app()->mpi.comm);
   *min_abs = kc;
 
-  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, app()->mpi.comm);
   *max_abs = kc;
 
 #endif

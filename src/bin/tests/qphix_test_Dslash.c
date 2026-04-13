@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
                    source_location, 12345 /* seed */);
 
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
 
     tm_t1 = gettime();
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
     tm_t2 = gettime();
 
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     q_t1 = gettime();
     Mfull_qphix(qphix_out_cb_spinors[0], qphix_out_cb_spinors[1], op->sr0, op->sr1, op->type);
@@ -297,7 +297,7 @@ int main(int argc, char* argv[]) {
   free_spinor_field();
   free_moment_field();
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
   return (failed);
@@ -305,7 +305,7 @@ int main(int argc, char* argv[]) {
 
 double compare_spinors(spinor* s1, spinor* s2) {
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif
   int coords[4];
   int x, y, z, t, id = 0;
@@ -352,7 +352,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
               }
             }
 #ifdef TM_USE_MPI
-            MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Barrier(app()->mpi.comm);
 #endif
           }  // z
         }  // y
@@ -361,7 +361,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
   }  // if( SourceInfo.type == SRC_TYPE_POINT )
 
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif
   if (g_proc_id == 0) {
     printf("\n");
@@ -376,7 +376,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
   double squarenorm = diff_and_square_norm(s1, s2, VOLUME);
 
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif
   id = 0;
   for (int t_global = 0; t_global < g_nproc_t * T; t_global++) {
@@ -408,7 +408,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
             }
           }
 #ifdef TM_USE_MPI
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
 #endif
         }  // z
       }  // y

@@ -37,7 +37,7 @@ void _PSWITCH(little_project_eo)(_Complex _F_TYPE *const out, _Complex _F_TYPE *
   }
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(phi, psi, N, _MPI_C_TYPE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(phi, psi, N, _MPI_C_TYPE, MPI_SUM, app()->mpi.comm);
 #else
   memcpy(psi, phi, N * sizeof(_Complex _F_TYPE));
 #endif
