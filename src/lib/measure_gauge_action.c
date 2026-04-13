@@ -96,7 +96,7 @@ double measure_plaquette(const su3 *const *const gf) {
   for (int i = 0; i < omp_num_threads; ++i) res += g_omp_acc_re[i];
 #endif
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   res = mres;
 #endif
   return res;
@@ -178,7 +178,7 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
   for (int i = 0; i < omp_num_threads; ++i) res += g_omp_acc_re[i];
 #endif
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   res = mres;
 #endif
   GaugeInfo.plaquetteEnergy = res;

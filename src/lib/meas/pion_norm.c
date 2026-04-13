@@ -68,7 +68,7 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   ranlxs(&tmp, 1);
   z0 = (int)(measurement_list[id].max_source_slice * tmp);
 #ifdef TM_USE_MPI
-  MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&z0, 1, MPI_INT, 0, app()->mpi.comm);
 #endif
 
   Cpp = (double *)calloc(g_nproc_z * LZ, sizeof(double));

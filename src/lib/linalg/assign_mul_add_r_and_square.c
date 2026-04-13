@@ -99,7 +99,7 @@ double assign_mul_add_r_and_square(spinor *const R, const double c, const spinor
 
 #ifdef TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     return (mres);
   }
 #endif
