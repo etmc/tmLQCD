@@ -210,9 +210,9 @@ void measure_clover_field_strength_observables(const su3 **const gf,
 #endif
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&Eres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&Eres, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   Eres = mres;
-  MPI_Allreduce(&Qres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&Qres, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   Qres = mres;
 #endif
   fso->E = energy_density_normalization * Eres;

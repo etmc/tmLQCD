@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2012 Carsten Urbach
+ * Copyright (C) 2026 Roman Gruber
  *
  * This file is part of tmLQCD.
  *
@@ -16,39 +16,34 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+ *
+ * Allocation utils
+ *
+ * Author: Roman Gruber
+ *         roman.gruber@unibe.ch
+ *
+ *******************************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <tmlqcd_config.h>
+#ifndef ALLOC_H
+#define ALLOC_H
+
+
+#include <stdbool.h>
+
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include <global.h>
-#include <stdio.h>
 
-#ifdef TM_USE_MPI
-#include <mpi.h>
-#endif
+void *safe_malloc_impl(size_t size, const char *file, int line, const char *func);
+void *safe_calloc_impl(size_t size, const char *file, int line, const char *func);
+#define safe_malloc(size) safe_malloc_impl((size), __FILE__, __LINE__, __func__)
+#define safe_calloc(size) safe_calloc_impl((size), __FILE__, __LINE__, __func__)
 
-#include "fatal_error.h"
 
-void fatal_error(char const *error, char const *function) {
-  if (error != NULL) {
-    fprintf(stderr, "FATAL ERROR\n");
-    if (function != NULL) {
-#ifdef TM_USE_MPI
-      fprintf(stderr, "  Within %s (reported by node %d):\n", function, g_proc_id);
-#else
-      fprintf(stderr, "  Within %s:\n", function);
-#endif
-    }
-    fprintf(stderr, "    %s\n", error);
-    fflush(stderr);
-  }
-
-#ifdef TM_USE_MPI
-  MPI_Abort(app()->mpi.comm, 1);
-  MPI_Finalize();
-#endif
-
-  exit(500);
+#ifdef __cplusplus
 }
+#endif
+
+#endif

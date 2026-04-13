@@ -31,7 +31,7 @@ int DML_global_xor(uint32_t *x) {
   int status;
 
   status =
-      MPI_Allreduce((void *)&work, (void *)&dest, 1, MPI_UNSIGNED_LONG, MPI_BXOR, MPI_COMM_WORLD);
+      MPI_Allreduce((void *)&work, (void *)&dest, 1, MPI_UNSIGNED_LONG, MPI_BXOR, app()->mpi.comm);
 
   if (status == MPI_SUCCESS) {
     *x = (uint32_t)dest;
