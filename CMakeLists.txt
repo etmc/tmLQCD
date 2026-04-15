@@ -158,8 +158,8 @@ cmake_dependent_option(
   DDalphaAMG_ENABLE_SCHWARZ_RES "Enable paramount output support" OFF
   "TM_USE_DDalphaAMG" OFF)
 
-cmake_dependent_option(DDalphaAMG_ENABLE_OMP "Enable OpenMP support" ${TM_USE_OMP}
-                       "TM_USE_DDalphaAMG" OFF)
+cmake_dependent_option(DDalphaAMG_ENABLE_OMP "Enable OpenMP support"
+                       ${TM_USE_OMP} "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
   DDalphaAMG_ENABLE_TESTVECTOR_ANALYSIS "Enable vector analysis support" OFF
@@ -244,7 +244,7 @@ if(TM_USE_LEMON)
   FetchContent_Declare(
     lemon
     GIT_REPOSITORY https://github.com/etmc/lemon
-    GIT_TAG 42c2d99dae9c04ca1f09c532a8f9bcb1bb667528
+    GIT_TAG 1eba8143133ac4cbfb0738f6e4fc2d32bd9f008c
     FIND_PACKAGE_ARGS NAMES lemon)
   FetchContent_MakeAvailable(lemon)
 endif()
@@ -348,6 +348,22 @@ if(TM_USE_HALFSPINOR AND NOT TM_USE_GAUGE_COPY)
       "The TM_USE_GAUGE_COPY option should also be set to ON when TM_USE_HALFSPINOR is ON"
   )
 endif()
+
+# Sanitized build
+
+if(CMAKE_BUILD_TYPE STREQUAL "SANITIZE")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Building with AddressSanitizer")
+    # Apply AddressSanitizer flags for the SANITIZE build type
+
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fsanitize=address
+                        -fno-omit-frame-pointer -g>)
+    add_link_options(-fsanitize=address)
+  else()
+    message(WARNING "AddressSanitizer is not supported for this compiler")
+  endif()
+endif()
+
 # keep the autotool config.h header.
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlqcd_config_internal.h.in"
                "${PROJECT_BINARY_DIR}/tmlqcd_config_internal.h" @ONLY)
