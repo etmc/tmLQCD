@@ -8,7 +8,7 @@ find_library(
 find_path(
   TM_CLIME_INCLUDE_DIRS
   NAMES lime.h
-  PATH_SUFFIXES "include" "include/${_pacakge_name}" "${_package_name}")
+  PATH_SUFFIXES "include" "include/${_package_name}" "${_package_name}")
 
 find_package_handle_standard_args(CLime DEFAULT_MSG TM_CLIME_LIBRARIES
                                   TM_CLIME_INCLUDE_DIRS)
@@ -22,5 +22,4 @@ if(NOT TARGET tmlqcd::clime)
 endif()
 
 set(TM_CLIME_FOUND ON)
-mark_as_advanced(TM_CLIME_FOUND TM_CLIME_LIBRARIES
-                 TM_CLIME_INCLUDE_DIRS)
+mark_as_advanced(TM_CLIME_FOUND TM_CLIME_LIBRARIES TM_CLIME_INCLUDE_DIRS)
