@@ -355,9 +355,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "SANITIZE")
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Building with AddressSanitizer")
     # Apply AddressSanitizer flags for the SANITIZE build type
-
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fsanitize=address
-                        -fno-omit-frame-pointer -g>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fsanitize=address>) 
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fno-omit-frame-pointer>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-g>)
     add_link_options(-fsanitize=address)
   else()
     message(WARNING "AddressSanitizer is not supported for this compiler")
