@@ -85,6 +85,8 @@ void init_parallel_and_read_input(int argc, char *argv[], const char input_filen
     exit(-1);
   }
 
+  app()->ptbc.initialize();
+
 #ifdef TM_USE_OMP
   init_openmp();
 #endif
