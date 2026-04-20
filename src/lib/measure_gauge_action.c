@@ -39,6 +39,7 @@
 #include "measure_gauge_action.h"
 #include "su3.h"
 #include "su3adj.h"
+#include "ptbc.h"
 
 double measure_plaquette(const su3 *const *const gf) {
   static double res;
@@ -73,8 +74,11 @@ double measure_plaquette(const su3 *const *const gf) {
           v = &gf[ix][mu2];
           w = &gf[ix2][mu1];
           _su3_times_su3(pr2, *v, *w);
+          // compute local parallel tempering factor: fac_1 * fac_2 * fac_3 *  fac_4
+          double const ptbc_fac = get_ptbc_coeff(ix, mu1) * get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, mu1);
+          //double const ptbc_fac = 1.;
           _trace_su3_times_su3d(ac, pr1, pr2);
-          tr = ac + kc;
+          tr = ac*ptbc_fac + kc;
           ts = tr + ks;
           tt = ts - ks;
           ks = ts;
@@ -135,9 +139,12 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
         v = &gf[ix][mu2];
         w = &gf[ix2][0];
         _su3_times_su3(pr2, *v, *w);
+        // parallel tempering factor = fac_1 * fac_2 * fac_3 *  fac_4 computed in 2 parts
+        double const ptbc_fac = get_ptbc_coeff(ix, 0) * get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, 0);
         _trace_su3_times_su3d(ac, pr1, pr2);
         ac *= (1 + lambda);
-        tr = ac + kc;
+        tr = ac*ptbc_fac + kc;
+        //tr = ac + kc;
         ts = tr + ks;
         tt = ts - ks;
         ks = ts;
@@ -146,6 +153,7 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
       // magnetic part
       for (int mu1 = 1; mu1 < 3; mu1++) {
         ix1 = g_iup[ix][mu1];
+        double const ptbc_fac1 = get_ptbc_coeff(ix, mu1);
         for (int mu2 = mu1 + 1; mu2 < 4; mu2++) {
           ix2 = g_iup[ix][mu2];
           v = &gf[ix][mu1];
@@ -154,9 +162,11 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
           v = &gf[ix][mu2];
           w = &gf[ix2][mu1];
           _su3_times_su3(pr2, *v, *w);
+          double const ptbc_fac2 = get_ptbc_coeff(ix1, mu2) * get_ptbc_coeff(ix, mu2) * get_ptbc_coeff(ix2, mu1);
           _trace_su3_times_su3d(ac, pr1, pr2);
-          ac *= (1 - lambda);
-          tr = ac + kc;
+          //ac *= (1 - lambda);
+          tr = ac*(1 - lambda)*(ptbc_fac2*ptbc_fac1) + kc;
+          //tr = ac + kc;
           ts = tr + ks;
           tt = ts - ks;
           ks = ts;
