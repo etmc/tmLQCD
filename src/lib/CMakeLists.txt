@@ -80,6 +80,12 @@ list(
 
 list(
   APPEND
+  PTBC_SRC_C
+  ptbc/defect.c
+)
+
+list(
+  APPEND
   SOLVER_SRC_C
   solver/bicg_complex.c
   solver/dfl_projector.c
@@ -380,6 +386,7 @@ list(
   ${INIT_SRC_C}
   ${APP_CONTEXT_SRC_C}
   ${ALLOC_SRC_C}
+  ${PTBC_SRC_C}
   ${SOLVER_SRC_C}
   ${TEST_SRC_C}
   ${MEAS_SRC_C}
