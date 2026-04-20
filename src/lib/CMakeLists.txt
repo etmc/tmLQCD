@@ -386,7 +386,7 @@ if(CMAKE_MAJOR_VERSION LESS 4)
               COMPILE_FLAGS "-Ca -Ptmlqcd -i")
 else()
   flex_target(tmlqcd_input_read read_input.l ${CMAKE_BINARY_DIR}/read_input.c
-              OPTIONS "-Ca -Ptmlqcd -i")
+              OPTIONS "-Ca;-Ptmlqcd;-i")
 endif()
 
 # create a target library with namespacing because cmake does not know name
