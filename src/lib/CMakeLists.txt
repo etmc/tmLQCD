@@ -442,8 +442,8 @@ install(
 
 install(
   EXPORT tmlqcd_targets
-  FILE tmlQCDTargets.cmake
-  NAMESPACE tmlQCD::
+  FILE tmLQCDTargets.cmake
+  NAMESPACE tmlqcd::
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
 install(

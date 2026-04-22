@@ -72,13 +72,17 @@ endmacro()
 # ------------------------------------------------
 if(SIMD_ARCH_FAMILY STREQUAL "x86")
   # AVX512 double (64-byte)
-  set(CMAKE_REQUIRED_FLAGS "${_SIMD_SAVED_REQUIRED_FLAGS} -mavx512f -mavx512dq")
   cmake_push_check_state(RESET)
+  set(CMAKE_REQUIRED_FLAGS "${_SIMD_SAVED_REQUIRED_FLAGS} -mavx512f -mavx512dq")
   check_source_runs(
     CXX
     "
         #include <immintrin.h>
-        int main() { __m512d v = _mm512_set1_pd(1.0); (void)v; return 0; }
+        int main() {
+           __m512d v = _mm512_set1_pd(1.0);
+           (void)v;
+           return 0;
+        }
     "
     _HAVE_AVX512_DOUBLE)
 
