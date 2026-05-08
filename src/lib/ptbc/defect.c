@@ -36,7 +36,7 @@ bool is_defect(PTBCDefect *def, int const ix, int const mu) {
         return false;
       }
     }
-    if (g_proc_id==0) printf("defect coordinate %d %d %d %d mu = %d\n", g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu);
+    //if (g_proc_id==0) printf("defect coordinate %d %d %d %d mu = %d\n", g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu);
     return true;
   }
   else {
@@ -48,6 +48,9 @@ bool is_defect(PTBCDefect *def, int const ix, int const mu) {
 double get_ptbc_coeff(int const ix, int const mu) {
   int const inst = app()->ptbc.instance_id;
   const PTBCInstance *instance = &(app()->ptbc.instances[inst]);
+
+  // if instance is not active, return 1
+  if (!instance->active) return 1.;
   
   // loop over defects
   for (int i=0; i<instance->n_coeffs; i++) {
