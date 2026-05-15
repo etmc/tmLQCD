@@ -446,11 +446,10 @@ install(
   NAMESPACE tmlqcd::
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/lib/include
+install(FILES "${CMAKE_SOURCE_DIR}/src/lib/include/tmLQCD.h"
+              "${CMAKE_SOURCE_DIR}/src/lib/include/tmlqcd_config.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
-  FILES_MATCHING
-  PATTERN "*.h")
+  )
 
 install(FILES "${CMAKE_BINARY_DIR}/tmlqcd_config_internal.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
