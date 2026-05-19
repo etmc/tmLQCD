@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
   tmlqcd
-  DESCRIPTION "tmlQCD"
+  DESCRIPTION "tmLQCD"
   HOMEPAGE_URL "https://github.com/etmc/tmLQCD"
   VERSION "6.1.0"
   LANGUAGES C CXX)
@@ -26,6 +26,8 @@ include(CMakeDependentOption)
 include(GNUInstallDirs)
 include(FetchContent)
 include(CMakePackageConfigHelpers)
+# Additionally, pass PIE-related link-time options to executable(s).
+include(CheckPIESupported)
 
 cmake_policy(SET CMP0048 NEW)
 
@@ -168,6 +170,8 @@ cmake_dependent_option(
 cmake_dependent_option(DDalphaAMG_ENABLE_HDF5 "Enable HDF5 support" OFF
                        "TM_USE_DDalphaAMG" OFF)
 
+check_pie_supported()
+
 # search for blas and lapack
 find_package(BLAS REQUIRED)
 #
@@ -244,7 +248,7 @@ if(TM_USE_LEMON)
   FetchContent_Declare(
     lemon
     GIT_REPOSITORY https://github.com/etmc/lemon
-    GIT_TAG 1eba8143133ac4cbfb0738f6e4fc2d32bd9f008c
+    GIT_TAG 52cc2bf9cf9ac6f8f9566e9625dced3bccd40b43
     FIND_PACKAGE_ARGS NAMES lemon)
   FetchContent_MakeAvailable(lemon)
 endif()
@@ -355,7 +359,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "SANITIZE")
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Building with AddressSanitizer")
     # Apply AddressSanitizer flags for the SANITIZE build type
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fsanitize=address>) 
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fsanitize=address>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-fno-omit-frame-pointer>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX,C>:-g>)
     add_link_options(-fsanitize=address)
@@ -397,25 +401,25 @@ add_subdirectory(src/lib)
 add_subdirectory(src/bin)
 
 write_basic_package_version_file(
-  "${PROJECT_BINARY_DIR}/tmlQCDConfigVersion.cmake"
+  "${PROJECT_BINARY_DIR}/tmLQCDConfigVersion.cmake"
   VERSION "${PROJECT_VERSION}"
   COMPATIBILITY SameMajorVersion)
 
-configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlQCD-config.cmake.in"
-               "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/cmake/tmLQCDConfig.cmake.in"
+               "${PROJECT_BINARY_DIR}/tmLQCDConfig.cmake" @ONLY)
 
-configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlQCD.pc.in"
-               "${PROJECT_BINARY_DIR}/tmlQCD.pc" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/cmake/tmLQCD.pc.in"
+               "${PROJECT_BINARY_DIR}/tmLQCD.pc" @ONLY)
 
-install(FILES "${PROJECT_BINARY_DIR}/tmlQCD-config.cmake"
-              "${PROJECT_BINARY_DIR}/tmlQCDConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD")
+install(FILES "${PROJECT_BINARY_DIR}/tmLQCDConfig.cmake"
+              "${PROJECT_BINARY_DIR}/tmLQCDConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-install(FILES "${PROJECT_BINARY_DIR}/tmlQCD.pc"
+install(FILES "${PROJECT_BINARY_DIR}/tmLQCD.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 install(
   DIRECTORY "${PROJECT_SOURCE_DIR}/cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tmlQCD"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   FILES_MATCHING
   PATTERN "*.cmake")
