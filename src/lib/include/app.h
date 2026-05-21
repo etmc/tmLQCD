@@ -67,8 +67,10 @@ typedef struct {
 
 typedef struct {
     bool active;        // Whether the defect is active or not
-    int Ld[3];          // Extents of the defect
-    direction_t along;  // Along which dimension
+    //int Ld[3];          // Extents of the defect
+    //direction_t along;  // Along which dimension
+    int pos[4];          // Position of the defect
+    int Ld[4];           // Extent of the defect
 } PTBCDefect;
 
 
