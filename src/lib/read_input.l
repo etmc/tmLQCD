@@ -3182,29 +3182,19 @@ static inline double fltlist_next_token(int * const list_end){
       PTBCDefect* cd = appm()->ptbc.defects + b;
 
       int n_parameters = strlist_count_tokens(yytext);
-      fail(n_parameters != 3, "Coefficients must provide exactly 3 numbers, not %d!\n", n_parameters);
-      sscanf(yytext, " %[a-zA-Z] = %d, %d, %d", name, cd->Ld, cd->Ld+1, cd->Ld+2);
-      if(myverbose) printf("    Ld = [%d, %d, %d] line %d\n", cd->Ld[0], cd->Ld[1], cd->Ld[2], line_of_file);
+      fail(n_parameters != 4, "Coefficients must provide exactly 4 numbers, not %d!\n", n_parameters);
+      sscanf(yytext, " %[a-zA-Z] = %d, %d, %d, %d", name, cd->Ld, cd->Ld+1, cd->Ld+2, cd->Ld+3);
+      if(myverbose) printf("    Ld = [%d, %d, %d, %d] line %d\n", cd->Ld[0], cd->Ld[1], cd->Ld[2], cd->Ld[3], line_of_file);
       BEGIN(PTBCDEFECT);
     }
-    {SPC}*Along{EQL}T {
-      appm()->ptbc.defects[b].along = DIRECTION_T;
-      if(myverbose) printf("    PTBC defect along T direction line %d\n", line_of_file);
-      BEGIN(PTBCDEFECT);
-    }
-    {SPC}*Along{EQL}X {
-      appm()->ptbc.defects[b].along = DIRECTION_X;
-      if(myverbose) printf("    PTBC defect along X direction line %d\n", line_of_file);
-      BEGIN(PTBCDEFECT);
-    }
-    {SPC}*Along{EQL}Y {
-      appm()->ptbc.defects[b].along = DIRECTION_Y;
-      if(myverbose) printf("    PTBC defect along Y direction line %d\n", line_of_file);
-      BEGIN(PTBCDEFECT);
-    }
-    {SPC}*Along{EQL}Z {
-      appm()->ptbc.defects[b].along = DIRECTION_Z;
-      if(myverbose) printf("    PTBC defect along Z direction line %d\n", line_of_file);
+    {SPC}*Position{EQL}{STRLIST} {
+      
+      PTBCDefect* cd = appm()->ptbc.defects + b;
+
+      int n_parameters = strlist_count_tokens(yytext);
+      fail(n_parameters != 4, "Position must provide exactly 4 numbers, not %d!\n", n_parameters);
+      sscanf(yytext, " %[a-zA-Z] = %d, %d, %d, %d", name, cd->pos, cd->pos+1, cd->pos+2, cd->pos+3);
+      if(myverbose) printf("    pos = [%d, %d, %d, %d] line %d\n", cd->pos[0], cd->pos[1], cd->pos[2], cd->pos[3], line_of_file);
       BEGIN(PTBCDEFECT);
     }
     {SPC}*EndPTBCDefect{SPC}* {
