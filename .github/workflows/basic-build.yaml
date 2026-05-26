@@ -30,7 +30,7 @@ jobs:
         run: mpicc --version
 
       - name: get_lime
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: usqcd-software/c-lime
           path: lime
@@ -56,7 +56,7 @@ jobs:
           path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: etmc/lemon
           path: lemon
@@ -83,7 +83,7 @@ jobs:
           path: ${{github.workspace}}/lemon/build/config.log 
 
       - name: get_tmlqcd
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: main
 
