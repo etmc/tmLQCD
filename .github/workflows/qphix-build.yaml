@@ -33,7 +33,7 @@ jobs:
         run: mpicc --version
 
       - name: get_lime
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: usqcd-software/c-lime
           path: lime
@@ -59,7 +59,7 @@ jobs:
           path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: etmc/lemon
           path: lemon
@@ -86,7 +86,7 @@ jobs:
           path: ${{github.workspace}}/lemon/build/config.log 
 
       - name: get_qmp
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: usqcd-software/qmp
           path: qmp
@@ -116,7 +116,7 @@ jobs:
           path: ${{github.workspace}}/qmp/build/config.log 
 
       - name: get_qphix
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: JeffersonLab/qphix
           ref: sysctl_deprecated
@@ -157,7 +157,7 @@ jobs:
           cat config.log
 
       - name: get_tmlqcd
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: main
 
