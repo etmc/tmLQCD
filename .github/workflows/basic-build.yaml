@@ -33,7 +33,7 @@ jobs:
         run: mpicc --version
 
       - name: get_lime
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           repository: usqcd-software/c-lime
           path: lime
@@ -53,13 +53,13 @@ jobs:
 
       - name: Archive lime config.log
         if: ${{ always() }}
-        uses: actions/upload-artiface@v7
+        uses: actions/upload-artifact@v6
         with:
           name: lime_config_output
           path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           repository: etmc/lemon
           path: lemon
@@ -80,13 +80,13 @@ jobs:
       
       - name: Archive lemon config.log
         if: ${{ always() }}
-        uses: actions/upload-artiface@v7
+        uses: actions/upload-artifact@v6
         with:
           name: lemon_config_output
           path: ${{github.workspace}}/lemon/build/config.log 
 
       - name: get_tmlqcd
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           path: main
 
@@ -110,7 +110,7 @@ jobs:
 
       - name: Archive tmLQCD config.log
         if: ${{ always() }}
-        uses: actions/upload-artiface@v7
+        uses: actions/upload-artifact@v6
         with:
           name: tmlqcd_config_output
           path: ${{github.workspace}}/main/build/config.log 
@@ -123,7 +123,7 @@ jobs:
       
       - name: Archive nf2_rgmixedcg_hmc_tmcloverdetratio output
         if: ${{ always() }}
-        uses: actions/upload-artiface@v7
+        uses: actions/upload-artifact@v6
         with:
           name: tmlqcd_test_output
           path: ${{github.workspace}}/main/build/output.data
