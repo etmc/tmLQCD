@@ -371,7 +371,8 @@ list(
   ${SOLVER_SRC_C}
   ${TEST_SRC_C}
   ${MEAS_SRC_C}
-  ${PROJECT_BINARY_DIR}/git_hash.c)
+  ${PROJECT_BINARY_DIR}/git_hash.c
+  wrapper/lib_wrapper.c)
 
 include_directories(
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
