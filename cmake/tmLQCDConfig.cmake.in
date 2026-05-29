@@ -4,12 +4,6 @@ if (NOT TARGET tmlqcd::tmlqcd)
 
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-  # store CXX compiler id. Used in MKL package.
-  set(TM_C_COMPILER_ID @CMAKE_C_COMPILER_ID@)
-  if(NOT ${CMAKE_C_COMPILER_ID})
-    set(CMAKE_C_COMPILER_ID ${TM_C_COMPILER_ID})
-  endif()
-
   # pass REQUIRED or QUIET depending on top Config call
   if(tmlQCD_c_FIND_REQUIRED)
     set(mode REQUIRED)
