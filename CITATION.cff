@@ -16,10 +16,8 @@ authors:
     orcid: 'https://orcid.org/0000-0003-1412-7582'
   - given-names: "Bartosz"
     family-names: "Kostrzewa"
-    email: "bkostrze@uni-bonn.de"
-    affiliation: >-
-      High Performance Computing and Analytics Lab,
-      University of Bonn
+    email: "kostrzewa@hiskp.uni-bonn.de"
+    affiliation: 'HISKP, University of Bonn'
     orcid: 'https://orcid.org/0000-0003-4434-6022'
   - given-names: "Siebren"
     family-names: "Reker"
