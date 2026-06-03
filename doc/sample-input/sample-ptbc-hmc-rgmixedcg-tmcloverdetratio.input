@@ -16,16 +16,35 @@ ReversibilityCheckIntervall = 4
 InitialStoreCounter = 0
 DebugLevel = 1
 
+
+# complex PTBC topo example, 2 periodic, 2 tentacles
+# 2 periodic instances connected by dummy defect 2
+
 BeginPTBC
 
   BeginPTBCDefect 0
-    Extents = 2, 2, 2
-    Along = Y
+    Extents = 2, 2, 2, 2
+    Position = 1, 1, 1, 1
+  EndPTBCDefect
+
+  BeginPTBCDefect 1
+    Extents = 0, 2, 2, 2
+    Position = 4, 4, 4, 4
+  EndPTBCDefect
+
+  BeginPTBCDefect 2
+    Extents = 0, 0, 0, 1
+    Position = 0, 0, 3, 0
+  EndPTBCDefect
+
+  BeginPTBCDefect 3
+    Extents = 0, 1, 1, 1
+    Position = 6, 6, 6, 6
   EndPTBCDefect
 
   BeginPTBCInstance 0
-    Coefficients = 1.0
-    Defects = 0
+    Coefficients = 1.0, 1.0
+    Defects = 0, 2
   EndPTBCInstance
 
   BeginPTBCInstance 1
@@ -34,16 +53,17 @@ BeginPTBC
   EndPTBCInstance
 
   BeginPTBCInstance 2
-    Coefficients = 0.75
-    Defects = 0
+    Coefficients = 1.0, 1.0, 1.0
+    Defects = 1, 2, 3
   EndPTBCInstance
 
   BeginPTBCInstance 3
-    Coefficients = 0.5
-    Defects = 0
+    Coefficients = 0.1, 0.0
+    Defects = 1, 3
   EndPTBCInstance
 
 EndPTBC
+
 
 
 
