@@ -73,6 +73,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
+#include "ptbc.h"
 
 extern int nstore;
 
@@ -142,6 +143,13 @@ int main(int argc, char *argv[]) {
   NO_OF_SPINORFIELDS_32 = 6;
 
   tmlqcd_mpi_init(argc, argv);
+
+  // initialise ptbc
+  if (app()->ptbc.active) {
+    init_ptbc_tree();
+    if (g_proc_id == 0) print_ptbc_topo();
+  }
+
   tm_stopwatch_push(&g_timers, "HMC", "");
 
   if (nstore == -1) {
