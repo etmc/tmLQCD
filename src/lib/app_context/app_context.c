@@ -215,6 +215,16 @@ static void initialize(void)
         app_instance.ptbc.instance_id, app_instance.ptbc.n_instances,
         instance_rank, instance_size);
 
+    
+    // verify that local ranks are organised regularly
+    int expected_world_rank = (app_instance.ptbc.instance_id * instance_size) + instance_rank;
+
+    // If this assertion fails, the user launched the MPI program with a cyclic layout
+    if (app_instance.mpi.world_rank != expected_world_rank) {
+        fprintf(stderr, "Error: MPI rank topology is not block-contiguous! "
+                        "Please check your mpirun/srun pinning settings.\n");
+        MPI_Abort(app_instance.mpi.world_comm, 1);
+    }
 
     //err(true, "bailing out");
     /*if (app_instance.ptbc.instance_id != 0) {
