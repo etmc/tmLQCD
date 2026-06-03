@@ -831,6 +831,11 @@ void start_ranlux(int level, int seed) {
                       g_proc_coords[3];
 
   max_seed = 2147483647 / g_nproc;
+  
+  // offset for ptbc. If PTBC not active, instance_id=0, n_instances=1 ptbc_offset=0
+  unsigned int ptbc_offset = app()->ptbc.instance_id * max_seed / app()->ptbc.n_instances;
+  seed += ptbc_offset;
+
   loc_seed = (seed + step * max_seed) % 2147483647;
 
   if (loc_seed == 0) loc_seed++;
