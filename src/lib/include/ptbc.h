@@ -1,3 +1,5 @@
+#ifndef PTBC_H
+#define PTBC_H
 
 #include <mpi.h>
 #include <app.h>
@@ -7,6 +9,10 @@
 bool is_defect(PTBCDefect *def, int const ix, int const mu);
 double get_ptbc_coeff(int const ix, int const mu);
 
+
+void mpi_gather_base_rank();
+void mpi_bcast_base_rank();
+void mpi_base_rank_update_fini();
 
 /* for swapping rng */
 typedef struct{
@@ -45,3 +51,5 @@ int const get_node_n_children(int const node_id);
 // initialiser
 void init_ptbc_tree();
 void print_ptbc_topo();
+
+#endif

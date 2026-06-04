@@ -11,10 +11,6 @@
 #include "ranlxs.h"
 #include "ranlxd.h"
 
-MPI_Datatype swap_info_type= MPI_DATATYPE_NULL; // MPI datatype for swapping info
-static Tree tree;
-static Node nodes[MAX_N_INSTANCES]; // each node corresponds to an instance
-
 #define err(test, ...) err_impl(test, __func__, __FILE__, __LINE__, __VA_ARGS__)
 static void err_impl(const bool test, const char* func, const char* file, const int line, const char* format, ...)
 {
@@ -29,6 +25,15 @@ static void err_impl(const bool test, const char* func, const char* file, const 
         fatal_error(message, location);
     }
 }
+
+static int base_rank[MAX_N_INSTANCES];  // MPI rank offset of each instance
+static MPI_Comm leader_comm;
+static bool leader_comm_initialised = false;
+static MPI_Request stats[2];
+
+MPI_Datatype swap_info_type= MPI_DATATYPE_NULL; // MPI datatype for swapping info
+static Tree tree;
+static Node nodes[MAX_N_INSTANCES]; // each node corresponds to an instance
 
 // find distance end-start corrected for peridic bc 
 int const static dist(int start, int end, int const g_length) {
@@ -121,10 +126,9 @@ void swap_rng(int const dest_inst) {
   if (dest_inst == app()->ptbc.instance_id) return;
 
   // find dest rank and src rank
-  int n_ranks, local_rank;
+  int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
-  MPI_Comm_size(app()->mpi.world_comm, &n_ranks);
-  int const dest_rank = n_ranks / app()->ptbc.n_instances * dest_inst + local_rank;  
+  int const dest_rank = base_rank[dest_inst] + local_rank;  
   int const src_rank = app()->mpi.world_rank;
 
   // get states
@@ -133,11 +137,10 @@ void swap_rng(int const dest_inst) {
 
   // define MPI datatype for swapping info if not defined
   if (swap_info_type == MPI_DATATYPE_NULL) {
-    PTBCInstance const *instance = &(app()->ptbc.instances[app()->ptbc.instance_id]);
-    int const blocklengths[3] = {105, 105, instance->n_coeffs};
-    MPI_Aint const displacements[3] = {0, 105 * sizeof(int), 2 * 105 * sizeof(int)};
-    MPI_Datatype const types[3] = {MPI_INT, MPI_INT, MPI_DOUBLE};
-    MPI_Type_create_struct(3, blocklengths, displacements, types, &swap_info_type);
+    int const blocklengths[2] = {105, 105};
+    MPI_Aint const displacements[2] = {0, 105 * sizeof(int)};
+    MPI_Datatype const types[2] = {MPI_INT, MPI_INT};
+    MPI_Type_create_struct(2, blocklengths, displacements, types, &swap_info_type);
     MPI_Type_commit(&swap_info_type);
   }
 
@@ -154,6 +157,51 @@ void swap_rng(int const dest_inst) {
   rlxd_reset(info.state_d);
 
   return;
+}
+
+
+/**
+ * @brief Gather base rank offset from leader rank of all instances. Must use with the other two!
+ * 
+ */
+void mpi_gather_base_rank() {
+  int my_rank;
+  MPI_Comm_rank(app()->mpi.comm, &my_rank);
+
+  if (my_rank != 0) return; // only local rank 0 needs to send information, avoid redundancy
+
+  // set communicator if not yet
+  if (!leader_comm_initialised) {
+    int leader_color = (my_rank == 0) ? 0 : MPI_UNDEFINED;
+    
+    // leader rank == instance_id
+    MPI_Comm_split(app()->mpi.world_comm, leader_color, app()->ptbc.instance_id, &leader_comm);
+    leader_comm_initialised = true;
+  }
+
+  // collect base rank offsets from leader ranks
+  MPI_Iallgather(&(app()->mpi.world_rank), 1, MPI_INT, base_rank, 1, MPI_INT, leader_comm, stats);
+}
+
+/**
+ * @brief Broadcast base rank offset to all local ranks from leader rank. Must use with the other two!
+ * 
+ */
+void mpi_bcast_base_rank() {
+  // check if gather complete
+  MPI_Wait(stats, MPI_STATUS_IGNORE);
+
+  // broadcast from leader rank (rank 0) to all other local ranks
+  MPI_Ibcast(base_rank, app()->ptbc.n_instances, MPI_INT, 0, app()->mpi.comm, stats+1);
+}
+
+/**
+ * @brief Finalise base rank update.
+ * 
+ */
+void mpi_base_rank_update_fini(){
+  // finalise
+  MPI_Wait(stats+1, MPI_STATUS_IGNORE);
 }
 
 typedef struct {
@@ -378,7 +426,10 @@ void init_ptbc_tree() {
   return;
 }
 
-
+/**
+ * @brief Print information of instances, including instance type upstream IDs and downstream IDs 
+ * 
+ */
 void print_ptbc_topo() {
   // Iterate through the nodes
   const char* typeLabels[] = {
