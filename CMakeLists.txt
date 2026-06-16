@@ -248,7 +248,7 @@ if(TM_USE_LEMON)
   FetchContent_Declare(
     lemon
     GIT_REPOSITORY https://github.com/etmc/lemon
-    GIT_TAG 52cc2bf9cf9ac6f8f9566e9625dced3bccd40b43
+    GIT_TAG e40cda10d18284795f840a04ecbb4d63007fee3d
     FIND_PACKAGE_ARGS NAMES lemon)
   FetchContent_MakeAvailable(lemon)
 endif()
