@@ -5,7 +5,7 @@ spack:
   commit: releases/v1.1
   packages:
     repo: https://github.com/spack/spack-packages.git
-    #commit: 
+    commit: 60ca28b3565975d530f7c4645cc25670b7365de2 
 modules: true
 description: "tmLQCD dependencies for CSCS CI on GH200."
 version: 2
