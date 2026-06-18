@@ -399,6 +399,7 @@ endif()
 configure_file(cmake/git_hash.c.in git_hash.c @ONLY)
 add_subdirectory(src/lib)
 add_subdirectory(src/bin)
+add_subdirectory(tests)
 
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/tmLQCDConfigVersion.cmake"
