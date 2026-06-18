@@ -153,8 +153,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t *const hf) {
     // mnl->w_fields[0], mnl->w_fields[1] = p[i][parity]
     // mnl->w_fields[4], mnl->w_fields[5] = p[i][other_parity] *kappa
     // further in quda parity = odd and other_parity = even
-    compute_ndcloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                                        &(mnl->solver_params), !mnl->trlog);
+    compute_ndcloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field, g_chi_dn_spinor_field);
 
     if (g_debug_level > 3) {
       su3adj **given = hf->derivative;

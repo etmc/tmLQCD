@@ -24,8 +24,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "boundary.h"
+#include "compare_derivative.h"
 #include "deriv_Sb.h"
 #include "gettime.h"
 #include "global.h"
@@ -45,6 +47,11 @@
 #include "solver/solver_types.h"
 #include "start.h"
 #include "su3.h"
+#include "xchange/xchange_deri.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
+
 
 /********************************************
  *
@@ -80,9 +87,7 @@ void rat_derivative(const int id, hamiltonian_field_t* const hf) {
     // we invert it for the even sites only
     sw_invert(EE, 0.);
   }
-  // mnl->forcefactor = mnl->EVMaxInv*mnl->EVMaxInv;
-  mnl->forcefactor = 1.;
-
+  mnl->forcefactor = 1.; // unlike the 1+1 case no additional normalization is required for the operator
   mnl->solver_params.max_iter = mnl->maxiter;
   mnl->solver_params.squared_solver_prec = mnl->forceprec;
   mnl->solver_params.no_shifts = mnl->rat.np;
@@ -94,6 +99,45 @@ void rat_derivative(const int id, hamiltonian_field_t* const hf) {
   // this generates all X_j,o (odd sites only) -> g_chi_up_spinor_field
   mnl->iter1 += solve_mms_tm(g_chi_up_spinor_field, mnl->pf, &(mnl->solver_params));
 
+  if (mnl->external_library == QUDA_LIB) {
+    if (!mnl->even_odd_flag) {
+      fatal_error("QUDA supports only even_odd_flag", __func__);
+    }
+#ifdef TM_USE_QUDA
+    if (g_debug_level > 3) {
+#ifdef TM_USE_MPI
+#ifdef TM_USE_OMP
+#pragma omp parallel for
+#endif
+      for (int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); i++) {
+        for (int mu = 0; mu < 4; mu++) {
+          _zero_su3adj(debug_derivative[i][mu]); // zero out the halo when using MPI
+        }
+      }
+#endif
+      memcpy(debug_derivative[0], hf->derivative[0], 4 * VOLUME * sizeof(su3adj)); // copy the interior
+    }
+    if (!(mnl->type == CLOVERRAT)) {
+      fatal_error("QUDA support only mnl->type = CLOVERRAT", __func__);
+    }
+
+    compute_cloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field);
+
+    if (g_debug_level > 3) {
+      su3adj **given = hf->derivative;
+      hf->derivative = debug_derivative;
+      mnl->external_library = NO_EXT_LIB;
+      tm_debug_printf(0, 3, "Recomputing the derivative from tmLQCD\n");
+      rat_derivative(id, hf);
+#ifdef TM_USE_MPI
+      xchange_deri(hf->derivative);  // this function use ddummy inside
+#endif
+      compare_derivative(mnl, given, hf->derivative, 1e-9, "rat_derivative");
+      mnl->external_library = QUDA_LIB;
+      hf->derivative = given;
+    }
+#endif  // no other option, TM_USE_QUDA already checked by solver
+  } else { // ... not using QUDA_LIB: CPU implentations for (CLOVER)RAT
   for (int j = (mnl->rat.np - 1); j > -1; j--) {
     tm_stopwatch_push(&g_timers, "Qp", "");
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);
@@ -142,12 +186,14 @@ void rat_derivative(const int id, hamiltonian_field_t* const hf) {
                mnl->rat.rmu[j] * mnl->forcefactor);
     }
   }
-  if (mnl->type == CLOVERRAT && mnl->trlog) {
-    sw_deriv(EE, 0., 1);
+    if (mnl->type == CLOVERRAT && mnl->trlog) {
+      sw_deriv(EE, 0., 1);
+    }
+    if (mnl->type == CLOVERRAT) {
+      sw_all(hf, mnl->kappa, mnl->c_sw);
+    }
   }
-  if (mnl->type == CLOVERRAT) {
-    sw_all(hf, mnl->kappa, mnl->c_sw);
-  }
+
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;

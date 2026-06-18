@@ -3033,7 +3033,7 @@ void quda_mg_tune_params(void *spinorOut, void *spinorIn, const int max_iter) {
 }
 
 void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t *const hf,
-                                       spinor *const X_o, spinor *const phi, int detratio) {
+                                       spinor *const X_o, spinor *const phi, const int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
   _initQuda();
@@ -3063,7 +3063,7 @@ void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t 
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   inv_param.dagger = QUDA_DAG_YES;
   computeTMCloverForceQuda(mom_quda, &spinorIn, &spinorPhi, coeff, nvector, &f_gauge_param,
-                           &inv_param, detratio);
+                           &inv_param, detratio, !detratio, 0); // in a detratio monomial there is never a trlog, but in a det monomial it is always added. 
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
@@ -3077,16 +3077,54 @@ void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
+
+void compute_cloverrat_derivative_quda(monomial* const mnl, hamiltonian_field_t* const hf,
+                                       spinor** const Q) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+
+  _initQuda();
+  _initMomQuda();
+  const int num_shifts = mnl->solver_params.no_shifts;
+  void **spinorIn = (void **)Q;
+  double *coeff = (double *)malloc(sizeof(double) * num_shifts);
+
+  for (int shift = 0; shift < num_shifts; shift++) {
+    reorder_spinor_eo_toQuda((double *)spinorIn[shift], inv_param.cpu_prec, 0, 1);
+    coeff[shift] = 4. * mnl->kappa * mnl->kappa * mnl->rat.rmu[shift];
+    inv_param.offset[shift] = mnl->rat.mu[shift];
+  }
+
+  inv_param.kappa = mnl->kappa;
+  inv_param.clover_csw = mnl->c_sw;
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+  // when using QUDA MG the following parameter need to be set
+  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  inv_param.dagger = QUDA_DAG_YES;
+  _setOneFlavourSolverParam(g_kappa, g_c_sw, 0., mnl->solver_params.type, mnl->even_odd_flag,
+                            mnl->solver_params.squared_solver_prec, mnl->solver_params.max_iter, 1, 1); // here we set mu=0
+  _loadCloverQuda(&inv_param);
+  _loadGaugeQuda(mnl->solver_params.compression_type);
+  tm_stopwatch_push(&g_timers, "computeTMCloverForceQuda", "");
+
+  computeTMCloverForceQuda(mom_quda, spinorIn, NULL, coeff, num_shifts, &f_gauge_param, &inv_param, 0, mnl->trlog, 1);
+  free(coeff);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+
+  reorder_mom_fromQuda();
+  add_mom_to_derivative(hf->derivative);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
+
+
 void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_t *const hf,
-                                         spinor **const Qup, spinor **const Qdn,
-                                         solver_params_t *solver_params, int detratio) {
+                                         spinor **const Qup, spinor **const Qdn) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
   _initQuda();
   _initMomQuda();
   spinor **in;
   void *spinorPhi;
-  const int num_shifts = solver_params->no_shifts;
+  const int num_shifts = mnl->solver_params.no_shifts;
   const int Vh = VOLUME / 2;
 
   init_solver_field(&in, VOLUME, num_shifts);
@@ -3111,7 +3149,6 @@ void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_
     inv_param.offset[shift] = mnl->rat.mu[shift];
   }
   inv_param.evmax = 1.0 / mnl->EVMaxInv;
-
   inv_param.kappa = mnl->kappa;
   inv_param.clover_csw = mnl->c_sw;
   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
@@ -3119,16 +3156,12 @@ void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   inv_param.dagger = QUDA_DAG_YES;
   computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff, num_shifts, &f_gauge_param,
-                           &inv_param, detratio);
-
+                           &inv_param, 0, mnl->trlog, 2);
   free(coeff);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-
   reorder_mom_fromQuda();
   add_mom_to_derivative(hf->derivative);
-
   finalize_solver(in, num_shifts);
-
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
