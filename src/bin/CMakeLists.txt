@@ -26,7 +26,7 @@ if(TM_ENABLE_TESTS)
   if(TM_USE_LEMON)
     list(APPEND tmlqcd_test_prog "test_lemon")
   endif()
-  if(TN_USE_QPHIX)
+  if(TM_USE_QPHIX)
     list(APPEND tmlqcd_test_prog "qphix_test_Dslash")
   endif()
 
