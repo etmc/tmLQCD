@@ -38,3 +38,4 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
+    return args
