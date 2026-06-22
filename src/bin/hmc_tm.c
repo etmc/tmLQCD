@@ -73,6 +73,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
+#include "ptbc.h"
 
 extern int nstore;
 
@@ -142,6 +143,13 @@ int main(int argc, char *argv[]) {
   NO_OF_SPINORFIELDS_32 = 6;
 
   tmlqcd_mpi_init(argc, argv);
+
+  // initialise ptbc
+  if (app()->ptbc.active) {
+    init_ptbc_tree();
+    if (g_proc_id == 0) print_ptbc_topo();
+  }
+
   tm_stopwatch_push(&g_timers, "HMC", "");
 
   if (nstore == -1) {
@@ -479,7 +487,7 @@ int main(int argc, char *argv[]) {
 
           sleep(io_timeout);
 #ifdef TM_USE_MPI
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
 #endif
         }
       /* Now move .conf.tmp into place */
@@ -528,7 +536,7 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     if (ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
@@ -581,7 +589,7 @@ int main(int argc, char *argv[]) {
   _endQuda();
 #endif
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
 
