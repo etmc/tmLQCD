@@ -41,6 +41,11 @@ static void err_impl(const bool test, const char* func, const char* file, const 
     }
 }
 
+/**
+ * @brief find the id of monomial that corresponds to gauge
+ * 
+ * @return * int 
+ */
 static int gauge_mnl_id(void) {
   static int id = -1;
   if (id < 0) {
@@ -52,6 +57,12 @@ static int gauge_mnl_id(void) {
   return id;
 }
 
+
+/**
+ * @brief calculate the gauge action
+ * 
+ * @return * double 
+ */
 static double ptbc_gauge_action(void) {
   monomial const *mnl = &monomial_list[gauge_mnl_id()];
   double s = g_beta * (mnl->c0 * measure_gauge_action((const su3 **)g_gauge_field, mnl->glambda));
@@ -61,6 +72,13 @@ static double ptbc_gauge_action(void) {
   return s;
 }
 
+
+/**
+ * @brief   find gauge action difference of with swap partner defect and own defect
+ * 
+ * @param alt_inst    instance id of swap partner
+ * @return * double 
+ */
 double ptbc_swap_dh(int const alt_inst) {
   int const own_inst = app()->ptbc.instance_id;
   double const s_own = ptbc_gauge_action();
