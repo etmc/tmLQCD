@@ -82,6 +82,7 @@ list(
   APPEND
   PTBC_SRC_C
   ptbc/defect.c
+  ptbc/ptbc_gauge_action.c
 )
 
 list(
