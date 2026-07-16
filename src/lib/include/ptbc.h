@@ -31,8 +31,8 @@ double get_ptbc_coeff(int const ix, int const mu);
 
 
 void mpi_gather_base_rank();
-void mpi_bcast_base_rank();
 void mpi_base_rank_update_fini();
+void ptbc_sync();
 
 /* for swapping rng */
 typedef struct{
@@ -71,5 +71,18 @@ int const get_node_n_children(int const node_id);
 // initialiser
 void init_ptbc_tree();
 void print_ptbc_topo();
+
+
+// utils
+bool if_periodic(int inst_id);
+void swap_rate(int const inst_id, int *rate);
+
+// swap function
+int swap_eo_tent(double const diff_up, double const diff_dn, int eo);
+int init_eoswap_pbc(int *tent_order, int eo);
+int try_swap_link(int const partner_inst, double const own_diff);
+
+// gauge action with PTBC
+double ptbc_swap_dh(int const alt_inst);
 
 #endif

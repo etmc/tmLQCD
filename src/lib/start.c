@@ -830,13 +830,19 @@ void start_ranlux(int level, int seed) {
                       g_proc_coords[1] * g_nproc_y * g_nproc_z + g_proc_coords[2] * g_nproc_z +
                       g_proc_coords[3];
 
-  max_seed = 2147483647 / g_nproc;
+  int n_ranks = g_nproc;
+  if (app()->ptbc.active) {
+    MPI_Comm_size(app()->mpi.world_comm, &n_ranks);
+    MPI_Comm_rank(app()->mpi.world_comm, &step);
+  }
+  max_seed = 2147483647 / n_ranks;
   
   // offset for ptbc. If PTBC not active, instance_id=0, n_instances=1 ptbc_offset=0
-  unsigned int ptbc_offset = app()->ptbc.instance_id * max_seed / app()->ptbc.n_instances;
+  unsigned int ptbc_offset = max_seed / app()->ptbc.n_instances * app()->ptbc.instance_id;
   seed += ptbc_offset;
 
   loc_seed = (seed + step * max_seed) % 2147483647;
+  printf("Instance %d seed is %d offset is %d \n", app()->ptbc.instance_id, loc_seed, ptbc_offset);
 
   if (loc_seed == 0) loc_seed++;
 
