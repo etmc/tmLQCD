@@ -383,18 +383,6 @@ int main(int argc, char *argv[]) {
     fclose(countfile);
   }
 
-/*   int target_inst;
-  int state[105]={0};
-  rlxd_get(state);
-  printf("Instance %d has state %d\n", app()->ptbc.instance_id, state[54]);
-  if (app()->ptbc.instance_id % 2 == 0) target_inst = app()->ptbc.instance_id + 1;
-  else target_inst = app()->ptbc.instance_id -1;
-  swap_rng(target_inst);
-  int new_state[105]={0};
-  rlxd_get(new_state);
-  printf("Instance %d has state %d\n", app()->ptbc.instance_id, new_state[54]);
-  fflush(stdout); */
-
   /* Loop for measurements */
   for (j = 0; j < Nmeas; j++) {
     if (g_proc_id == 0) {
@@ -408,66 +396,13 @@ int main(int argc, char *argv[]) {
     Rate += accept;
     
     if (app()->ptbc.active) {
-      // swap tentacle
-      int const inst_id_e = app()->ptbc.instance_id;
-      printf("\nI am step %d instance %d rank %d \n", j, inst_id_e, app()->mpi.world_rank);
-    
-      double const diff_up_e = get_node_parent(inst_id_e) != -1? ptbc_swap_dh(get_node_parent(inst_id_e)): 0.;
-      double const diff_dn_e = get_node_n_children(inst_id_e) > 0 ? ptbc_swap_dh(get_node_children(inst_id_e)[0]) : 0.;
-      int const swap_accepted_e = swap_eo_tent(diff_up_e, diff_dn_e, 0); // even swap
-      ptbc_sync();
-      // if swap happened, swap acceptance rate
-      if (swap_accepted_e)  swap_rate(inst_id_e, &Rate);
+      // even odd swap
+      eo_swap(&Rate);
 
-      int const inst_id_o = app()->ptbc.instance_id;
-      double const diff_up_o = get_node_parent(inst_id_o) != -1? ptbc_swap_dh(get_node_parent(inst_id_o)): 0.;
-      double const diff_dn_o = get_node_n_children(inst_id_o) > 0 ? ptbc_swap_dh(get_node_children(inst_id_o)[0]) : 0.;
-      int const swap_accepted_o = swap_eo_tent(diff_up_o, diff_dn_o, 1); // odd swap
-      ptbc_sync();
-    
-      if (swap_accepted_o) swap_rate(inst_id_o, &Rate);
-      int const inst_id_new = app()->ptbc.instance_id;
-
-      // initialise pbc swaps
-      int *tent_order = (int *)malloc(get_node_n_children(inst_id_new) * sizeof(int) * 2);
-      int * const tent_order_e = tent_order;
-      int * const tent_order_o = tent_order + get_node_n_children(inst_id_new);
-      
-      int const n_swaps_e = init_eoswap_pbc(tent_order_e, 0);
-      int const n_swaps_o = init_eoswap_pbc(tent_order_o, 1);
-    
-      // execute pbc swaps
-      // every rank must call ptbc_sync() (collective over world_comm) the same
-      // number of times, so agree on the round count via an unrooted Allreduce max
-      // rather than trying to signal it with per-process broadcasts.
-      int max_swaps_e, max_swaps_o;
-      MPI_Allreduce(&n_swaps_e, &max_swaps_e, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
-      MPI_Allreduce(&n_swaps_o, &max_swaps_o, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
-    
-      // first even then odd swaps
-      for (int i = 0; i < max_swaps_e; i++) {
-        if (i < n_swaps_e) {
-          int const partner_inst = if_periodic(inst_id_new) ? get_node_children(inst_id_new)[tent_order_e[i]] : get_node_parent(inst_id_new);
-          double const own_diff = ptbc_swap_dh(partner_inst);
-          int const swap_accepted = try_swap_link(partner_inst, own_diff);
-          if (swap_accepted) swap_rate(inst_id_new, &Rate);
-        }
-        ptbc_sync();
-      }
-
-      for (int i = 0; i < max_swaps_o; i++) {
-        if (i < n_swaps_o) {
-          int const partner_inst = if_periodic(inst_id_new) ? get_node_children(inst_id_new)[tent_order_o[i]] : get_node_parent(inst_id_new);
-          double const own_diff = ptbc_swap_dh(partner_inst);
-          int const swap_accepted = try_swap_link(partner_inst, own_diff);
-          if (swap_accepted) swap_rate(inst_id_new, &Rate);
-        }
-        ptbc_sync();
-      }
-
-      free(tent_order);
+      // print post swap status
+      if (g_proc_id == 0) 
+        printf("\nI am step %d instance %d rank %d \n", j, app()->ptbc.instance_id, app()->mpi.world_rank);
     }
-
 
     /* Save gauge configuration all Nsave times */
     if ((Nsave != 0) && (trajectory_counter % Nsave == 0) && (trajectory_counter != 0)) {

@@ -29,9 +29,7 @@
 bool is_defect(PTBCDefect *def, int const ix, int const mu);
 double get_ptbc_coeff(int const ix, int const mu);
 
-
-void mpi_gather_base_rank();
-void mpi_base_rank_update_fini();
+/* synchronising the ptbc topology whenever swaps happen */
 void ptbc_sync();
 
 /* for swapping rng */
@@ -77,7 +75,7 @@ void print_ptbc_topo();
 bool if_periodic(int inst_id);
 void swap_rate(int const inst_id, int *rate);
 
-// swap function
+/* Swapping functions (can make static if confirm later not used elsewhere) */
 int swap_eo_tent(double const diff_up, double const diff_dn, int eo);
 int init_eoswap_pbc(int *tent_order, int eo);
 int try_swap_link(int const partner_inst, double const own_diff);
@@ -85,4 +83,6 @@ int try_swap_link(int const partner_inst, double const own_diff);
 // gauge action with PTBC
 double ptbc_swap_dh(int const alt_inst);
 
+/* The even-odd swap */
+void eo_swap(int *Rate);
 #endif
