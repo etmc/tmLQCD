@@ -78,11 +78,15 @@ void swap_rate(int const inst_id, int *rate);
 /* Swapping functions (can make static if confirm later not used elsewhere) */
 int swap_eo_tent(double const diff_up, double const diff_dn, int eo);
 int init_eoswap_pbc(int *tent_order, int eo);
-int try_swap_link(int const partner_inst, double const own_diff);
+int swap_link(int const partner_inst, double const own_diff);
 
 // gauge action with PTBC
 double ptbc_swap_dh(int const alt_inst);
 
 /* The even-odd swap */
-void eo_swap(int *Rate);
+void eo_swap(int *Rate, int eo);
+
+
+/* periodic-periodic dummy link swap */
+void swap_dummy(int *Rate);
 #endif
