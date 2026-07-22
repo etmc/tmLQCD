@@ -397,7 +397,9 @@ int main(int argc, char *argv[]) {
     
     if (app()->ptbc.active) {
       // even odd swap
-      eo_swap(&Rate);
+      eo_swap(&Rate, 0);
+      eo_swap(&Rate, 1);
+      swap_dummy(&Rate);
 
       // print post swap status
       if (g_proc_id == 0) 
