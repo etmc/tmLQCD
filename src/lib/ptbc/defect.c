@@ -545,7 +545,7 @@ void static swap(int const inst_id) {
  * 
  * @param inst_id 
  * @param rate 
- * @return * void 
+ * @return void 
  */
 void swap_rate(int const inst_id, int *rate) {
   int local_rank;
@@ -662,7 +662,7 @@ void ptbc_sync() {
 /**
  * @brief Get the number of periodic instance
  * 
- * @return * int number of periodic instances
+ * @return int number of periodic instances
  */
 int get_n_periodic() {
   int n_periodic = 0;
@@ -678,7 +678,7 @@ int get_n_periodic() {
  * @brief Get the periodic nodes
  * 
  * @param periodic_id the array of periodic IDs
- * @return * int number of periodic instances
+ * @return int number of periodic instances
  */
 int get_periodic(int *periodic_id) {
   int n_periodic = 0;
@@ -693,17 +693,20 @@ int get_periodic(int *periodic_id) {
 
 
 /**
- * @brief initialise Periodic instance swap order, return order of tentacles to periodic bc and
- * 
- * @param tent_order  array of tentacle indices that are involved in the even swap
+ * @brief initialise periodic-instance swap order; for a periodic instance, returns the
+ *        number of tentacles swapping with it this pass; for a tentacle instance, returns
+ *        the round index (matching eo_swap's loop) at which it swaps with its periodic
+ *        neighbour, or -1 if it is not swapping this pass
+ *
+ * @param tent_order  array of tentacle indices that are involved in the even/odd swap (periodic instances only)
  * @param eo even or odd swaps, 0 for even 1 for odd
- * @return int  number of tentacles involved in the even swap
+ * @return int  periodic instance: number of tentacles involved; tentacle instance: assigned round index, or -1
  */
 int init_eoswap_pbc(int *tent_order, int eo){
   int local_inst = app()->ptbc.instance_id;
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
-  int local_decision = 0; // 1 if need to swap with periodic instance, 0 if not >1 if periodic with multiple tentacles to swap
+  int my_round = -1; // round index at which a tentacle swaps with its periodic neighbour, -1 if not swapping
 
   // if periodic instance, may need swap with multiple tentacles
   if (if_periodic(local_inst) && local_rank == 0) {
@@ -723,7 +726,8 @@ int init_eoswap_pbc(int *tent_order, int eo){
     int *swapping_tents = (int *)malloc(sizeof(int) * get_node_n_children(local_inst));
     int n_swapping_tents = 0;
     for (int t=0; t<get_node_n_children(local_inst); t++) {
-      if ((dist[t]+eo)%2 == 1) { // involved in even swap!
+      // find tentacles involved in even swap, exclude dummy
+      if ((dist[t]+eo)%2 == 1 && !if_periodic(get_node_children(local_inst)[t])) {
         swapping_tents[n_swapping_tents] = t;
         n_swapping_tents++;
       }
@@ -739,20 +743,19 @@ int init_eoswap_pbc(int *tent_order, int eo){
     }
     
     // notify other ranks
-    int decision[MAX_N_INSTANCES] = {0};
-    for (int i=0; i<n_swapping_tents; i++) {
-      decision[get_node_children(local_inst)[swapping_tents[i]]] = 1;
-    }
+    int * decision = (int *)malloc(sizeof(int) * app()->ptbc.n_instances);
+    for (int i=0; i<app()->ptbc.n_instances; i++)  decision[i] = -1;
+    for (int i=0; i<n_swapping_tents; i++)  
+      decision[get_node_children(local_inst)[swapping_tents[i]]] = i;
 
     int periodic_id[MAX_N_DEFECTS];
     int const n_periodic = get_periodic(periodic_id);
-
     
     MPI_Request* request = (MPI_Request*)malloc(n_periodic * sizeof(MPI_Request));
     int decisions[MAX_N_DEFECTS] = {0}; // dummy receives
     for (int i = 0; i < n_periodic; i++) {
-      if (periodic_id[i] == local_inst) MPI_Iscatter(decision, 1, MPI_INT, decisions+i, 1, MPI_INT, local_inst, leader_comm, request+i);
-      else                              MPI_Iscatter(NULL, 1, MPI_INT, decisions+i, 1, MPI_INT, periodic_id[i], leader_comm, request+i);
+      if (periodic_id[i] == local_inst) MPI_Iscatter(decision, 1, MPI_INT, &decisions[i], 1, MPI_INT, local_inst, leader_comm, &request[i]);
+      else                              MPI_Iscatter(NULL, 1, MPI_INT, &decisions[i], 1, MPI_INT, periodic_id[i], leader_comm, &request[i]);
     }
 
     
@@ -764,6 +767,8 @@ int init_eoswap_pbc(int *tent_order, int eo){
     free(swapping_tents);
     free(dist);
     free(request);
+    free(decision);
+    free(decisions);
 
     return n_swapping_tents; // return number of swaps for the periodic instance
   }
@@ -777,19 +782,19 @@ int init_eoswap_pbc(int *tent_order, int eo){
     int decisions[MAX_N_DEFECTS] = {0};
     for (int i=0; i<n_periodic; i++) {
       MPI_Iscatter(NULL, 1, MPI_INT, &decisions[i], 1, MPI_INT, periodic_id[i], leader_comm, request+i);
-    } 
+    }
 
     MPI_Waitall(n_periodic, request, MPI_STATUSES_IGNORE);
-    
-    for (int i=0; i<n_periodic; i++) {
-      local_decision = (local_decision || decisions[i]);
-    }
-    
-    MPI_Bcast(&local_decision, 1, MPI_INT, 0, app()->mpi.comm);
-
     free(request);
-    return local_decision; // 1 swap if notified by periodic instance
-  } 
+
+    // if selected, record my round index
+    for (int i=0; i<n_periodic; i++) {
+      if (decisions[i] != -1) my_round = decisions[i];
+    }
+
+    MPI_Bcast(&my_round, 1, MPI_INT, 0, app()->mpi.comm);
+    return my_round;
+  }
   else if (if_periodic(local_inst) && local_rank!=0) {
     int n_swapping_tents;
     MPI_Bcast(&n_swapping_tents, 1, MPI_INT, 0, app()->mpi.comm);
@@ -797,19 +802,73 @@ int init_eoswap_pbc(int *tent_order, int eo){
     return n_swapping_tents; // return number of swaps for the periodic instance
   }
   else {
-    MPI_Bcast(&local_decision, 1, MPI_INT, 0, app()->mpi.comm);
-    return local_decision; // 1 swap if notified by periodic instance
+    MPI_Bcast(&my_round, 1, MPI_INT, 0, app()->mpi.comm);
+    return my_round;
   }
 }
 
+void swap_dummy(int* Rate) {
+  int local_rank;
+  MPI_Comm_rank(app()->mpi.comm, &local_rank);
+  int const local_inst = app()->ptbc.instance_id;
+
+  // find the pbc
+  int periodic_id[MAX_N_DEFECTS] = {0};
+  int const n_periodic = get_periodic(periodic_id);
+  
+  int *link_id = (int *) malloc(sizeof(int) * (n_periodic - 1)); // dummy links
+
+  if (local_inst == 0 && local_rank == 0) {
+    // exclude root, left with dummy links
+    int cnt = 0;
+    int const root = get_tree_root();
+    for (int i=0; i<n_periodic; i++) {
+      if (periodic_id[i] != root) {
+        link_id[cnt] = periodic_id[i]; 
+        cnt++;
+      }
+    }
+
+    // randomise link order
+    shuffle(link_id, n_periodic - 1);
+  }
+
+  // broadcast shuffle result
+  if (local_rank == 0) MPI_Bcast(link_id, n_periodic - 1, MPI_INT, 0, leader_comm);
+  MPI_Bcast(link_id, n_periodic-1, MPI_INT, 0, app()->mpi.comm);
+
+  // if periodic, swap when it is a link connected to me
+  if (if_periodic(local_inst)) {
+    for (int i=0; i<n_periodic-1; i++) {
+      if (local_inst == link_id[i]) {
+        int const upstream = get_node_parent(local_inst);
+        double const diff = ptbc_swap_dh(upstream);
+        int const accepted = swap_link(upstream, diff);
+        if (accepted) swap_rate(local_inst, Rate);
+      } 
+      else if (local_inst == get_node_parent(link_id[i])) {
+        double const diff = ptbc_swap_dh(link_id[i]);
+        int const accepted = swap_link(link_id[i], diff); 
+        if (accepted) swap_rate(local_inst, Rate);
+      }
+      ptbc_sync();
+    }
+  } else {
+    for (int i=0; i<n_periodic-1; i++)  ptbc_sync();
+  }
+
+  free(link_id);
+  return;
+}
+
 /**
- * @brief try swapping between two instances, decision by pbc
+ * @brief try swapping between periodic instance and another neighbour, decision by pbc
  * 
  * @param partner_inst 
  * @param own_diff 
- * @return * int 1 accept; 0 reject 
+ * @return int 1 accept; 0 reject 
  */
-int try_swap_link(int const partner_inst, double const own_diff) {
+int swap_link(int const partner_inst, double const own_diff) {
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
   int const local_inst = app()->ptbc.instance_id;
@@ -821,18 +880,20 @@ int try_swap_link(int const partner_inst, double const own_diff) {
                   &partner_diff, 1, MPI_DOUBLE, partner_inst, 0,
                   leader_comm, MPI_STATUS_IGNORE);
 
-    // only pbc, or if both periodic, the upstream decides
-    if (if_periodic(local_inst) && get_node_parent(partner_inst)==local_inst) {
+    // the upstream decides
+    if (get_node_parent(partner_inst)==local_inst) {
       double const expmdh = exp(-(own_diff + partner_diff));
       double u; ranlxd(&u, 1);
       accept = expmdh > u;
       if (g_cart_id == 0)
-        printf("[try_swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
+        printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
               local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
         fflush(stdout);
       MPI_Send(&accept, 1, MPI_INT, partner_inst, partner_inst, leader_comm);
-    } else {
+    } else if (get_node_parent(local_inst)==partner_inst) {
       MPI_Recv(&accept, 1, MPI_INT, partner_inst, local_inst, leader_comm, MPI_STATUS_IGNORE);
+    } else {
+      err(1, "Error in swap_link: the two instances are not neighbours!");
     }
   }
 
@@ -846,61 +907,222 @@ int try_swap_link(int const partner_inst, double const own_diff) {
  * 
  * @param Rate the swap rate follows instance id
  */
-void eo_swap(int *Rate){
+void eo_swap(int *Rate, int eo){
   // swap tentacle
-  int const inst_id_e = app()->ptbc.instance_id;
-  double const diff_up_e = get_node_parent(inst_id_e) != -1? ptbc_swap_dh(get_node_parent(inst_id_e)): 0.;
-  double const diff_dn_e = get_node_n_children(inst_id_e) > 0 ? ptbc_swap_dh(get_node_children(inst_id_e)[0]) : 0.;
-  int const swap_accepted_e = swap_eo_tent(diff_up_e, diff_dn_e, 0); // even swap
+  int const inst_id = app()->ptbc.instance_id;
+  double const diff_up = get_node_parent(inst_id) != -1? ptbc_swap_dh(get_node_parent(inst_id)): 0.;
+  double const diff_dn = get_node_n_children(inst_id) > 0 ? ptbc_swap_dh(get_node_children(inst_id)[0]) : 0.;
+  
+  int const swap_accepted = swap_eo_tent(diff_up, diff_dn, eo); // even-odd swap
   ptbc_sync();
-  if (swap_accepted_e)  swap_rate(inst_id_e, Rate);  // if swap happened, swap acceptance rate
+  if (swap_accepted)  swap_rate(inst_id, Rate);  // if swap happened, swap acceptance rate
 
-  int const inst_id_o = app()->ptbc.instance_id;
-  double const diff_up_o = get_node_parent(inst_id_o) != -1? ptbc_swap_dh(get_node_parent(inst_id_o)): 0.;
-  double const diff_dn_o = get_node_n_children(inst_id_o) > 0 ? ptbc_swap_dh(get_node_children(inst_id_o)[0]) : 0.;
-  int const swap_accepted_o = swap_eo_tent(diff_up_o, diff_dn_o, 1); // odd swap
-  ptbc_sync();
-
-  if (swap_accepted_o) swap_rate(inst_id_o, Rate);
   int const inst_id_new = app()->ptbc.instance_id;
 
   // initialise pbc swaps
-  int *tent_order = (int *)malloc(get_node_n_children(inst_id_new) * sizeof(int) * 2);
-  int * const tent_order_e = tent_order;
-  int * const tent_order_o = tent_order + get_node_n_children(inst_id_new);
-  
-  int const n_swaps_e = init_eoswap_pbc(tent_order_e, 0);
-  int const n_swaps_o = init_eoswap_pbc(tent_order_o, 1);
+  int *tent_order = (int *)malloc(get_node_n_children(inst_id_new) * sizeof(int));
+  int const n_swaps = init_eoswap_pbc(tent_order, eo);
 
   // execute pbc swaps
   // every rank must call ptbc_sync() (collective over world_comm) the same
   // number of times, so agree on the round count via an unrooted Allreduce max
   // rather than trying to signal it with per-process broadcasts.
-  int max_swaps_e, max_swaps_o;
-  MPI_Allreduce(&n_swaps_e, &max_swaps_e, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
-  MPI_Allreduce(&n_swaps_o, &max_swaps_o, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
-
-  // first even swaps with periodic
-  for (int i = 0; i < max_swaps_e; i++) {
-    if (i < n_swaps_e) {
-      int const partner_inst = if_periodic(inst_id_new) ? get_node_children(inst_id_new)[tent_order_e[i]] : get_node_parent(inst_id_new);
+  int max_swaps;
+  MPI_Allreduce(&n_swaps, &max_swaps, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
+  
+  // swaps with periodic
+  // periodic instances swap on every round i < n_swaps (n_swaps = its count of swapping tentacles,
+  // each round picking the next tentacle from tent_order); a tentacle instance instead gets back the
+  // single round it was assigned to (or -1), so it must only act when i matches that round exactly.
+  int const inst_is_periodic = if_periodic(inst_id_new);
+  for (int i = 0; i < max_swaps; i++) {
+    int const my_turn = inst_is_periodic ? (i < n_swaps) : (i == n_swaps);
+    if (my_turn) {
+      int const partner_inst = inst_is_periodic ? get_node_children(inst_id_new)[tent_order[i]] : get_node_parent(inst_id_new);
       double const own_diff = ptbc_swap_dh(partner_inst);
-      int const swap_accepted = try_swap_link(partner_inst, own_diff);
-      if (swap_accepted) swap_rate(inst_id_new, Rate);
-    }
-    ptbc_sync();
-  }
-
-  // then odd swaps with periodic
-  for (int i = 0; i < max_swaps_o; i++) {
-    if (i < n_swaps_o) {
-      int const partner_inst = if_periodic(inst_id_new) ? get_node_children(inst_id_new)[tent_order_o[i]] : get_node_parent(inst_id_new);
-      double const own_diff = ptbc_swap_dh(partner_inst);
-      int const swap_accepted = try_swap_link(partner_inst, own_diff);
+      int const swap_accepted = swap_link(partner_inst, own_diff);
       if (swap_accepted) swap_rate(inst_id_new, Rate);
     }
     ptbc_sync();
   }
 
   free(tent_order);
+  return;
+}
+
+/**
+ * @brief swap upstream (open to periodic) on the tentacles
+ * 
+ */
+void static swap_up_tent(){
+  int local_inst = app()->ptbc.instance_id;
+  int local_rank;
+  MPI_Comm_rank(app()->mpi.comm, &local_rank);
+
+  // count number of syncs
+  int n_max_links;
+  // count number of tentacles and find open bc positions
+  int pos[MAX_N_DEFECTS];
+  int n_tent = 0;
+  for (int i=0; i<app()->ptbc.n_instances; i++) {
+    if (nodes[i].n_children == 0) {
+      pos[n_tent] = i;
+      n_tent ++;
+    }
+  }
+
+  // find lengths of tentacles
+  int lengths[MAX_N_DEFECTS] = {0};
+  for (int t=0; t<n_tent; t++) {
+    int upstream = get_node_parent(pos[t]);
+    while(!if_periodic(upstream)) {
+      lengths[t]++;
+      pos[t] = upstream;
+      upstream = get_node_parent(pos[t]);
+    }
+  }
+
+  // find max number of links
+  n_max_links = lengths[0];
+  for (int i=1; i<n_tent; i++) {
+    if (lengths[i] > n_max_links) n_max_links = lengths[i];
+  }
+    
+
+  // count own distance to open 
+  int d = 0;
+  int id = local_inst;
+  while(get_node_n_children(id)!=0) {
+    d++;
+    id = get_node_children(id)[0];
+  }
+
+  // loop over links, the nodes on a link will launch swaps
+  for (int i=0; i<n_max_links; i++) {
+    int accepted = 0;
+    if (d == i) { // my turn to swap up
+      int const upstream = get_node_parent(local_inst);
+      double const own_diff = ptbc_swap_dh(upstream);
+      accepted = swap_link(upstream, own_diff);
+    }
+    else if (d == i+1){ // my turn to swap dn
+      int const downstream = get_node_children(local_inst)[0];
+      double const own_diff = ptbc_swap_dh(downstream);
+      accepted = swap_link(downstream, own_diff);
+    }
+    ptbc_sync();
+    if (accepted) {
+      swap_rate(local_inst, &d); // borrow swap_rate to swap 1 int
+      local_inst = app()->ptbc.instance_id;
+    }
+  }
+
+  return;
+}
+
+void static swap_pbc(int *rate) {
+  int local_inst = app()->ptbc.instance_id;
+  int local_rank;
+  MPI_Comm_rank(app()->mpi.comm, &local_rank);
+  int my_round = -1;
+
+  // need to know the number of synchronisations
+  int periodic_id[MAX_N_DEFECTS] = {0};
+  int const n_periodic = get_periodic(periodic_id);
+  int n_swaps = 0;
+  int max_swaps = 0;
+  
+  //periodic instance
+  if (if_periodic(local_inst)) {
+    int *children = get_node_children(local_inst);
+    int const n_children = get_node_n_children(local_inst);
+    int *order = (int *)malloc(sizeof(int) * n_children);
+
+    // local rank 0 decide order
+    if (local_rank == 0) {
+      // find links that are not dummy
+      for (int i=0; i<n_children; i++) {
+        if (!if_periodic(children[i])) {
+          order[n_swaps] = children[i];
+          n_swaps++;
+        }
+      }
+
+      // shuffle order
+      shuffle(order, n_swaps);
+
+      // notify deicision, -1 if no swap, round index if swap
+      int * decision = (int *) malloc(sizeof(int) * app()->ptbc.n_instances);
+      for (int i=0; i<app()->ptbc.n_instances; i++) decision[i] = -1;
+      for (int i=0; i<n_swaps; i++) decision[order[i]] = i;
+      
+      MPI_Request* request = (MPI_Request*)malloc(n_periodic * sizeof(MPI_Request));
+      int * decisions = (int *) malloc(sizeof(int) * n_periodic); // dummy receive    
+      for (int i = 0; i < n_periodic; i++) {
+        if (periodic_id[i] == local_inst) MPI_Iscatter(decision, 1, MPI_INT, &decisions[i], 1, MPI_INT, local_inst, leader_comm, &request[i]);
+        else                              MPI_Iscatter(NULL, 1, MPI_INT, &decisions[i], 1, MPI_INT, periodic_id[i], leader_comm, &request[i]);
+      }
+      
+      MPI_Waitall(n_periodic, request, MPI_STATUSES_IGNORE);
+      free(decision);
+      free(decisions);
+      free(request);
+    }
+
+    // broadcast information
+    MPI_Bcast(&n_swaps, 1, MPI_INT, 0, app()->mpi.comm);
+    MPI_Bcast(order, n_swaps, MPI_INT, 0, app()->mpi.comm);
+
+    // count max swaps 
+    MPI_Allreduce(&n_swaps, &max_swaps, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
+
+    for (int i=0; i<max_swaps; i++) {
+      if (i<n_swaps) {
+        double diff = ptbc_swap_dh(order[i]);
+        int const accepted = swap_link(order[i], diff);
+        if (accepted) swap_rate(local_inst, rate);
+      }
+      ptbc_sync();
+    }
+    free(order);
+  }
+  // non-periodic ranks
+  else {
+    if (local_rank == 0) {
+      // get my round number if I swap
+      MPI_Request* request = (MPI_Request*)malloc(n_periodic * sizeof(MPI_Request));
+      int * decisions = (int *) malloc(sizeof(int) * n_periodic);
+      // receive from all periodic ranks
+      for (int i=0; i<n_periodic; i++) {
+        MPI_Iscatter(NULL, 1, MPI_INT, &decisions[i], 1, MPI_INT, periodic_id[i], leader_comm, request+i);
+      }
+
+      MPI_Waitall(n_periodic, request, MPI_STATUSES_IGNORE);
+      free(request);
+
+      // if selected, record my round index
+      for (int i=0; i<n_periodic; i++) {
+        if (decisions[i] != -1) my_round = decisions[i];
+      }
+      free(decisions);
+    }
+    // bcast info to local instance
+    MPI_Bcast(&my_round, 1, MPI_INT, 0, app()->mpi.comm);
+    
+    // count max swaps 
+    MPI_Allreduce(&n_swaps, &max_swaps, 1, MPI_INT, MPI_MAX, app()->mpi.world_comm);
+
+    // swap when it is my_round, if my_round = -1 never swap
+    for (int i=0; i<max_swaps; i++) {
+      if (i == my_round) {
+        double diff = ptbc_swap_dh(get_node_parent(local_inst));
+        int const accepted = swap_link(get_node_parent(local_inst), diff);
+        if (accepted) swap_rate(local_inst, rate);
+      }
+      ptbc_sync();
+    }
+
+  }
+
+  return;
 }
