@@ -84,9 +84,10 @@ int swap_link(int const partner_inst, double const own_diff);
 double ptbc_swap_dh(int const alt_inst);
 
 /* The even-odd swap */
-void eo_swap(int *Rate, int eo);
+void eo_swap(int *Rate, int const eo);
 
 
-/* periodic-periodic dummy link swap */
-void swap_dummy(int *Rate);
+/* up or downstream swap */
+void up_swap(int *Rate);
+void down_swap(int *Rate);
 #endif
