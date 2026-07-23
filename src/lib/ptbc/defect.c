@@ -752,7 +752,7 @@ int init_eoswap_pbc(int *tent_order, int eo){
     int const n_periodic = get_periodic(periodic_id);
     
     MPI_Request* request = (MPI_Request*)malloc(n_periodic * sizeof(MPI_Request));
-    int decisions[MAX_N_DEFECTS] = {0}; // dummy receives
+    int *decisions = (int *) malloc(sizeof(int) * n_periodic); // dummy receives
     for (int i = 0; i < n_periodic; i++) {
       if (periodic_id[i] == local_inst) MPI_Iscatter(decision, 1, MPI_INT, &decisions[i], 1, MPI_INT, local_inst, leader_comm, &request[i]);
       else                              MPI_Iscatter(NULL, 1, MPI_INT, &decisions[i], 1, MPI_INT, periodic_id[i], leader_comm, &request[i]);
@@ -906,6 +906,7 @@ int swap_link(int const partner_inst, double const own_diff) {
  * @brief even-odd swaps
  * 
  * @param Rate the swap rate follows instance id
+ * @param eo   even 0, odd 1
  */
 void eo_swap(int *Rate, int eo){
   // swap tentacle
@@ -946,6 +947,8 @@ void eo_swap(int *Rate, int eo){
     ptbc_sync();
   }
 
+  if (eo==0)  swap_dummy(Rate); // dummies are length 1, even swap
+
   free(tent_order);
   return;
 }
@@ -953,8 +956,11 @@ void eo_swap(int *Rate, int eo){
 /**
  * @brief swap upstream (open to periodic) on the tentacles
  * 
+ * @param Rate  current acceptance rate
+ * @param ud    upstream 0 downstream 1
+ * 
  */
-void static swap_up_tent(){
+void static swap_updown_tent(int *Rate, int const ud){
   int local_inst = app()->ptbc.instance_id;
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
@@ -991,27 +997,35 @@ void static swap_up_tent(){
 
   // count own distance to open 
   int d = 0;
-  int id = local_inst;
-  while(get_node_n_children(id)!=0) {
-    d++;
-    id = get_node_children(id)[0];
+  if (!if_periodic(local_inst)) {
+    int id = local_inst;
+    while(get_node_n_children(id)!=0) {
+      d++;
+      id = get_node_children(id)[0];
+    }
+  }
+  else {
+    d = -1;
   }
 
   // loop over links, the nodes on a link will launch swaps
   for (int i=0; i<n_max_links; i++) {
     int accepted = 0;
-    if (d == i) { // my turn to swap up
+    int const up_cond = ud ? n_max_links-i-1 : i;
+    int const dn_cond = ud ? n_max_links-i  : i+1;
+    if (d == up_cond && !if_periodic(get_node_parent(local_inst))) { // my turn to swap up
       int const upstream = get_node_parent(local_inst);
       double const own_diff = ptbc_swap_dh(upstream);
       accepted = swap_link(upstream, own_diff);
     }
-    else if (d == i+1){ // my turn to swap dn
+    else if (d == dn_cond && !if_periodic(get_node_children(local_inst)[0])){ // my turn to swap dn
       int const downstream = get_node_children(local_inst)[0];
       double const own_diff = ptbc_swap_dh(downstream);
       accepted = swap_link(downstream, own_diff);
     }
     ptbc_sync();
     if (accepted) {
+      swap_rate(local_inst, Rate);
       swap_rate(local_inst, &d); // borrow swap_rate to swap 1 int
       local_inst = app()->ptbc.instance_id;
     }
@@ -1125,4 +1139,17 @@ void static swap_pbc(int *rate) {
   }
 
   return;
+}
+
+
+void up_swap(int *Rate) {
+  swap_updown_tent(Rate, 0);
+  swap_pbc(Rate);
+  swap_dummy(Rate);
+}
+
+void down_swap(int *Rate) {
+  swap_dummy(Rate);
+  swap_pbc(Rate);
+  swap_updown_tent(Rate, 1);
 }
