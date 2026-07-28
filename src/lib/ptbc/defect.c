@@ -62,34 +62,6 @@ int const static dist(int start, int end, int const g_length) {
   return dist;
 }
 
-
-/** 
- * @brief           check a point's relative position to a 4D hypercube
- * 
- * @param coords    coordinate of the point, 4D array
- * @param pos       position of hypercube, 4D array
- * @param Ld        extent of hypercube, 4D array  
- * 
- * @returns         1 for in hypercubic, 2 for potentially cutting on the left, 0 for not in hypercube
- */
-int static in_hypercube(int const * coords, int const *pos, int const *Ld) {
-  if (dist(pos[0], coords[0], T*g_nproc_t)<=Ld[0] && dist(pos[1], coords[1], LX*g_nproc_x)<=Ld[1]
-      && dist(pos[2], coords[2], LY*g_nproc_y)<=Ld[2] && dist(pos[3], coords[3], LZ*g_nproc_z)<=Ld[3]
-      && dist(pos[0]+Ld[0], coords[0], T*g_nproc_t)<=Ld[0] && dist(pos[1]+Ld[1], coords[1], LX*g_nproc_x)<=Ld[1]
-      && dist(pos[2]+Ld[2], coords[2], LY*g_nproc_y)<=Ld[2] && dist(pos[3]+Ld[3], coords[3], LZ*g_nproc_z)<=Ld[3]){
-    if(dist(pos[0], coords[0], T*g_nproc_t)>0 && dist(pos[1], coords[1], LX*g_nproc_x)>0
-      && dist(pos[2], coords[2], LY*g_nproc_y)>0 && dist(pos[3], coords[3], LZ*g_nproc_z)>0) {
-        return 1; // in hypercube
-    }
-    else if (!(dist(pos[0], coords[0], T*g_nproc_t)==0 && dist(pos[1], coords[1], LX*g_nproc_x)==0
-      && dist(pos[2], coords[2], LY*g_nproc_y)==0 && dist(pos[3], coords[3], LZ*g_nproc_z)==0)){
-      return 2; // slightly to the left of hypercube, vector starting from these points in +ve direction can cut hypercube
-    }
-  }
-  return 0; // not in hypercube
-
-}
-
 /**
  * @brief      check if a link lie in defect region, return true
  *             include both case when link is internal to the defect and case link is
@@ -292,31 +264,26 @@ void init_ptbc_tree() {
   int periodic_id[MAX_N_INSTANCES]; // store periodic instance id, may be multiple periodic instances
 
   // check if defects are valid / no overlap
+  int const Ltot[4] = {T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
   for (int i=0; i<ptbc_ctx->n_defects-1; i++) {
-    // define diagonal of the hypercubic
     PTBCDefect const* def_ref = &(ptbc_ctx->defects[i]);
-    
-    // loop over compare defects
+
     for (int j=i+1; j<ptbc_ctx->n_defects; j++) {
       PTBCDefect const* def = &(ptbc_ctx->defects[j]);
-      int const start[] = {def->Ld[0], def->Ld[1], def->Ld[2], def->Ld[3]};
-      int const end[] = {def->Ld[0] + def->pos[0], def->Ld[1] + def->pos[1], 
-                        def->Ld[2] + def->pos[2], def->Ld[3] + def->pos[3]};
 
-      bool def_overlap=false;
-      // start point must be outside
-      if (in_hypercube(start, def_ref->Ld, def_ref->Ld) ){
-        def_overlap = true;
-        break;
+      // two per-axis circular intervals [pos, pos+Ld] overlap iff either
+      // defect's start falls within the other's forward span; the 4D boxes
+      // overlap only if that holds on every axis simultaneously
+      bool def_overlap = true;
+      for (int d=0; d<4; d++) {
+        bool const axis_overlap =
+            dist(def_ref->pos[d], def->pos[d], Ltot[d]) <= def_ref->Ld[d] ||
+            dist(def->pos[d], def_ref->pos[d], Ltot[d]) <= def->Ld[d];
+        if (!axis_overlap) { def_overlap = false; break; }
       }
-      else if(in_hypercube(end, def_ref->Ld, def_ref->Ld)){
-        def_overlap=true;
-        break;
-      }
-      err((def_overlap), "Some defects overlap!");
+      err(def_overlap, "Some defects overlap!");
     }
   }
-
 
   // initialise
   for (int i=0; i<ptbc_ctx->n_instances; i++) {
