@@ -134,14 +134,14 @@ void swap_rng(int const dest_inst) {
   // find dest rank and src rank
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
-  int const dest_rank = base_rank[dest_inst] + local_rank;  
+  int const dest_rank = base_rank[dest_inst] + local_rank;
   int const src_rank = app()->mpi.world_rank;
 
   // get states
   rlxs_get(state);
   rlxd_get(state+105);
 
-  printf("to %d rng = %d\n", dest_rank, state[100]);
+  // printf("to %d rng = %d\n", dest_rank, state[100]);
 
   // swap rng and coeff info
   MPI_Status status;
@@ -231,6 +231,21 @@ bool if_periodic(int inst_id) {
   return true;
 }
 
+/**
+ * @brief format a small "instN" tag for tm_stopwatch_pop's prefix argument, so PTBC
+ *        timer lines show which instance produced them. Callers should capture their
+ *        own instance id at the start of the measured block (app()->ptbc.instance_id
+ *        may change mid-function if a swap is accepted) and pass that captured value
+ *        here, rather than re-reading the live instance id at pop time.
+ *
+ * @param inst_id captured instance id to tag the line with
+ */
+const char* ptbc_timer_tag(int const inst_id) {
+  static char buf[32];
+  snprintf(buf, sizeof(buf), "inst%d", inst_id);
+  return buf;
+}
+
 
 void set_tree_root(int const root) {tree.root = root;};
 void set_node_parent(int const node_id, int const parent_id) {nodes[node_id].parent = parent_id;};
@@ -254,6 +269,18 @@ int const get_node_n_children(int const node_id) {return nodes[node_id].n_childr
  * @brief      Initialise PTBC instance connection graph.
  */
 void init_ptbc_tree() {
+  // modify invalid positions
+  int const Ltot[4] = {T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
+  for (int n_def=0; n_def <app()->ptbc.n_defects; n_def++) {
+    int *positions = appm()->ptbc.defects[n_def].pos;
+    for (int d=0; d<4; d++) {
+      while (positions[d] < 0) {
+        positions[d] += Ltot[d];
+      }
+      positions[d] = positions[d] % Ltot[d];
+      err(app()->ptbc.defects[n_def].Ld[d] < 0, "Negative defect extent!");
+    }
+  }
   PTBCContext const *ptbc_ctx = &(app()->ptbc);
   InstanceInfo info[MAX_N_DEFECTS][MAX_N_INSTANCES]; // instance info n_tentacles x instance per tentacle
   int n_tentacles = 0;
@@ -264,7 +291,6 @@ void init_ptbc_tree() {
   int periodic_id[MAX_N_INSTANCES]; // store periodic instance id, may be multiple periodic instances
 
   // check if defects are valid / no overlap
-  int const Ltot[4] = {T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
   for (int i=0; i<ptbc_ctx->n_defects-1; i++) {
     PTBCDefect const* def_ref = &(ptbc_ctx->defects[i]);
 
@@ -583,9 +609,10 @@ int swap_eo_tent(double const d_up, double const d_dn, int eo) {
         ranlxd(&random_number, 1);
         int const accept = expmdh > random_number;
 
-        printf("[swap_eo_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
+        /* printf("[swap_eo_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
               pos[t], upstream, diff_up[pos[t]], diff_dn[upstream], total_diff, expmdh, random_number, accept);
-        fflush(stdout);
+         */
+
         
         swap_info[pos[t] * 2] = accept;
         swap_info[pos[t] * 2 + 1] = upstream;
@@ -842,10 +869,10 @@ void swap_dummy(int* Rate) {
 
 /**
  * @brief try swapping between periodic instance and another neighbour, decision by pbc
- * 
- * @param partner_inst 
- * @param own_diff 
- * @return int 1 accept; 0 reject 
+ *
+ * @param partner_inst
+ * @param own_diff
+ * @return int 1 accept; 0 reject
  */
 int swap_link(int const partner_inst, double const own_diff) {
   int local_rank;
