@@ -391,14 +391,21 @@ int main(int argc, char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter % return_check_interval == 0);
 
+    int const ptbc_inst_before_update = app()->ptbc.instance_id;
+    tm_stopwatch_push(&g_timers, "ptbc_update_tm", "");
     accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check,
                        trajectory_counter >= Ntherm, trajectory_counter);
+    tm_stopwatch_pop(&g_timers, 0, 1, app()->ptbc.active ? ptbc_timer_tag(ptbc_inst_before_update) : "");
     Rate += accept;
     
+    MPI_Barrier(app()->mpi.world_comm);
     if (app()->ptbc.active) {
       // even odd swap
+      int const ptbc_inst_at_swap = app()->ptbc.instance_id;
+      tm_stopwatch_push(&g_timers, "ptbc_swap", "");
       eo_swap(&Rate, 0);
       eo_swap(&Rate, 1);
+      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
 
       // print post swap status
       if (g_proc_id == 0) 
