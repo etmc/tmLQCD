@@ -74,6 +74,7 @@ void print_ptbc_topo();
 // utils
 bool if_periodic(int inst_id);
 void swap_rate(int const inst_id, int *rate);
+const char* ptbc_timer_tag(int const inst_id);
 
 /* Swapping functions (can make static if confirm later not used elsewhere) */
 int swap_eo_tent(double const diff_up, double const diff_dn, int eo);
