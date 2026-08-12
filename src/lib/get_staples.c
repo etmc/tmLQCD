@@ -42,7 +42,10 @@ void get_staples(su3* const staple, const int x, const int mu, const su3** in_ga
       w1 = &in_gauge_field[x][k];
       w2 = &in_gauge_field[g_iup[x][k]][mu];
       w3 = &in_gauge_field[g_iup[x][mu]][k];
-      double const ptbc_fac0 = get_ptbc_coeff(x, k) * get_ptbc_coeff(g_iup[x][k], mu) * get_ptbc_coeff(g_iup[x][mu], k);
+      // g_iup[x][k] = x + e_k and g_iup[x][mu] = x + e_mu may be halo sites
+      double const ptbc_fac0 = ptbc_coeff0(x,        k)
+                             * ptbc_coeff1(x, k,  1, mu)
+                             * ptbc_coeff1(x, mu, 1, k);
 
       /* st = w2 * w3^d */
       _su3_times_su3d(st, *w2, *w3);
@@ -54,7 +57,10 @@ void get_staples(su3* const staple, const int x, const int mu, const su3** in_ga
       w1 = &in_gauge_field[iy][k];
       w2 = &in_gauge_field[iy][mu];
       w3 = &in_gauge_field[g_iup[iy][mu]][k];
-      double const ptbc_fac1 = get_ptbc_coeff(iy, k) * get_ptbc_coeff(iy, mu) * get_ptbc_coeff(g_iup[iy][mu], k);
+      // iy = x - e_k, g_iup[iy][mu] = x - e_k + e_mu
+      double const ptbc_fac1 = ptbc_coeff1(x, k, -1,        k)
+                             * ptbc_coeff1(x, k, -1,        mu)
+                             * ptbc_coeff2(x, k, -1, mu, 1, k);
       /* st = w2 * w3 */
       _su3_times_su3(st, *w2, *w3);
       /* v = v + w1^d * st */
@@ -76,7 +82,10 @@ void get_spacelike_staples(su3* const staple, const int x, const int mu,
       w1 = &in_gauge_field[x][k];
       w2 = &in_gauge_field[g_iup[x][k]][mu];
       w3 = &in_gauge_field[g_iup[x][mu]][k];
-       double const ptbc_fac0 = get_ptbc_coeff(x, k) * get_ptbc_coeff(g_iup[x][k], mu) * get_ptbc_coeff(g_iup[x][mu], k);
+      // g_iup[x][k] = x + e_k and g_iup[x][mu] = x + e_mu may be halo sites
+      double const ptbc_fac0 = ptbc_coeff0(x,        k)
+                             * ptbc_coeff1(x, k,  1, mu)
+                             * ptbc_coeff1(x, mu, 1, k);
 
       /* st = w2 * w3^d */
       _su3_times_su3d(st, *w2, *w3);
@@ -88,7 +97,10 @@ void get_spacelike_staples(su3* const staple, const int x, const int mu,
       w1 = &in_gauge_field[iy][k];
       w2 = &in_gauge_field[iy][mu];
       w3 = &in_gauge_field[g_iup[iy][mu]][k];
-      double const ptbc_fac1 = get_ptbc_coeff(iy, k) * get_ptbc_coeff(iy, mu) * get_ptbc_coeff(g_iup[iy][mu], k);
+      // iy = x - e_k, g_iup[iy][mu] = x - e_k + e_mu
+      double const ptbc_fac1 = ptbc_coeff1(x, k, -1,        k)
+                             * ptbc_coeff1(x, k, -1,        mu)
+                             * ptbc_coeff2(x, k, -1, mu, 1, k);
       /* st = w2 * w3 */
       _su3_times_su3(st, *w2, *w3);
       /* v = v + w1^d * st */
@@ -110,7 +122,10 @@ void get_timelike_staples(su3* const staple, const int x, const int mu,
     w1 = &in_gauge_field[x][k];
     w2 = &in_gauge_field[g_iup[x][k]][mu];
     w3 = &in_gauge_field[g_iup[x][mu]][k];
-    double const ptbc_fac0 = get_ptbc_coeff(x, k) * get_ptbc_coeff(g_iup[x][k], mu) * get_ptbc_coeff(g_iup[x][mu], k);
+    // g_iup[x][k] = x + e_k and g_iup[x][mu] = x + e_mu may be halo sites
+    double const ptbc_fac0 = ptbc_coeff0(x,        k)
+                           * ptbc_coeff1(x, k,  1, mu)
+                           * ptbc_coeff1(x, mu, 1, k);
 
     /* st = w2 * w3^d */
     _su3_times_su3d(st, *w2, *w3);
@@ -122,7 +137,10 @@ void get_timelike_staples(su3* const staple, const int x, const int mu,
     w1 = &in_gauge_field[iy][k];
     w2 = &in_gauge_field[iy][mu];
     w3 = &in_gauge_field[g_iup[iy][mu]][k];
-    double const ptbc_fac1 = get_ptbc_coeff(iy, k) * get_ptbc_coeff(iy, mu) * get_ptbc_coeff(g_iup[iy][mu], k);
+    // iy = x - e_k, g_iup[iy][mu] = x - e_k + e_mu
+    double const ptbc_fac1 = ptbc_coeff1(x, k, -1,        k)
+                           * ptbc_coeff1(x, k, -1,        mu)
+                           * ptbc_coeff2(x, k, -1, mu, 1, k);
     /* st = w2 * w3 */
     _su3_times_su3(st, *w2, *w3);
     /* v = v + w1^d * st */

@@ -52,14 +52,20 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3(tmp1, *a, *b);
       z = g_iup[y][nu];
       c = &gf[z][mu];
-      double const ptbc_fac0 = get_ptbc_coeff(x, nu) * get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, mu);
+      // links (x, nu), (x + e_nu, nu), (x + 2 e_nu, mu). y and z may lie in the
+      // halo, so coefficients are addressed by displacement from the local x.
+      double const ptbc_fac0 = ptbc_coeff0(x,        nu)
+                             * ptbc_coeff1(x, nu, 1, nu)
+                             * ptbc_coeff1(x, nu, 2, mu);
       _su3_times_su3(tmp2, tmp1, *c);
 
       y = g_iup[x][mu];
       d = &gf[y][nu];
       z = g_iup[y][nu];
       e = &gf[z][nu];
-      double const ptbc_fac1 = get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, nu);
+      // links (x + e_mu, nu), (x + e_mu + e_nu, nu)
+      double const ptbc_fac1 = ptbc_coeff1(x, mu, 1,       nu)
+                             * ptbc_coeff2(x, mu, 1, nu, 1, nu);
       _su3_times_su3(tmp1, *d, *e);
       //_su3_times_su3d_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3d_acc((*v), tmp2, tmp1, ptbc_fac0 * ptbc_fac1);
@@ -77,14 +83,19 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       a = &gf[z][mu];
       _su3d_times_su3(tmp1, *d, *a);
       e = &gf[y][nu];
-      double const ptbc_fac2 = get_ptbc_coeff(z, nu) * get_ptbc_coeff(z, mu) * get_ptbc_coeff(y, nu);
+      // links (x - 2 e_nu, nu), (x - 2 e_nu, mu), (x - e_nu, nu)
+      double const ptbc_fac2 = ptbc_coeff1(x, nu, -2, nu)
+                             * ptbc_coeff1(x, nu, -2, mu)
+                             * ptbc_coeff1(x, nu, -1, nu);
       _su3d_times_su3(tmp2, *e, tmp1);
 
       y = g_iup[z][mu];
       b = &gf[y][nu];
       z = g_iup[y][nu];
       c = &gf[z][nu];
-      double const ptbc_fac3 = get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, nu);
+      // links (x + e_mu - 2 e_nu, nu), (x + e_mu - e_nu, nu)
+      double const ptbc_fac3 = ptbc_coeff2(x, mu, 1, nu, -2, nu)
+                             * ptbc_coeff2(x, mu, 1, nu, -1, nu);
       _su3_times_su3(tmp1, *b, *c);
       //_su3_times_su3_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3_acc((*v), tmp2, tmp1, ptbc_fac2 * ptbc_fac3);
@@ -103,14 +114,19 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3(tmp1, *a, *b);
       z = g_iup[y][mu];
       c = &gf[z][mu];
-      double const ptbc_fac4 = get_ptbc_coeff(x, nu) * get_ptbc_coeff(y, mu) * get_ptbc_coeff(z, mu);
+      // links (x, nu), (x + e_nu, mu), (x + e_mu + e_nu, mu)
+      double const ptbc_fac4 = ptbc_coeff0(x,               nu)
+                             * ptbc_coeff1(x, nu, 1,        mu)
+                             * ptbc_coeff2(x, mu, 1, nu, 1, mu);
       _su3_times_su3(tmp2, tmp1, *c);
 
       y = g_iup[x][mu];
       d = &gf[y][mu];
       z = g_iup[y][mu];
       e = &gf[z][nu];
-      double const ptbc_fac5 = get_ptbc_coeff(y, mu) * get_ptbc_coeff(z, nu);
+      // links (x + e_mu, mu), (x + 2 e_mu, nu)
+      double const ptbc_fac5 = ptbc_coeff1(x, mu, 1, mu)
+                             * ptbc_coeff1(x, mu, 2, nu);
       _su3_times_su3(tmp1, *d, *e);
       //_su3_times_su3d_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3d_acc((*v), tmp2, tmp1, ptbc_fac4 * ptbc_fac5);
@@ -129,14 +145,19 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3d_times_su3(tmp1, *d, *a);
       z = g_iup[y][mu];
       b = &gf[z][mu];
-      double const ptbc_fac6 = get_ptbc_coeff(y, nu) * get_ptbc_coeff(y, mu) * get_ptbc_coeff(z, mu);
+      // links (x - e_nu, nu), (x - e_nu, mu), (x + e_mu - e_nu, mu)
+      double const ptbc_fac6 = ptbc_coeff1(x, nu, -1,        nu)
+                             * ptbc_coeff1(x, nu, -1,        mu)
+                             * ptbc_coeff2(x, mu,  1, nu, -1, mu);
       _su3_times_su3(tmp2, tmp1, *b);
 
       y = g_iup[z][mu];
       c = &gf[y][nu];
       z = g_iup[x][mu];
       e = &gf[z][mu];
-      double const ptbc_fac7 = get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, mu);
+      // links (x + 2 e_mu - e_nu, nu), (x + e_mu, mu)
+      double const ptbc_fac7 = ptbc_coeff2(x, mu, 2, nu, -1, nu)
+                             * ptbc_coeff1(x, mu, 1,         mu);
       _su3_times_su3d(tmp1, *c, *e);
       //_su3_times_su3_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3_acc((*v), tmp2, tmp1, ptbc_fac6 * ptbc_fac7);
@@ -155,14 +176,19 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       a = &gf[z][mu];
       _su3d_times_su3(tmp1, *d, *a);
       e = &gf[y][mu];
-      double const ptbc_fac8 = get_ptbc_coeff(z, nu) * get_ptbc_coeff(z, mu) * get_ptbc_coeff(y, mu);
+      // links (x - e_mu - e_nu, nu), (x - e_mu - e_nu, mu), (x - e_mu, mu)
+      double const ptbc_fac8 = ptbc_coeff2(x, mu, -1, nu, -1, nu)
+                             * ptbc_coeff2(x, mu, -1, nu, -1, mu)
+                             * ptbc_coeff1(x, mu, -1,         mu);
       _su3d_times_su3(tmp2, *e, tmp1);
 
       y = g_idn[x][nu];
       b = &gf[y][mu];
       z = g_iup[y][mu];
       c = &gf[z][nu];
-      double const ptbc_fac9 = get_ptbc_coeff(y, mu) * get_ptbc_coeff(z, nu);
+      // links (x - e_nu, mu), (x + e_mu - e_nu, nu)
+      double const ptbc_fac9 = ptbc_coeff1(x, nu, -1,        mu)
+                             * ptbc_coeff2(x, mu,  1, nu, -1, nu);
       _su3_times_su3(tmp1, *b, *c);
       //_su3_times_su3_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3_acc((*v), tmp2, tmp1, ptbc_fac8 * ptbc_fac9);
@@ -181,14 +207,19 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       a = &gf[y][nu];
       _su3d_times_su3(tmp1, *d, *a);
       b = &gf[z][mu];
-      double const ptbc_fac10 = get_ptbc_coeff(y, mu) * get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, mu);
+      // links (x - e_mu, mu), (x - e_mu, nu), (x - e_mu + e_nu, mu)
+      double const ptbc_fac10 = ptbc_coeff1(x, mu, -1,        mu)
+                              * ptbc_coeff1(x, mu, -1,        nu)
+                              * ptbc_coeff2(x, mu, -1, nu, 1, mu);
       _su3_times_su3(tmp2, tmp1, *b);
 
       y = g_iup[x][mu];
       e = &gf[y][nu];
       z = g_iup[x][nu];
       c = &gf[z][mu];
-      double const ptbc_fac11 = get_ptbc_coeff(y, nu) * get_ptbc_coeff(z, mu);
+      // links (x + e_mu, nu), (x + e_nu, mu)
+      double const ptbc_fac11 = ptbc_coeff1(x, mu, 1, nu)
+                              * ptbc_coeff1(x, nu, 1, mu);
       _su3_times_su3d(tmp1, *c, *e);
       //_su3_times_su3_acc((*v), tmp2, tmp1);
       _real_times_su3_times_su3_acc((*v), tmp2, tmp1, ptbc_fac10 * ptbc_fac11);

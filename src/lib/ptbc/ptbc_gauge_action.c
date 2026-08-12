@@ -80,10 +80,13 @@ static double ptbc_gauge_action(void) {
  * @return * double 
  */
 double ptbc_swap_dh(int const alt_inst) {
+  tm_stopwatch_push(&g_timers, "ptbc_swap_dh", "");
   int const own_inst = app()->ptbc.instance_id;
   double const s_own = ptbc_gauge_action();
   appm()->ptbc.instance_id = alt_inst;
   double const s_alt = ptbc_gauge_action();
   appm()->ptbc.instance_id = own_inst;
-  return s_alt - s_own;
+  double const dh = s_own - s_alt;
+  tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(own_inst));
+  return dh;
 }

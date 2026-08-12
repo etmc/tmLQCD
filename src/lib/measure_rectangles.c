@@ -87,7 +87,10 @@ double measure_rectangles(const su3 **const gf) {
             _su3_times_su3(tmp, *v, *w);
             v = &gf[k][nu];
             _su3_times_su3(pr1, tmp, *v);
-            double const ptbc_fac0 = get_ptbc_coeff(i, mu) * get_ptbc_coeff(j, nu) * get_ptbc_coeff(k, nu);
+            // j = i + e_mu, k = i + e_mu + e_nu (either may be a halo site)
+            double const ptbc_fac0 = ptbc_coeff0(i,              mu)
+                                   * ptbc_coeff1(i, mu, 1,       nu)
+                                   * ptbc_coeff2(i, mu, 1, nu, 1, nu);
             /*
               ->
               ^
@@ -102,7 +105,10 @@ double measure_rectangles(const su3 **const gf) {
             _su3_times_su3(tmp, *v, *w);
             v = &gf[k][mu];
             _su3_times_su3(pr2, tmp, *v);
-            double const ptbc_fac1 = get_ptbc_coeff(i, nu) * get_ptbc_coeff(j, nu) * get_ptbc_coeff(k, mu);
+            // j = i + e_nu, k = i + 2*e_nu (either may be a halo site)
+            double const ptbc_fac1 = ptbc_coeff0(i,        nu)
+                                   * ptbc_coeff1(i, nu, 1, nu)
+                                   * ptbc_coeff1(i, nu, 2, mu);
 
             /* Trace it */
             _trace_su3_times_su3d(ac, pr1, pr2);

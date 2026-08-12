@@ -48,6 +48,20 @@ static void err_impl(const bool test, const char* func, const char* file, const 
     }
 }
 
+/* Global lattice extents. T, LX, ... and g_nproc_* are runtime globals, not
+   compile-time constants, so this cannot be a static initialiser: fill it on
+   first use instead. */
+static int Ltot[4] = {0};
+
+static void fill_Ltot(void) {
+  if (Ltot[0] == 0) {
+    Ltot[0] = T * g_nproc_t;
+    Ltot[1] = LX * g_nproc_x;
+    Ltot[2] = LY * g_nproc_y;
+    Ltot[3] = LZ * g_nproc_z;
+  }
+}
+
 static int base_rank[MAX_N_INSTANCES];  // MPI rank offset of each instance
 static MPI_Comm leader_comm = MPI_COMM_NULL;  // communicator for leader ranks of each instance
 static bool leader_comm_initialised = false;
@@ -63,26 +77,14 @@ int const static dist(int start, int end, int const g_length) {
 }
 
 /**
- * @brief      check if a link lie in defect region, return true
- *             include both case when link is internal to the defect and case link is
- *             crossing the defect boundary
- *
- *             the box (pos+1/2, pos+Ld+1/2) is checked per axis: along the link's own
- *             direction mu a link overlaps the box whenever its start site's distance
- *             from pos is in [0, Ld[mu]] (inclusive -- the link starting exactly at pos
- *             straddles the near cut, and the one starting at pos+Ld straddles the far
- *             cut, both count); along the three perpendicular directions the site must
- *             be strictly inside, i.e. distance from pos in [1, Ld[i]]. This is why
- *             Ld[mu]==0 still selects exactly one link (the smallest valid defect).
+ * @brief      check if a link lie in defect region
+ *             i.e. link is internal to the defect or link is crossing the defect surface
  *
  * @param      def  defect region
- * @param      ix   link start point
+ * @param      coords   link start point
  * @param      mu   link direction
  */
-bool is_defect(PTBCDefect *def, int const ix, int const mu) {
-  if (ix >= VOLUME) return false;
-  int* coords = g_coord[ix];
-  int const Ltot[4] = {T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
+bool is_defect(PTBCDefect *def, int const coords[4], int const mu) {
 
   for (int i = 0; i < 4; i++) {
     int const d = dist(def->pos[i], coords[i], Ltot[i]);
@@ -100,19 +102,24 @@ bool is_defect(PTBCDefect *def, int const ix, int const mu) {
  *
  * @param      ix   starting point of link
  * @param      mu   direction of link
+ * @param      disp displacement from ix (could extend to halo region)
  */
-double get_ptbc_coeff(int const ix, int const mu) {
+double get_ptbc_coeff(int const ix, int const disp[4], int const mu) {
   int const inst = app()->ptbc.instance_id;
   const PTBCInstance *instance = &(app()->ptbc.instances[inst]);
 
   // if instance is not active, return 1
   if (!instance->active) return 1.;
   
+  // the base site must be local: g_coord is only defined for ix < VOLUME.
+  err(ix < 0 || ix >= VOLUME, "Error in get_ptbc_coeff: base site is not local!");
+  int coords[4];
+  for (int d=0; d<4; d++) coords[d] = (g_coord[ix][d] + disp[d] + Ltot[d]) % Ltot[d];
   // loop over defects
   for (int i=0; i<instance->n_coeffs; i++) {
     PTBCDefect *def = instance->defects[i];
     // apply coeff if within defect
-    if (is_defect(def, ix, mu)) {
+    if (is_defect(def, coords, mu)) {
       return instance->coefficients[i];
     }
   }
@@ -270,7 +277,7 @@ int const get_node_n_children(int const node_id) {return nodes[node_id].n_childr
  */
 void init_ptbc_tree() {
   // modify invalid positions
-  int const Ltot[4] = {T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
+  fill_Ltot();
   for (int n_def=0; n_def <app()->ptbc.n_defects; n_def++) {
     int *positions = appm()->ptbc.defects[n_def].pos;
     for (int d=0; d<4; d++) {
@@ -601,7 +608,7 @@ int swap_eo_tent(double const d_up, double const d_dn, int eo) {
         upstream = get_node_parent(pos[t]);
       }
       // links connected to periodic nodes are not swapped
-      while(!if_periodic(pos[t]) && !if_periodic(upstream)) {
+      while(!if_periodic(pos[t]) && !if_periodic(upstream) && local_rank == 0) {
         double const total_diff = diff_up[pos[t]] + diff_dn[upstream];
         double expmdh = exp(-total_diff);
 
@@ -609,9 +616,9 @@ int swap_eo_tent(double const d_up, double const d_dn, int eo) {
         ranlxd(&random_number, 1);
         int const accept = expmdh > random_number;
 
-        /* printf("[swap_eo_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
-              pos[t], upstream, diff_up[pos[t]], diff_dn[upstream], total_diff, expmdh, random_number, accept);
-         */
+        printf("[swap_eo_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
+          pos[t], upstream, diff_up[pos[t]], diff_dn[upstream], total_diff, expmdh, random_number, accept);
+        
 
         
         swap_info[pos[t] * 2] = accept;
@@ -887,19 +894,20 @@ int swap_link(int const partner_inst, double const own_diff) {
                   leader_comm, MPI_STATUS_IGNORE);
 
     // the upstream decides
-    if (get_node_parent(partner_inst)==local_inst) {
+    if (get_node_parent(partner_inst)==local_inst && local_rank==0) {
       double const expmdh = exp(-(own_diff + partner_diff));
-      double u; ranlxd(&u, 1);
+      double u; 
+      ranlxd(&u, 1);
       accept = expmdh > u;
-      if (g_cart_id == 0)
-        printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
-              local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
-        fflush(stdout);
+      printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
+            local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
       MPI_Send(&accept, 1, MPI_INT, partner_inst, partner_inst, leader_comm);
-    } else if (get_node_parent(local_inst)==partner_inst) {
+    } 
+    else if (get_node_parent(local_inst)==partner_inst && local_rank==0) {
       MPI_Recv(&accept, 1, MPI_INT, partner_inst, local_inst, leader_comm, MPI_STATUS_IGNORE);
-    } else {
-      err(1, "Error in swap_link: the two instances are not neighbours!");
+    } 
+    else {
+      err(get_node_parent(local_inst)==partner_inst && get_node_parent(partner_inst)==local_inst, "Error in swap_link: the two instances are not neighbours!");
     }
   }
 
@@ -1045,6 +1053,13 @@ void static swap_updown_tent(int *Rate, int const ud){
   return;
 }
 
+
+/**
+ * @brief attempt pbc swap with all attached tentacles
+ * 
+ * @param rate 
+ * @return * void 
+ */
 void static swap_pbc(int *rate) {
   int local_inst = app()->ptbc.instance_id;
   int local_rank;
@@ -1155,13 +1170,25 @@ void static swap_pbc(int *rate) {
   return;
 }
 
-
+/**
+ * @brief Upstream swap, open (leaf) -> periodic (root)
+ * 
+ * @param Rate 
+ * @return * void 
+ */
 void up_swap(int *Rate) {
   swap_updown_tent(Rate, 0);
   swap_pbc(Rate);
   swap_dummy(Rate);
 }
 
+
+/**
+ * @brief Downstream swap, periodic (root) -> open (leaf)
+ * 
+ * @param Rate 
+ * @return * void 
+ */
 void down_swap(int *Rate) {
   swap_dummy(Rate);
   swap_pbc(Rate);
