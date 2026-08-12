@@ -25,9 +25,40 @@
 #include <app.h>
 
 
-/* for computing action with PTBC */
-bool is_defect(PTBCDefect *def, int const ix, int const mu);
-double get_ptbc_coeff(int const ix, int const mu);
+/* for computing action with PTBC.
+ *
+ * A link is identified by its start site and its direction. The start site is
+ * passed as a LOCAL site ix plus a displacement rather than as the neighbour
+ * index, because a neighbour may lie in the MPI halo, where g_coord is not
+ * defined. get_ptbc_coeff() resolves the displacement in global coordinates
+ * (with periodic wrap), so halo links get the correct coefficient.
+ *
+ * ix must satisfy ix < VOLUME; the displaced site need not.
+ */
+bool is_defect(PTBCDefect *def, int const coords[4], int const mu);
+double get_ptbc_coeff(int const ix, int const disp[4], int const mu);
+
+/* link (ix, dir) */
+static inline double ptbc_coeff0(int const ix, int const dir) {
+  int const disp[4] = {0, 0, 0, 0};
+  return get_ptbc_coeff(ix, disp, dir);
+}
+
+/* link (ix + a*e_alpha, dir) */
+static inline double ptbc_coeff1(int const ix, int const alpha, int const a, int const dir) {
+  int disp[4] = {0, 0, 0, 0};
+  disp[alpha] = a;
+  return get_ptbc_coeff(ix, disp, dir);
+}
+
+/* link (ix + a*e_alpha + b*e_beta, dir); alpha == beta accumulates */
+static inline double ptbc_coeff2(int const ix, int const alpha, int const a, int const beta,
+                                 int const b, int const dir) {
+  int disp[4] = {0, 0, 0, 0};
+  disp[alpha] = a;
+  disp[beta] += b;
+  return get_ptbc_coeff(ix, disp, dir);
+}
 
 /* synchronising the ptbc topology whenever swaps happen */
 void ptbc_sync();
