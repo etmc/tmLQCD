@@ -47,7 +47,7 @@ extern "C" {
 
 
 #define MAX_N_DEFECTS 10
-#define MAX_N_INSTANCES 10
+#define MAX_N_INSTANCES 20
 
 
 typedef enum direction_t {
