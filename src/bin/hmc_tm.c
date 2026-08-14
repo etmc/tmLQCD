@@ -401,7 +401,6 @@ int main(int argc, char *argv[]) {
     
     MPI_Barrier(app()->mpi.world_comm);
     if (app()->ptbc.active) {
-      // even odd swap
       int const ptbc_inst_at_swap = app()->ptbc.instance_id;
       tm_stopwatch_push(&g_timers, "ptbc_swap", "");
       
@@ -415,25 +414,31 @@ int main(int argc, char *argv[]) {
       }
       MPI_Bcast(&rand_num, 1, MPI_FLOAT, 0, app()->mpi.world_comm);
 
-      // 50-50 even or odd first
-      if (rand_num < 0.5) {
-        eo_swap(&Rate, 0);
-        eo_swap(&Rate, 1);
-
-        //up_swap(&Rate);
-      } 
-      else {
-        eo_swap(&Rate, 1);
-        eo_swap(&Rate, 0);
-
-        //down_swap(&Rate);
+      // 50-50 on the sweep order, so that neither end of the chain is systematically favoured
+      if (app()->ptbc.strat == EVEN_ODD) {
+        if (rand_num < 0.5) {
+          eo_swap(&Rate, 0);
+          eo_swap(&Rate, 1);
+        }
+        else {
+          eo_swap(&Rate, 1);
+          eo_swap(&Rate, 0);
+        }
       }
-
-      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
+      else { // UP_DOWN
+        if (rand_num < 0.5) {
+          up_swap(&Rate);
+        }
+        else {
+          down_swap(&Rate);
+        }
+      }
 
       // print post swap status
       if (g_proc_id == 0) 
         printf("\nI am step %d instance %d rank %d \n", j, app()->ptbc.instance_id, app()->mpi.world_rank);
+
+      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
     }
 
     /* Save gauge configuration all Nsave times */
