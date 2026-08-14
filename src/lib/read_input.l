@@ -3163,10 +3163,27 @@ static inline double fltlist_next_token(int * const list_end){
   appm()->ptbc.n_instances = 0;
   appm()->ptbc.n_defects = 0;
   appm()->ptbc.instance_id = 0;
+  appm()->ptbc.strat = EVEN_ODD;
   if(myverbose) printf("Initialising PTBC line %d\n", line_of_file);
   BEGIN(PTBC);
 }
 <PTBC>{
+  {SPC}*Strategy{EQL}{NAME} {
+    char strategy_name[100];
+    sscanf(yytext, " %[a-zA-Z] = %99s", name, strategy_name);
+    for(int i = 0; strategy_name[i]; ++i) strategy_name[i] = tolower(strategy_name[i]);
+    if(strcmp(strategy_name, "even_odd") == 0) {
+      appm()->ptbc.strat = EVEN_ODD;
+    }
+    else if(strcmp(strategy_name, "up_down") == 0) {
+      appm()->ptbc.strat = UP_DOWN;
+    }
+    else {
+      fail(true, "Unknown PTBC swap strategy '%s'! Must be one of EVEN_ODD, UP_DOWN.", strategy_name);
+    }
+    if(myverbose) printf("  PTBC swap strategy = %s line %d\n", strategy_name, line_of_file);
+    BEGIN(PTBC);
+  }
   {SPC}*BeginPTBCDefect{SPC}+{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] %d", name, &b);
     fail(b<0 || b>MAX_N_DEFECTS, "PTBC Defect id = %d out of bounds!", b);

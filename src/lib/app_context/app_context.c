@@ -81,6 +81,7 @@ static AppContext app_instance = {
         .n_instances = 1,
         .n_defects = 0,
         .active = false,
+        .strat = EVEN_ODD,
         .initialize = initialize,
         .instances = {{.active = false}},
         .defects = {{.active = false}}
