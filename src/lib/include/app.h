@@ -57,6 +57,11 @@ typedef enum direction_t {
    DIRECTION_Z = 3
 } direction_t;
 
+typedef enum strategy_t {
+   EVEN_ODD = 0,
+   UP_DOWN = 1,
+} strategy_t;
+
 
 typedef struct {
     MPI_Comm comm;          // MPI instance communicator
@@ -87,6 +92,7 @@ typedef struct {
     int instance_id;                            // Instance ID
     int n_instances;                            // Number of instances
     int n_defects;                              // Number of defects
+    strategy_t strat;                           // Swapping strategy
     PTBCInstance instances[MAX_N_INSTANCES];    // List of all instances
     PTBCDefect defects[MAX_N_DEFECTS];          // List of all defects
     void (*initialize)(void);                   // PTBC algorithm initializer
