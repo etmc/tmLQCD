@@ -43,6 +43,7 @@
 #include "gradient_flow.h"
 #include "matrix_utils.h"
 #include "meas/field_strength_types.h"
+#include "ptbc.h"
 #include "meas/measurements.h"
 #include "measure_clover_field_strength_observables.h"
 #include "measure_gauge_action.h"
@@ -91,6 +92,11 @@ void step_gradient_flow(su3 **x0, su3 **x1, su3 **x2, su3 **z, const unsigned in
           // usually we dagger the staples, but the sign convention seems to require this
           _su3_times_su3d(z_tmp, w1, fields[f][x][mu]);
           project_traceless_antiherm(&z_tmp);
+          /* apply the PTBC weight */
+          double const c_self = ptbc_coeff0(x, mu);
+          if (c_self != 1.0) {
+            _real_times_su3(z_tmp, c_self, z_tmp);
+          }
 
           // implementing the Iwasaki, Symanzik or DBW2 flow from here should be a trivial extension
           // but it will require adding some (more) parameters and making sure that g_dbw2rand
