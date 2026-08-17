@@ -932,11 +932,6 @@ static inline double fltlist_next_token(int * const list_end){
     mg_update_setup_iter=a;
     if(myverbose) printf("  MG_Update_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
   }
-  {SPC}*MGOMPNumThreads{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mg_omp_num_threads=a;
-    if(myverbose) printf("  MG_omp_num_threads set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
-  }
   {SPC}*MGNumberOfShifts{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mg_no_shifts=a;
@@ -3284,10 +3279,6 @@ static inline double fltlist_next_token(int * const list_end){
   nb_cores=atoi(yytext);
   if(myverbose!=0) printf("nb_cores = %s \n", yytext);
 }
-<OMPNUMTHREADS>{DIGIT}+ {
-  omp_num_threads=atoi(yytext);
-  if(myverbose!=0) printf("omp_num_threads = %s \n", yytext);
-}
 <DFLNBLOCKT>{DIGIT}+               {
   nblocks_t=atoi(yytext);
   if(myverbose!=0) printf("nblocks_t = %s \n", yytext);
@@ -3789,7 +3780,7 @@ int read_input(const char * conf_file){
   propagator_comparison = 0;
   nb_cores = 1;
 
-  omp_num_threads=_default_omp_num_threads;
+  omp_num_threads = _default_omp_num_threads;
 
   nblocks_t = 1;
   nblocks_x = 1;

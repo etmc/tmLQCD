@@ -24,7 +24,7 @@ ThetaX = 1
 GaugeConfigInputFile = conf
 UseEvenOdd = yes
 
-OmpNumThreads = 2
+# OmpNumThreads = 2
 
 ComputeReweightingFactor = yes
 NoReweightingSamples = 2

@@ -5,7 +5,7 @@ NrXProcs = 1
 NrYProcs = 1
 NrZProcs = 1
 
-OmpNumThreads = 1
+# OmpNumThreads = 1
 
 
 DebugLevel            = 4

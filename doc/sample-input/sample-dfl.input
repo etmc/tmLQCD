@@ -26,7 +26,7 @@ SourceType = timeslice
 #ReadSource = no
 #NoSamples = 1
 UseSloppyPrecision = no
-OmpNumThreads = 2
+## OmpNumThreads = 2
 
 ReadSource = no
 SourceFilename = bla
