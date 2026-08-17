@@ -26,7 +26,7 @@ DebugLevel = 1
 ReproduceRandomNumbers = yes
 Seed = 87987
 
-OmpNumThreads = 1
+# OmpNumThreads = 1
 
 BeginMeasurement CORRELATORS
   Frequency = 2

@@ -30,20 +30,12 @@
 #include "global.h"
 
 void init_openmp(void) {
+  omp_num_threads = 1;
 #ifdef TM_USE_OMP
-  if (omp_num_threads > 0) {
-    omp_set_num_threads(omp_num_threads);
-    if (g_debug_level > 0 && g_proc_id == 0) {
-      printf("# Instructing OpenMP to use %d threads.\n", omp_num_threads);
-    }
-  } else {
-    if (g_proc_id == 0)
-      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
-
-    omp_num_threads = 1;
-    omp_set_num_threads(omp_num_threads);
+  omp_num_threads = omp_get_max_threads();
+  if (g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Number of openmp threads: %d\n", omp_num_threads);
   }
-
   init_omp_accumulators(omp_num_threads);
 #endif
   return;

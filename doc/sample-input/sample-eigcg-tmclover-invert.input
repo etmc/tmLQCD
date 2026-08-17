@@ -5,7 +5,7 @@ T=32
 NrXProcs = 1
 NrYProcs = 1
 NrZProcs = 1
-OmpNumThreads = 1
+## OmpNumThreads = 1
 
 Measurements = 1
 InitialStoreCounter = 0
