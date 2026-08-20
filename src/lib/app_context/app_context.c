@@ -243,4 +243,11 @@ static void initialize(void)
         mkdir(subdir, 0700);
 
     chdir(subdir);
+    
+    // All prints to stdout are redirected into the instance directory, in a log named after
+    // the rank inside this instance, so instance_xx/hmc_rankNN.log 
+    char logfile[1024];
+    snprintf(logfile, 1024, "hmc_rank%.2d.log", instance_rank);
+    err(freopen(logfile, "w", stdout) == NULL, "Could not reopen stdout on the instance logfile");
+    setvbuf(stdout, NULL, _IOLBF, 0);
 }

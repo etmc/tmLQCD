@@ -83,6 +83,7 @@ list(
   PTBC_SRC_C
   ptbc/defect.c
   ptbc/ptbc_gauge_action.c
+  ptbc/io.c
 )
 
 list(

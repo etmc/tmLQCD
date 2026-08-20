@@ -425,20 +425,23 @@ int main(int argc, char *argv[]) {
           eo_swap(&Rate, 0);
         }
       }
-      else { // UP_DOWN
+      else if (app()->ptbc.strat == UP_DOWN) { // UP_DOWN
         if (rand_num < 0.5) {
           up_swap(&Rate);
         }
         else {
           down_swap(&Rate);
         }
-      }
+      } 
+
+      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
+
+      ptbc_chdir_instance();
 
       // print post swap status
       if (g_proc_id == 0) 
         printf("\nI am step %d instance %d rank %d \n", j, app()->ptbc.instance_id, app()->mpi.world_rank);
 
-      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
     }
 
     /* Save gauge configuration all Nsave times */
