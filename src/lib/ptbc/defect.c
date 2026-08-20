@@ -154,7 +154,6 @@ void swap_rng(int const dest_inst) {
   MPI_Status status;
   MPI_Sendrecv_replace(state, 210, MPI_INT, dest_rank, src_rank, dest_rank, dest_rank, app()->mpi.world_comm, &status);
 
-  printf("%d rng = %d\n", src_rank, state[100]);
   // set state
   rlxs_reset(state);
   rlxd_reset(state+105);

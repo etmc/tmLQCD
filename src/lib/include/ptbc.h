@@ -122,4 +122,9 @@ void eo_swap(int *Rate, int const eo);
 /* up or downstream swap */
 void up_swap(int *Rate);
 void down_swap(int *Rate);
+
+
+/* io related */
+void ptbc_chdir_instance(void);
+
 #endif
