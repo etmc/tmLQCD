@@ -116,7 +116,8 @@ int swap_link(int const partner_inst, double const own_diff);
 double ptbc_swap_dh(int const alt_inst);
 
 /* The even-odd swap */
-void eo_swap(int *Rate, int const eo);
+void even_odd_swap(int *Rate);
+void odd_even_swap(int *Rate);
 
 
 /* up or downstream swap */
@@ -126,5 +127,10 @@ void down_swap(int *Rate);
 
 /* io related */
 void ptbc_chdir_instance(void);
+
+/* Persist the swap-decision RNG state into the result directory (the level holding
+   the instance_NN subdirectories) so a restart continues the stream rather than
+   replaying it. Global rank 0 writes; a no-op on every other rank. */
+void write_ptbc_rng_state(void);
 
 #endif

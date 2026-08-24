@@ -25,12 +25,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <math.h>
 #include <mpi.h>
 #include <ptbc.h>
 #include "global.h"
 #include "ranlxs.h"
 #include "ranlxd.h"
+#include "read_input.h"
 
 
 #define err(test, ...) err_impl(test, __func__, __FILE__, __LINE__, __VA_ARGS__)
@@ -67,6 +69,29 @@ static MPI_Comm leader_comm = MPI_COMM_NULL;  // communicator for leader ranks o
 static bool leader_comm_initialised = false;
 static Tree tree;
 static Node nodes[MAX_N_INSTANCES]; // each node corresponds to an instance
+// Pool size per leader rank. Worst-case consumption over one refill period (one
+// even_odd_swap / odd_even_swap / up_swap / down_swap) is bounded by
+// MAX_N_INSTANCES + MAX_N_DEFECTS - 2, so this is safe as long as
+// MAX_N_INSTANCES >= MAX_N_DEFECTS - 2. next_random() enforces it at runtime.
+#define N_RANDOM_PER_INSTANCE (2 * MAX_N_INSTANCES)
+
+static double random_numbers[N_RANDOM_PER_INSTANCE]; // every leader rank rank gets a pool of random numbers from rank 0
+static double *random_numbers_ptr = NULL; // pointer to the next random number in the pool
+
+/**
+ * @brief      Consume the next random number from this leader rank's pool.
+ *             Only leader ranks hold a pool; calling this elsewhere is a bug.
+ *
+ * @return     uniform double in [0,1)
+ */
+double static next_random(void) {
+  err(random_numbers_ptr == NULL, "Error in next_random: PTBC random pool not initialised!");
+  err(random_numbers_ptr >= random_numbers + N_RANDOM_PER_INSTANCE,
+      "Error in next_random: PTBC random pool of %d exhausted on instance %d!",
+      N_RANDOM_PER_INSTANCE, app()->ptbc.instance_id);
+
+  return *(random_numbers_ptr++);
+}
 
 // find distance end-start corrected for peridic bc 
 int const static dist(int start, int end, int const g_length) {
@@ -271,6 +296,122 @@ int const* get_node_children(int const node_id) {return nodes[node_id].children;
 int const get_node_n_children(int const node_id) {return nodes[node_id].n_children;};
 
 
+#define PTBC_RNG_STATE_SIZE 105
+#define PTBC_RNG_STATE_FILE "../ptbc_rng_state"
+
+/**
+ * @brief      Write the PTBC swap-decision RNG state to the result directory so that a
+ *             restart continues the stream instead of replaying it. Global rank 0 owns
+ *             the generator and is the only rank that writes
+ */
+void write_ptbc_rng_state(void) {
+  if (!app()->ptbc.active || app()->mpi.world_rank != 0) return;
+
+  FILE *fp = fopen(PTBC_RNG_STATE_FILE, "w");
+  err(fp == NULL, "Error in write_ptbc_rng_state: cannot open %s for writing!", PTBC_RNG_STATE_FILE);
+
+  for (int i = 0; i < PTBC_RNG_STATE_SIZE; i++) {
+    fprintf(fp, "%d\n", app()->ptbc.rng_state[i]);
+  }
+  err(fclose(fp) != 0, "Error in write_ptbc_rng_state: failed to write %s!", PTBC_RNG_STATE_FILE);
+}
+
+/**
+ * @brief      Restore the PTBC swap-decision RNG state written by a previous run. Global
+ *             rank 0 only. A missing file means this is a fresh start, which is not an
+ *             error; a present but malformed file is.
+ *
+ * @return     true if the state was restored, false if there is no state file
+ */
+bool static read_ptbc_rng_state(void) {
+  FILE *fp = fopen(PTBC_RNG_STATE_FILE, "r");
+  if (fp == NULL) return false;  // fresh start: seed from ptbc.seed instead
+
+  int state[PTBC_RNG_STATE_SIZE];
+  for (int i = 0; i < PTBC_RNG_STATE_SIZE; i++) {
+    if (fscanf(fp, "%d", &state[i]) != 1) {
+      fclose(fp);
+      err(1, "Error in read_ptbc_rng_state: %s is truncated at entry %d!", PTBC_RNG_STATE_FILE, i);
+    }
+  }
+  fclose(fp);
+
+  // rlxd_reset() exits on a bad state, so check what we can first to give a usable message
+  err(state[0] != PTBC_RNG_STATE_SIZE,
+      "Error in read_ptbc_rng_state: %s holds a state of size %d, expected %d!",
+      PTBC_RNG_STATE_FILE, state[0], PTBC_RNG_STATE_SIZE);
+
+  rlxd_reset(state);
+  memcpy(appm()->ptbc.rng_state, state, sizeof(state));
+  return true;
+}
+
+static bool rng_initialised = false;
+
+/**
+ * @brief      (Re)fill each leader rank's pool of swap-decision random numbers.
+ *
+ *             The PTBC generator is owned by global rank 0 and by nobody else: it is
+ *             seeded from ptbc.seed (or restored from PTBC_RNG_STATE_FILE on a restart)
+ *             on the first call, and carried forward in ptbc.rng_state. 
+ *
+ *             Only leader ranks receive a pool.the scatter root is therefore the instance
+ *             that currently carries global rank 0, which changes as swaps are accepted.
+ */
+void static fill_random_numbers(void) {
+  int local_rank;
+  MPI_Comm_rank(app()->mpi.comm, &local_rank);
+
+  // find which instance global rank 0 currently resides in
+  int rng_inst_id = -1;
+  for (int i=0; i<app()->ptbc.n_instances; i++) {
+    if (base_rank[i] == 0) {
+      rng_inst_id = i;
+      break;
+    }
+  }
+  err(rng_inst_id < 0, "Error in fill_random_numbers: cannot find the instance with world rank 0!");
+
+  if (app()->mpi.world_rank == 0) {
+    err(rng_inst_id != app()->ptbc.instance_id,
+        "Error in fill_random_numbers: mismatch RNG instance and base rank!");
+
+    int tmp[PTBC_RNG_STATE_SIZE];
+
+    // Whether there is a physics stream to park in tmp and put back afterwards. On the very
+    // first call there is not: init_ptbc_tree() runs before start_ranlux(), so the physics
+    // generator has no state yet. Captured here because rng_initialised flips below.
+    bool const parked = rng_initialised;
+
+    // if not initialised, either restore from file or init from seed
+    if (!rng_initialised) {
+      if (!read_ptbc_rng_state()) {
+        err(app()->ptbc.seed <= 0, "Error in fill_random_numbers: PTBC seed is invalid");
+        rlxd_init(rlxd_level, app()->ptbc.seed);
+      }
+      rng_initialised = true;
+    }
+    else {
+      rlxd_get(tmp);                       // park the physics stream
+      rlxd_reset(appm()->ptbc.rng_state);  // resume the PTBC stream
+    }
+
+    double numbers[N_RANDOM_PER_INSTANCE * app()->ptbc.n_instances];
+    ranlxd(numbers, N_RANDOM_PER_INSTANCE * app()->ptbc.n_instances); // uniform doubles in [0,1)
+    rlxd_get(appm()->ptbc.rng_state);      // carry the PTBC stream forward
+
+    if (parked) rlxd_reset(tmp);           // restore the physics stream
+
+    MPI_Scatter(numbers, N_RANDOM_PER_INSTANCE, MPI_DOUBLE, random_numbers, N_RANDOM_PER_INSTANCE, MPI_DOUBLE, rng_inst_id, leader_comm);
+  }
+  else if (local_rank == 0) {
+    MPI_Scatter(NULL, N_RANDOM_PER_INSTANCE, MPI_DOUBLE, random_numbers, N_RANDOM_PER_INSTANCE, MPI_DOUBLE, rng_inst_id, leader_comm);
+  }
+
+  random_numbers_ptr = random_numbers;  // reset pointer to the start of the array
+  return;
+}
+
 /**
  * @brief      Initialise PTBC instance connection graph.
  */
@@ -287,6 +428,7 @@ void init_ptbc_tree() {
       err(app()->ptbc.defects[n_def].Ld[d] < 0, "Negative defect extent!");
     }
   }
+
   PTBCContext const *ptbc_ctx = &(app()->ptbc);
   InstanceInfo info[MAX_N_DEFECTS][MAX_N_INSTANCES]; // instance info n_tentacles x instance per tentacle
   int n_tentacles = 0;
@@ -475,10 +617,16 @@ void init_ptbc_tree() {
 
   if(g_proc_id == 0) printf("PTBC graph initialised: %d periodic instance(s), %d tentacle(s). \n", n_periodic, n_tentacles);
   
-  set_leader_comm();  // set leader communicator for future use
+
+  // set leader communicator for the first time
+  set_leader_comm();  
   int size;
   MPI_Comm_size(app()->mpi.world_comm, &size);
   for (int i=0; i<ptbc_ctx->n_instances; i++) base_rank[i] = i * size / ptbc_ctx->n_instances;
+
+
+  // initialise PTBC rng state if global rank 0
+  fill_random_numbers();
   return;
 }
 
@@ -523,12 +671,10 @@ void print_ptbc_topo() {
  * 
  */
 void static shuffle(int *arr, int n) {
-  float *random_numbers = (float *)malloc(n * sizeof(float));
-  ranlxs(random_numbers, n); // Generate n uniform floats in [0,1) using ranlxs
 
   for (int i = n - 1; i > 0; i--) {
-      // Map float in [0,1) to an index between 0 and i inclusive
-      int j = (int)(random_numbers[i] * (i + 1));
+      // Map double in [0,1) to an index between 0 and i inclusive
+      int j = (int)(next_random() * (i + 1));
 
       // Swap arr[i] with the element at the random index
       int temp = arr[i];
@@ -536,7 +682,6 @@ void static shuffle(int *arr, int n) {
       arr[j] = temp;
   }
 
-  free(random_numbers);
   return;
 }
 
@@ -611,13 +756,10 @@ int swap_eo_tent(double const d_up, double const d_dn, int eo) {
         double const total_diff = diff_up[pos[t]] + diff_dn[upstream];
         double expmdh = exp(-total_diff);
 
-        double random_number;
-        ranlxd(&random_number, 1);
-        int const accept = expmdh > random_number;
-
+        double const u = next_random();
+        int const accept = expmdh > u;
         printf("[swap_eo_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
-          pos[t], upstream, diff_up[pos[t]], diff_dn[upstream], total_diff, expmdh, random_number, accept);
-        
+          pos[t], upstream, diff_up[pos[t]], diff_dn[upstream], total_diff, expmdh, u, accept);
 
         
         swap_info[pos[t] * 2] = accept;
@@ -895,8 +1037,7 @@ int swap_link(int const partner_inst, double const own_diff) {
     // the upstream decides
     if (get_node_parent(partner_inst)==local_inst && local_rank==0) {
       double const expmdh = exp(-(own_diff + partner_diff));
-      double u; 
-      ranlxd(&u, 1);
+      double const u = next_random();
       accept = expmdh > u;
       printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
             local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
@@ -906,7 +1047,7 @@ int swap_link(int const partner_inst, double const own_diff) {
       MPI_Recv(&accept, 1, MPI_INT, partner_inst, local_inst, leader_comm, MPI_STATUS_IGNORE);
     } 
     else {
-      err(get_node_parent(local_inst)==partner_inst && get_node_parent(partner_inst)==local_inst, "Error in swap_link: the two instances are not neighbours!");
+      err(get_node_parent(local_inst)!=partner_inst && get_node_parent(partner_inst)!=local_inst, "Error in swap_link: the two instances are not neighbours!");
     }
   }
 
@@ -916,12 +1057,12 @@ int swap_link(int const partner_inst, double const own_diff) {
 }
 
 /**
- * @brief even-odd swaps
+ * @brief Performeven or odd swap
  * 
  * @param Rate the swap rate follows instance id
  * @param eo   even 0, odd 1
  */
-void eo_swap(int *Rate, int eo){
+void static eo_swap(int *Rate, int eo){
   // swap tentacle
   int const inst_id = app()->ptbc.instance_id;
   double const diff_up = get_node_parent(inst_id) != -1? ptbc_swap_dh(get_node_parent(inst_id)): 0.;
@@ -968,6 +1109,33 @@ void eo_swap(int *Rate, int eo){
 
   if (eo==0)  swap_dummy(Rate); // dummies are length 1, even swap
 
+  return;
+}
+
+
+/**
+ * @brief Perform even then odd swaps
+ * 
+ * @param Rate 
+ * @return * void 
+ */
+void even_odd_swap(int *Rate) {
+  eo_swap(Rate, 0); // even
+  eo_swap(Rate, 1); // odd
+  fill_random_numbers(); // refill random numbers for next round
+  return;
+}
+
+/**
+ * @brief Perform odd then even swaps
+ * 
+ * @param Rate 
+ * @return * void 
+ */
+void odd_even_swap(int *Rate) {
+  eo_swap(Rate, 1); // odd
+  eo_swap(Rate, 0); // even
+  fill_random_numbers(); // refill random numbers for next round
   return;
 }
 
@@ -1179,6 +1347,7 @@ void up_swap(int *Rate) {
   swap_updown_tent(Rate, 0);
   swap_pbc(Rate);
   swap_dummy(Rate);
+  fill_random_numbers(); // refill random numbers for next round
 }
 
 
@@ -1192,4 +1361,5 @@ void down_swap(int *Rate) {
   swap_dummy(Rate);
   swap_pbc(Rate);
   swap_updown_tent(Rate, 1);
+  fill_random_numbers(); // refill random numbers for next round
 }

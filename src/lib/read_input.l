@@ -3164,6 +3164,7 @@ static inline double fltlist_next_token(int * const list_end){
   appm()->ptbc.n_defects = 0;
   appm()->ptbc.instance_id = 0;
   appm()->ptbc.strat = EVEN_ODD;
+  appm()->ptbc.do_swap = true;
   if(myverbose) printf("Initialising PTBC line %d\n", line_of_file);
   BEGIN(PTBC);
 }
@@ -3182,6 +3183,26 @@ static inline double fltlist_next_token(int * const list_end){
       fail(true, "Unknown PTBC swap strategy '%s'! Must be one of EVEN_ODD, UP_DOWN.", strategy_name);
     }
     if(myverbose) printf("  PTBC swap strategy = %s line %d\n", strategy_name, line_of_file);
+    BEGIN(PTBC);
+  }
+  {SPC}*DoSwap{EQL}yes {
+    appm()->ptbc.do_swap = true;
+    if(myverbose) printf("  PTBC swapping enabled line %d\n", line_of_file);
+    BEGIN(PTBC);
+  }
+  {SPC}*DoSwap{EQL}no {
+    appm()->ptbc.do_swap = false;
+    if(myverbose) printf("  PTBC swapping disabled line %d\n", line_of_file);
+    BEGIN(PTBC);
+  }
+  {SPC}*Seed{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    if(myverbose) printf("  PTBC random seeed set to %d line %d\n", a, line_of_file);
+    if(a <= 0) {
+      if(g_proc_id == 0) fprintf(stderr, "PTBC random seed must be positive! Aborting...!\n");
+      exit(-1);
+    }
+    appm()->ptbc.seed = a;
     BEGIN(PTBC);
   }
   {SPC}*BeginPTBCDefect{SPC}+{DIGIT}+ {

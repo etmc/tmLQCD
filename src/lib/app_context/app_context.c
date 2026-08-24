@@ -82,6 +82,8 @@ static AppContext app_instance = {
         .n_defects = 0,
         .active = false,
         .strat = EVEN_ODD,
+        .do_swap = true,
+        .seed = 0,
         .initialize = initialize,
         .instances = {{.active = false}},
         .defects = {{.active = false}}
@@ -243,11 +245,13 @@ static void initialize(void)
         mkdir(subdir, 0700);
 
     chdir(subdir);
-    
-    // All prints to stdout are redirected into the instance directory, in a log named after
-    // the rank inside this instance, so instance_xx/hmc_rankNN.log 
-    char logfile[1024];
-    snprintf(logfile, 1024, "hmc_rank%.2d.log", instance_rank);
+
+    // Only the leader of each instance keeps a log, at instance_xx/hmc.log. Every other rank
+    // sends stdout to /dev/null: their output duplicates the leader's, and anything that must
+    // survive goes to stderr (fatal_error included), which is never redirected.
+    // NB: g_proc_id is not usable here. It is still the world rank at this point and is only
+    // reset to the instance-local rank later, in tmlqcd_mpi_init(). Use instance_rank.
+    char const *logfile = (instance_rank == 0) ? "hmc.log" : "/dev/null";
     err(freopen(logfile, "w", stdout) == NULL, "Could not reopen stdout on the instance logfile");
     setvbuf(stdout, NULL, _IOLBF, 0);
 }
