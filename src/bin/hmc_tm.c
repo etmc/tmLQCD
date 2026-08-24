@@ -403,36 +403,31 @@ int main(int argc, char *argv[]) {
     if (app()->ptbc.active) {
       int const ptbc_inst_at_swap = app()->ptbc.instance_id;
       tm_stopwatch_push(&g_timers, "ptbc_swap", "");
-      
 
-      // rank 0 decides how to swap with a random number
-      int my_rank;
-      MPI_Comm_rank(app()->mpi.world_comm, &my_rank);
-      float rand_num;
-      if (my_rank == 0) {
-        ranlxs(&rand_num, 1); // float [0, 1)
-      }
-      MPI_Bcast(&rand_num, 1, MPI_FLOAT, 0, app()->mpi.world_comm);
+      if (app()->ptbc.do_swap) {
+        // rank 0 decides how to swap
+        double rand_num;
+        if (app()->mpi.world_rank == 0) {
+          int tmp[105];
+          rlxd_get(tmp);
+          rlxd_reset(app()->ptbc.rng_state);
+          ranlxd(&rand_num, 1); // float [0, 1)
+          rlxd_get(app()->ptbc.rng_state);
+          rlxd_reset(tmp);
+        }
+        MPI_Bcast(&rand_num, 1, MPI_DOUBLE, 0, app()->mpi.world_comm);
 
-      // 50-50 on the sweep order, so that neither end of the chain is systematically favoured
-      if (app()->ptbc.strat == EVEN_ODD) {
-        if (rand_num < 0.5) {
-          eo_swap(&Rate, 0);
-          eo_swap(&Rate, 1);
+        // 50-50 on the sweep order, so that neither end of the chain is systematically favoured
+        if (app()->ptbc.strat == EVEN_ODD) {
+          if (rand_num < 0.5) even_odd_swap(&Rate);
+          else odd_even_swap(&Rate);
         }
-        else {
-          eo_swap(&Rate, 1);
-          eo_swap(&Rate, 0);
+        else if (app()->ptbc.strat == UP_DOWN) { // UP_DOWN
+          if (rand_num < 0.5)up_swap(&Rate);
+          else down_swap(&Rate);
+
         }
       }
-      else if (app()->ptbc.strat == UP_DOWN) { // UP_DOWN
-        if (rand_num < 0.5) {
-          up_swap(&Rate);
-        }
-        else {
-          down_swap(&Rate);
-        }
-      } 
 
       tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
 
@@ -553,6 +548,9 @@ int main(int argc, char *argv[]) {
         fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter + 1, gauge_filename);
         fclose(countfile);
       }
+      /* checkpoint the PTBC swap-decision RNG next to the instance_NN directories, so the
+         swap stream resumes rather than restarts. Only global rank 0 actually writes. */
+      if (app()->ptbc.active) write_ptbc_rng_state();
     }
 
     /* online measurements */

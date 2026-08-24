@@ -34,7 +34,6 @@
  */
 void ptbc_chdir_instance(void) {
   char subdir[1024];
-  char logfile[1024];
   int local_rank;
 
   fflush(stdout);  /* flush into the OLD instance's log before moving away */
@@ -53,10 +52,11 @@ void ptbc_chdir_instance(void) {
   if (chdir(subdir) != 0)
     fatal_error("could not chdir into the instance directory", "ptbc_chdir_instance");
 
-  /* append: the log of this parameter set carries on from the group that was here before */
+  /* Only the instance leader keeps a log; every other rank stays on the /dev/null */
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
-  snprintf(logfile, sizeof(logfile), "hmc_rank%.2d.log", local_rank);
-  if (freopen(logfile, "a", stdout) == NULL)
-    fatal_error("could not reopen stdout on the instance logfile", "ptbc_chdir_instance");
-  setvbuf(stdout, NULL, _IOLBF, 0);
+  if (local_rank == 0) {
+    if (freopen("hmc.log", "a", stdout) == NULL)
+      fatal_error("could not reopen stdout on the instance logfile", "ptbc_chdir_instance");
+    setvbuf(stdout, NULL, _IOLBF, 0);
+  }
 }
