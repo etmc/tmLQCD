@@ -93,6 +93,9 @@ typedef struct {
     int n_instances;                            // Number of instances
     int n_defects;                              // Number of defects
     strategy_t strat;                           // Swapping strategy
+    bool do_swap;                               // Whether to attempt swaps between instances
+    int seed;                                   // PTBC random seed
+    int rng_state[105];                         // RNG state for PTBC
     PTBCInstance instances[MAX_N_INSTANCES];    // List of all instances
     PTBCDefect defects[MAX_N_DEFECTS];          // List of all defects
     void (*initialize)(void);                   // PTBC algorithm initializer

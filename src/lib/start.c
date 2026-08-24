@@ -842,7 +842,8 @@ void start_ranlux(int level, int seed) {
   seed += ptbc_offset;
 
   loc_seed = (seed + step * max_seed) % 2147483647;
-  printf("Instance %d seed is %d offset is %d \n", app()->ptbc.instance_id, loc_seed, ptbc_offset);
+
+    //printf("Instance %d leader seed is %d offset is %d \n", app()->ptbc.instance_id, loc_seed, ptbc_offset);
 
   if (loc_seed == 0) loc_seed++;
 
