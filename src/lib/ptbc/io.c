@@ -42,7 +42,7 @@ void ptbc_chdir_instance(void) {
   if (freopen("/dev/null", "w", stdout) == NULL)
     fatal_error("could not detach stdout from the old instance logfile", "ptbc_chdir_instance");
 
-  /* every rank has now closed its previous log, so no file has a writer left */
+  /* every rank has now closed its previous log */
   MPI_Barrier(app()->mpi.world_comm);
 
   if (chdir("..") != 0)

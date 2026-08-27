@@ -50,9 +50,7 @@ static void err_impl(const bool test, const char* func, const char* file, const 
     }
 }
 
-/* Global lattice extents. T, LX, ... and g_nproc_* are runtime globals, not
-   compile-time constants, so this cannot be a static initialiser: fill it on
-   first use instead. */
+/* Global lattice extents. Fill it on first use. */
 static int Ltot[4] = {0};
 
 static void fill_Ltot(void) {
@@ -69,25 +67,26 @@ static MPI_Comm leader_comm = MPI_COMM_NULL;  // communicator for leader ranks o
 static bool leader_comm_initialised = false;
 static Tree tree;
 static Node nodes[MAX_N_INSTANCES]; // each node corresponds to an instance
-// Pool size per leader rank. Worst-case consumption over one refill period (one
-// even_odd_swap / odd_even_swap / up_swap / down_swap) is bounded by
-// MAX_N_INSTANCES + MAX_N_DEFECTS - 2, so this is safe as long as
-// MAX_N_INSTANCES >= MAX_N_DEFECTS - 2. next_random() enforces it at runtime.
+
+// PTBC RNG on global rank 0 distribute bundles of random number to leader ranks every step
+// Worst-case consumption over one refill period  should is bounded by 
+// MAX_N_INSTANCES + MAX_N_DEFECTS - 2,therefore 2 * MAX_N_INSTANCES should be safe
+// There are also an out-of-bound checks at runtime see next_random() for details
 #define N_RANDOM_PER_INSTANCE (2 * MAX_N_INSTANCES)
 
-static double random_numbers[N_RANDOM_PER_INSTANCE]; // every leader rank rank gets a pool of random numbers from rank 0
-static double *random_numbers_ptr = NULL; // pointer to the next random number in the pool
+static double random_numbers[N_RANDOM_PER_INSTANCE]; // every leader rank rank gets a bundle of random numbers from rank 0
+static double *random_numbers_ptr = NULL; // pointer to the next random number in the bundle
 
 /**
- * @brief      Consume the next random number from this leader rank's pool.
- *             Only leader ranks hold a pool; calling this elsewhere is a bug.
+ * @brief      Consume the next random number from this leader rank's bundle.
+ *             Only leader ranks hold a bundle; calling this elsewhere is a bug.
  *
  * @return     uniform double in [0,1)
  */
 double static next_random(void) {
-  err(random_numbers_ptr == NULL, "Error in next_random: PTBC random pool not initialised!");
+  err(random_numbers_ptr == NULL, "Error in next_random: PTBC random bundle not initialised!");
   err(random_numbers_ptr >= random_numbers + N_RANDOM_PER_INSTANCE,
-      "Error in next_random: PTBC random pool of %d exhausted on instance %d!",
+      "Error in next_random: PTBC random bundle of %d exhausted on instance %d!",
       N_RANDOM_PER_INSTANCE, app()->ptbc.instance_id);
 
   return *(random_numbers_ptr++);
@@ -201,7 +200,7 @@ static void set_leader_comm() {
 }
 
 /**
- * @brief Gather base rank offset from leader rank of all instances. Must use with the other two!
+ * @brief Gather base rank offset from leader rank of all instances.
  * 
  */
 void static mpi_gather_base_rank() {
@@ -225,7 +224,7 @@ typedef struct {
   unsigned int inst_id;
 } InstanceInfo;
 
-int compare_coeff(void const *ia, void const *ib) {
+int static compare_coeff(void const *ia, void const *ib) {
   unsigned int count1 = 0;
   unsigned int count2 = 0;
 
@@ -264,10 +263,7 @@ bool if_periodic(int inst_id) {
 
 /**
  * @brief format a small "instN" tag for tm_stopwatch_pop's prefix argument, so PTBC
- *        timer lines show which instance produced them. Callers should capture their
- *        own instance id at the start of the measured block (app()->ptbc.instance_id
- *        may change mid-function if a swap is accepted) and pass that captured value
- *        here, rather than re-reading the live instance id at pop time.
+ *        timer lines show which instance produced them. 
  *
  * @param inst_id captured instance id to tag the line with
  */
@@ -317,9 +313,8 @@ void write_ptbc_rng_state(void) {
 }
 
 /**
- * @brief      Restore the PTBC swap-decision RNG state written by a previous run. Global
- *             rank 0 only. A missing file means this is a fresh start, which is not an
- *             error; a present but malformed file is.
+ * @brief      Restore the PTBC RNG state written by a previous run. Global rank 0 only. 
+ *             Abscence of PTBC_RNG_STATE_FILE file means this is a fresh start
  *
  * @return     true if the state was restored, false if there is no state file
  */
@@ -349,14 +344,13 @@ bool static read_ptbc_rng_state(void) {
 static bool rng_initialised = false;
 
 /**
- * @brief      (Re)fill each leader rank's pool of swap-decision random numbers.
+ * @brief      (Re)fill each leader rank's bundle of swap-decision random numbers.
  *
  *             The PTBC generator is owned by global rank 0 and by nobody else: it is
  *             seeded from ptbc.seed (or restored from PTBC_RNG_STATE_FILE on a restart)
  *             on the first call, and carried forward in ptbc.rng_state. 
  *
- *             Only leader ranks receive a pool.the scatter root is therefore the instance
- *             that currently carries global rank 0, which changes as swaps are accepted.
+ *             Only leader ranks receive a bundle.
  */
 void static fill_random_numbers(void) {
   int local_rank;
@@ -378,9 +372,7 @@ void static fill_random_numbers(void) {
 
     int tmp[PTBC_RNG_STATE_SIZE];
 
-    // Whether there is a physics stream to park in tmp and put back afterwards. On the very
-    // first call there is not: init_ptbc_tree() runs before start_ranlux(), so the physics
-    // generator has no state yet. Captured here because rng_initialised flips below.
+    // Whether rng is parked in tmp and need to be restored
     bool const parked = rng_initialised;
 
     // if not initialised, either restore from file or init from seed
@@ -698,7 +690,7 @@ void static swap(int const inst_id) {
  * @param size  size of the array 
  * @return void 
  */
-void swap_arr(int const inst_id, int *arr, int const size) {
+void static swap_arr(int const inst_id, int *arr, int const size) {
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
 
@@ -719,7 +711,7 @@ void swap_arr(int const inst_id, int *arr, int const size) {
  * @return int 1 if need to further swap with pbc 0 if done
  */
 
-int swap_eo_tent(double const d_up, double const d_dn, int eo) {
+int static swap_eo_tent(double const d_up, double const d_dn, int eo) {
   double diff_up[MAX_N_INSTANCES], diff_dn[MAX_N_INSTANCES];
   int local_info[2], local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
@@ -795,7 +787,7 @@ int swap_eo_tent(double const d_up, double const d_dn, int eo) {
  * @brief synchronise the base ranks of all instances after swap(s)
  * 
  */
-void ptbc_sync() {
+void static ptbc_sync() {
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, & local_rank);
   // reset leader comm to be reinitialised for new instance.
@@ -851,7 +843,7 @@ int get_periodic(int *periodic_id) {
  * @param eo even or odd swaps, 0 for even 1 for odd
  * @return int  periodic instance: number of tentacles involved; tentacle instance: assigned round index, or -1
  */
-int init_eoswap_pbc(int *tent_order, int eo){
+int static init_eoswap_pbc(int *tent_order, int eo){
   int local_inst = app()->ptbc.instance_id;
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
@@ -956,7 +948,52 @@ int init_eoswap_pbc(int *tent_order, int eo){
   }
 }
 
-void swap_dummy(int* Rate) {
+/**
+ * @brief Try swapping between periodic instance and another neighbour. Decision made by pbc
+ *
+ * @param partner_inst
+ * @param own_diff
+ * @return int 1 accept; 0 reject
+ */
+int static swap_link(int const partner_inst, double const own_diff) {
+  int local_rank;
+  MPI_Comm_rank(app()->mpi.comm, &local_rank);
+  int const local_inst = app()->ptbc.instance_id;
+
+  double partner_diff;
+  int accept;
+  if (local_rank==0){ 
+    MPI_Sendrecv(&own_diff, 1, MPI_DOUBLE, partner_inst, 0,
+                  &partner_diff, 1, MPI_DOUBLE, partner_inst, 0,
+                  leader_comm, MPI_STATUS_IGNORE);
+
+    // the upstream decides
+    if (get_node_parent(partner_inst)==local_inst && local_rank==0) {
+      double const expmdh = exp(-(own_diff + partner_diff));
+      double const u = next_random();
+      accept = expmdh > u;
+      printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
+            local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
+      MPI_Send(&accept, 1, MPI_INT, partner_inst, partner_inst, leader_comm);
+    } 
+    else if (get_node_parent(local_inst)==partner_inst && local_rank==0) {
+      MPI_Recv(&accept, 1, MPI_INT, partner_inst, local_inst, leader_comm, MPI_STATUS_IGNORE);
+    } 
+    else {
+      err(get_node_parent(local_inst)!=partner_inst && get_node_parent(partner_inst)!=local_inst, "Error in swap_link: the two instances are not neighbours!");
+    }
+  }
+
+  MPI_Bcast(&accept, 1, MPI_INT, 0, app()->mpi.comm);
+  if (accept) swap(partner_inst);
+  return accept; // return 1 if swap accepted, 0 if not
+}
+
+/**
+ * @brief Perform dummy swap
+ * @param Rate
+ */
+void static swap_dummy(int* Rate) {
   int local_rank;
   MPI_Comm_rank(app()->mpi.comm, &local_rank);
   int local_inst = app()->ptbc.instance_id;
@@ -1016,48 +1053,7 @@ void swap_dummy(int* Rate) {
 }
 
 /**
- * @brief try swapping between periodic instance and another neighbour, decision by pbc
- *
- * @param partner_inst
- * @param own_diff
- * @return int 1 accept; 0 reject
- */
-int swap_link(int const partner_inst, double const own_diff) {
-  int local_rank;
-  MPI_Comm_rank(app()->mpi.comm, &local_rank);
-  int const local_inst = app()->ptbc.instance_id;
-
-  double partner_diff;
-  int accept;
-  if (local_rank==0){ 
-    MPI_Sendrecv(&own_diff, 1, MPI_DOUBLE, partner_inst, 0,
-                  &partner_diff, 1, MPI_DOUBLE, partner_inst, 0,
-                  leader_comm, MPI_STATUS_IGNORE);
-
-    // the upstream decides
-    if (get_node_parent(partner_inst)==local_inst && local_rank==0) {
-      double const expmdh = exp(-(own_diff + partner_diff));
-      double const u = next_random();
-      accept = expmdh > u;
-      printf("[swap_link] inst %d <-> %d: own_diff=%.6e partner_diff=%.6e total_diff=%.6e expmdh=%.6e random number=%.6e accept=%d\n",
-            local_inst, partner_inst, own_diff, partner_diff, own_diff + partner_diff, expmdh, u, accept);
-      MPI_Send(&accept, 1, MPI_INT, partner_inst, partner_inst, leader_comm);
-    } 
-    else if (get_node_parent(local_inst)==partner_inst && local_rank==0) {
-      MPI_Recv(&accept, 1, MPI_INT, partner_inst, local_inst, leader_comm, MPI_STATUS_IGNORE);
-    } 
-    else {
-      err(get_node_parent(local_inst)!=partner_inst && get_node_parent(partner_inst)!=local_inst, "Error in swap_link: the two instances are not neighbours!");
-    }
-  }
-
-  MPI_Bcast(&accept, 1, MPI_INT, 0, app()->mpi.comm);
-  if (accept) swap(partner_inst);
-  return accept; // return 1 if swap accepted, 0 if not
-}
-
-/**
- * @brief Performeven or odd swap
+ * @brief Perform even or odd swap
  * 
  * @param Rate the swap rate follows instance id
  * @param eo   even 0, odd 1
