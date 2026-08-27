@@ -27,11 +27,11 @@
 
 /* for computing action with PTBC.
  *
- * A link is identified by its start site and its direction. The start site is
- * passed as a LOCAL site ix plus a displacement rather than as the neighbour
- * index, because a neighbour may lie in the MPI halo, where g_coord is not
- * defined. get_ptbc_coeff() resolves the displacement in global coordinates
- * (with periodic wrap), so halo links get the correct coefficient.
+ * A link is identified by its start site and its direction. Because a raw 
+ * index may lie in the MPI halo, pass a LOCAL site ---ix plus a displacement instead.
+ *
+ * get_ptbc_coeff() resolves the displacement in global coordinates
+ * via periodic wrapping, so halo links get the correct coefficient.
  *
  * ix must satisfy ix < VOLUME; the displaced site need not.
  */
@@ -60,8 +60,6 @@ static inline double ptbc_coeff2(int const ix, int const alpha, int const a, int
   return get_ptbc_coeff(ix, disp, dir);
 }
 
-/* synchronising the ptbc topology whenever swaps happen */
-void ptbc_sync();
 
 /* for swapping rng */
 typedef struct{
@@ -97,20 +95,14 @@ int const* get_node_children(int const node_id);
 int const get_node_n_children(int const node_id);
 
 
-// initialiser
+// init ptbc
 void init_ptbc_tree();
 void print_ptbc_topo();
 
 
 // utils
 bool if_periodic(int inst_id);
-void swap_rate(int const inst_id, int *rate);
 const char* ptbc_timer_tag(int const inst_id);
-
-/* Swapping functions (can make static if confirm later not used elsewhere) */
-int swap_eo_tent(double const diff_up, double const diff_dn, int eo);
-int init_eoswap_pbc(int *tent_order, int eo);
-int swap_link(int const partner_inst, double const own_diff);
 
 // gauge action with PTBC
 double ptbc_swap_dh(int const alt_inst);
@@ -127,10 +119,6 @@ void down_swap(int *Rate);
 
 /* io related */
 void ptbc_chdir_instance(void);
-
-/* Persist the swap-decision RNG state into the result directory (the level holding
-   the instance_NN subdirectories) so a restart continues the stream rather than
-   replaying it. Global rank 0 writes; a no-op on every other rank. */
 void write_ptbc_rng_state(void);
 
 #endif

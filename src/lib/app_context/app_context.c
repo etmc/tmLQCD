@@ -238,10 +238,8 @@ static void initialize(void)
     chdir(subdir);
 
     // Only the leader of each instance keeps a log, at instance_xx/hmc.log. Every other rank
-    // sends stdout to /dev/null.
-    // Note: g_proc_id is not usable here. It is still the world rank at this point and is only
-    // reset to the instance-local rank later, in tmlqcd_mpi_init(). Use instance_rank.
+    // sends stdout to /dev/null
     char const *logfile = (instance_rank == 0) ? "hmc.log" : "/dev/null";
-    err(freopen(logfile, "w", stdout) == NULL, "Could not reopen stdout on the instance logfile");
+    err(freopen(logfile, "a", stdout) == NULL, "Could not reopen stdout on the instance logfile");
     setvbuf(stdout, NULL, _IOLBF, 0);
 }
