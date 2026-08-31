@@ -1,4 +1,4 @@
-name: basic-build
+name: ptbc-build
 
 on: [push]
 
@@ -118,7 +118,7 @@ jobs:
       - name: nf2_rgmixedcg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          mpirun -np 4 src/bin/hmc_tm \
+          mpirun -np 4 --oversubscribe src/bin/hmc_tm \
             -f ../doc/sample-input/sample-ptbc.input
       
       - name: Archive nf2_rgmixedcg_hmc_tmcloverdetratio output
