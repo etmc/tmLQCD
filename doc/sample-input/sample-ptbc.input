@@ -1,0 +1,61 @@
+# ---- lattice geometry: 18^4 ----
+L = 8
+T = 8
+
+# ---- run control ----
+Measurements = 10          # number of trajectories to generate
+StartCondition = hot       # or 'cold'; 'continue' to restart from conf.save
+NSave = 200                # write a configuration to disk every NSave trajectories
+InitialStoreCounter = 0
+ReversibilityCheck = no
+DebugLevel = 1
+Seed = 127782
+ompnumthreads=2
+
+# ---- action: pure SU(3) Wilson plaquette gauge action ----
+BeginMonomial GAUGE
+  Type = Wilson
+  Beta = 5.60
+  Timescale = 0
+EndMonomial
+
+# ---- MD integration: 2nd-order Omelyan, tau=1, 24 steps ----
+BeginIntegrator
+  Type0 = 2MNFG
+  IntegrationSteps0 = 24
+  Tau = 1
+  Lambda0 = 0.1666666
+  NumberOfTimescales = 1
+EndIntegrator
+
+# ---- PTBC initialisation ----
+BeginPTBC
+  Seed=101
+  Strategy=UP_DOWN
+  DoSwap=yes	# turn on swapping 
+
+  BeginPTBCDefect 0
+    Extents = 0, 2, 2, 2	  # change defect extent here
+    Position = 7, 0, 0, 0	  # last time slice
+  EndPTBCDefect
+
+  BeginPTBCInstance 0
+    Coefficients = 1.0
+    Defects = 0
+  EndPTBCInstance
+
+  BeginPTBCInstance 1
+    Coefficients = 0.67
+    Defects = 0
+  EndPTBCInstance
+
+  BeginPTBCInstance 2
+    Coefficients = 0.33
+    Defects = 0
+  EndPTBCInstance
+
+  BeginPTBCInstance 3
+    Coefficients = 0.
+    Defects = 0
+  EndPTBCInstance
+EndPTBC

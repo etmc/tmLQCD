@@ -1,0 +1,1556 @@
+# Creating the following cartesian grid for a 4 dimensional parallelisation:
+# 1 x 1 x 1 x 1
+PTBC graph initialised: 1 periodic instance(s), 1 tentacle(s). 
+Instance ID: 0	Type: periodic	Upstream ID: 	Downstream ID: 1, 
+
+Instance ID: 1	Type: intermediate	Upstream ID: 0	Downstream ID: 2, 
+
+Instance ID: 2	Type: intermediate	Upstream ID: 1	Downstream ID: 3, 
+
+Instance ID: 3	Type: open	Upstream ID: 2	Downstream ID: 
+
+
+This is the hmc code for twisted mass Wilson QCD
+
+Version tmLQCD 6.1.0, commit a2090c82d5449866fda02ec86273c9760a93b54c
+# The code is compiled with -DTM_USE_GAUGE_COPY
+# The code is compiled with -DTM_USE_HALFSPINOR
+# the code is compiled for non-blocking MPI calls (spinor and gauge)
+# the code is compiled with MPI IO / Lemon
+# the code is compiled with openMP support
+# Non-Schroedinger (anti-periodic, periodic or twisted) boundary conditions are used
+# The lattice size is 8 x 8 x 8 x 8
+# The local lattice size is 8 x 8 x 8 x 8
+# Even/odd preconditioning is used
+# beta = 5.600000000000 , kappa= 0.125000000000
+# boundary conditions for fermion fields (t,x,y,z) * pi: 0.000000 0.000000 0.000000 0.000000 
+# mu = 0.000000000000
+# g_rgi_C0 = 1.000000, g_rgi_C1 = 0.000000
+# Using absolute precision for the inversions!
+# Initialising rectangular gauge action stuff
+# The lattice is correctly mapped by the index arrays
+
+# monomial id 0 type = 2 timescale 0
+# Computed plaquette value: 0.125630501780.
+#
+# Starting trajectory no 0
+# : Time for gauge_heatbath 5.256471e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.068192e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.048486e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073970e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.079357e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017082e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075592e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.037815e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068182e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077009e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025170e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079912e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032477e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086665e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086661e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021365e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067054e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032970e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082677e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084871e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011665e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074279e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031044e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076668e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.082786e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024032e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080828e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033309e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073790e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071149e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014521e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081095e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030944e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084370e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078309e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023361e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.064280e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033287e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066155e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.064476e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018147e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076126e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032702e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071018e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073828e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024036e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082993e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031860e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083204e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086430e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015074e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086401e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.036528e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088532e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073639e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025801e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069930e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033064e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068729e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067326e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021589e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071319e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033220e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074642e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076736e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020555e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081281e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031700e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084445e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080118e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017425e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073829e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032985e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066231e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.065557e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029343e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070583e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031672e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068136e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.066878e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027226e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066229e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032201e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068492e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067976e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032643e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082211e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.044729e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075916e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.066574e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020843e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067688e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033635e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068671e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076897e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023183e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.064084e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028824e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070566e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067916e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032989e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066741e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032836e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070863e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071177e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025579e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084835e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031941e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089191e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086996e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022308e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089366e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032922e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088073e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072495e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021103e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077631e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034604e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067366e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068195e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012009e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085341e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.123380e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.490342e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.034358e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.207141e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 0 instance 3 rank 2 
+# Writing gauge field to .conf.t00000.tmp.
+# Constructing LEMON writer for file .conf.t00000.tmp for append = 0
+# Time spent writing 2.36 Mb was 117 ms.
+# Writing speed: 20.2 Mb/s (20.2 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00000.tmp:
+#   Calculated            : A = 0x3df83803 B = 0x4cf46531.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00000.tmp ...
+# Time spent reading 2.36 Mb was 906 us.
+# Reading speed: 2.60 Gb/s (2.60 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00000.tmp:
+#   Calculated            : A = 0x3df83803 B = 0x4cf46531.
+#   Read from LIME headers: A = 0x3df83803 B = 0x4cf46531.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00000.tmp to conf.save.
+#
+# Starting trajectory no 1
+# : Time for gauge_heatbath 5.217420e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.075668e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.065345e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087419e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077160e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011228e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080307e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030562e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084767e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088275e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015083e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070675e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028899e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067620e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069282e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019593e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074286e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028390e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080090e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078833e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006714e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069138e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027852e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085870e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.091185e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014547e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071784e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026037e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068607e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080201e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017756e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074354e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024719e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069570e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069353e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018658e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.280041e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032450e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073205e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074665e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014290e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.091271e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026857e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080158e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086998e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011960e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069704e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028520e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086435e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072285e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007077e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070704e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029402e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070588e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088661e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023148e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086653e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.043056e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072294e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070683e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010803e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076333e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028178e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076457e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.087259e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009331e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080567e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028789e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086907e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071377e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016163e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074063e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029647e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075043e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085382e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016957e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076463e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027305e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087111e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088477e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.004778e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080240e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.046813e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084070e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073100e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018025e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068103e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029511e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089498e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078410e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008095e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078868e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028371e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.091238e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084650e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015067e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067257e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025889e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068882e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069199e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017376e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078547e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025062e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074395e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069907e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021010e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068539e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027121e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068636e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088210e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017290e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068653e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029583e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075131e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072550e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023131e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076607e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032387e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071891e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074018e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008088e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086103e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.095499e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.516640e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.100965e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.764813e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 1 instance 3 rank 2 
+# Writing gauge field to .conf.t00001.tmp.
+# Constructing LEMON writer for file .conf.t00001.tmp for append = 0
+# Time spent writing 2.36 Mb was 120 ms.
+# Writing speed: 19.7 Mb/s (19.7 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00001.tmp:
+#   Calculated            : A = 0x74560c5e B = 0x65f6cf79.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00001.tmp ...
+# Time spent reading 2.36 Mb was 618 us.
+# Reading speed: 3.82 Gb/s (3.82 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00001.tmp:
+#   Calculated            : A = 0x74560c5e B = 0x65f6cf79.
+#   Read from LIME headers: A = 0x74560c5e B = 0x65f6cf79.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00001.tmp to conf.save.
+#
+# Starting trajectory no 2
+# : Time for gauge_heatbath 5.161730e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.065041e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.053900e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072230e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086458e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010242e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072371e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028566e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083537e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.087394e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006277e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068714e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029292e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068873e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084934e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009539e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.036734e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077899e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068794e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006345e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079562e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.036521e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080300e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080766e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019871e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087511e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027349e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087841e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.090267e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008198e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068664e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024313e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067657e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078985e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007082e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082874e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025512e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085388e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.091253e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012410e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072777e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025150e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072933e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070098e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016799e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071824e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027027e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071707e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071474e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020977e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074637e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067283e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075056e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027921e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085986e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034583e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068715e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075399e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019666e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077564e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027210e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078105e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083050e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010574e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076602e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028678e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.093984e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074694e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020507e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071624e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025506e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071112e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070464e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008133e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083490e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028057e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068974e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085735e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019975e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074861e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026539e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068675e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088808e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014688e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067332e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034224e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089976e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083926e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009602e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069991e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028790e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079937e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068767e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008017e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089916e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032040e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082630e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071209e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007884e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088781e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.043845e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074900e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075987e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018486e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081690e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026731e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080199e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073418e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028544e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066826e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028907e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065531e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071702e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013602e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079322e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034739e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072106e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072041e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018069e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082983e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.110190e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.602765e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.035822e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.122511e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 2 instance 3 rank 2 
+# Writing gauge field to .conf.t00002.tmp.
+# Constructing LEMON writer for file .conf.t00002.tmp for append = 0
+# Time spent writing 2.36 Mb was 66.3 ms.
+# Writing speed: 35.6 Mb/s (35.6 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00002.tmp:
+#   Calculated            : A = 0x4d22be29 B = 0xa9fa03f7.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00002.tmp ...
+# Time spent reading 2.36 Mb was 448 us.
+# Reading speed: 5.26 Gb/s (5.26 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00002.tmp:
+#   Calculated            : A = 0x4d22be29 B = 0xa9fa03f7.
+#   Read from LIME headers: A = 0x4d22be29 B = 0xa9fa03f7.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00002.tmp to conf.save.
+#
+# Starting trajectory no 3
+# : Time for gauge_heatbath 5.238401e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.078776e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.054248e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081444e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072992e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017822e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075160e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030829e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072228e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069840e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012689e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.064165e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029879e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070461e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077890e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.000393e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079864e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024925e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071523e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071956e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008200e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071551e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024136e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074536e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073138e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.005254e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083763e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032244e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068121e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078205e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.004366e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073309e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025820e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077205e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073277e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010238e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085307e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032498e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080457e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077574e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018134e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078592e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027663e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077685e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.079012e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017884e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071118e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031084e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078054e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088109e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023565e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070189e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.051618e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065860e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088493e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009864e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076868e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.041886e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069328e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075729e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072395e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031163e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088393e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072677e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008330e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088809e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027019e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087403e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088930e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069223e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028733e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068212e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.064907e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021603e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073916e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026481e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072469e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076189e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016093e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.090453e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028232e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.093303e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.091716e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011106e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077741e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027115e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071981e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076293e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014688e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072206e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029038e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068897e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075288e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013374e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065544e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027116e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085515e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.089278e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022149e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.093730e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029235e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083266e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074187e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021577e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065891e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033157e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071163e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072707e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030819e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028062e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068851e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069584e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031375e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.092129e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021359e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069355e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067259e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020355e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070843e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.105979e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.550178e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.038781e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.134912e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 3 instance 3 rank 2 
+# Writing gauge field to .conf.t00003.tmp.
+# Constructing LEMON writer for file .conf.t00003.tmp for append = 0
+# Time spent writing 2.36 Mb was 82.6 ms.
+# Writing speed: 28.6 Mb/s (28.6 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00003.tmp:
+#   Calculated            : A = 0x05f45432 B = 0x566311a2.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00003.tmp ...
+# Time spent reading 2.36 Mb was 464 us.
+# Reading speed: 5.08 Gb/s (5.08 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00003.tmp:
+#   Calculated            : A = 0x05f45432 B = 0x566311a2.
+#   Read from LIME headers: A = 0x05f45432 B = 0x566311a2.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00003.tmp to conf.save.
+#
+# Starting trajectory no 4
+# : Time for gauge_heatbath 5.177510e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.069480e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.067059e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069758e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068811e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025291e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069994e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025861e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067497e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075857e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007747e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085123e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026717e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085185e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 3.332401e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021540e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067009e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029380e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067522e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073604e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012000e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068996e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026287e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074711e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.079611e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008337e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071111e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028657e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087098e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068681e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020832e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070270e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031751e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.061825e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072454e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006213e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075744e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032084e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080574e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083196e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008852e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085143e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030178e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085437e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.065545e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016383e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069131e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028584e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065502e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067928e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018137e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068751e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.035586e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068834e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.066283e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011995e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074760e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027384e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084728e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088929e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010792e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.091544e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028053e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081508e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072389e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011633e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028978e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.093931e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.079707e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018876e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079173e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023804e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087259e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088331e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007886e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065688e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026272e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067135e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073717e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026988e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066338e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026710e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073542e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075550e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014809e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068432e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025287e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081616e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074676e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028435e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077976e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027819e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066887e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.064393e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010332e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.314301e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033996e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082455e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083139e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025233e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078881e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031596e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074893e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078445e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012679e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072233e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028788e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086114e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068999e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.037161e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068628e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030265e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069684e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067833e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029881e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067644e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026920e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068621e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071290e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011557e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078043e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.141329e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.545001e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.045520e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.168113e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 4 instance 3 rank 2 
+# Writing gauge field to .conf.t00004.tmp.
+# Constructing LEMON writer for file .conf.t00004.tmp for append = 0
+# Time spent writing 2.36 Mb was 136 ms.
+# Writing speed: 17.4 Mb/s (17.4 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00004.tmp:
+#   Calculated            : A = 0xc9ca1e08 B = 0x0e224d78.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00004.tmp ...
+# Time spent reading 2.36 Mb was 488 us.
+# Reading speed: 4.83 Gb/s (4.83 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00004.tmp:
+#   Calculated            : A = 0xc9ca1e08 B = 0x0e224d78.
+#   Read from LIME headers: A = 0xc9ca1e08 B = 0x0e224d78.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00004.tmp to conf.save.
+#
+# Starting trajectory no 5
+# : Time for gauge_heatbath 5.120779e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.079252e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.053362e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076985e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077244e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010897e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071199e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027912e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081204e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070611e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013306e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069933e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027786e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082588e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.082453e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020630e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071829e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027666e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073583e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071122e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007518e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081941e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032066e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081719e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078719e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018842e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067835e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032684e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068513e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.066272e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015802e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070449e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024749e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079785e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080769e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009817e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083585e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027129e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079546e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078264e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014006e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.113490e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028900e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071990e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026167e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072590e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028894e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071754e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083506e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020561e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070276e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029759e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077440e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072698e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024019e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087586e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034077e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.093714e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083326e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016846e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079166e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027299e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077587e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069064e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006068e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069752e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027621e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067425e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072380e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013421e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082435e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027313e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077250e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083777e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020267e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073461e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024624e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078768e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084280e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013075e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.092976e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030222e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076952e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.081884e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026675e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068239e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027996e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068378e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088799e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016892e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080896e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032319e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071099e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068202e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015323e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072355e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.043399e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074074e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069652e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029475e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088297e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028149e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068871e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080414e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013924e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070021e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031436e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067847e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072606e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023134e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082645e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024786e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084500e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069905e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017266e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075025e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026068e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075871e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071163e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007152e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085707e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.089069e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.763118e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.079885e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.776658e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 5 instance 3 rank 2 
+# Writing gauge field to .conf.t00005.tmp.
+# Constructing LEMON writer for file .conf.t00005.tmp for append = 0
+# Time spent writing 2.36 Mb was 77.8 ms.
+# Writing speed: 30.3 Mb/s (30.3 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00005.tmp:
+#   Calculated            : A = 0xcc59621b B = 0xe3bff36b.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00005.tmp ...
+# Time spent reading 2.36 Mb was 472 us.
+# Reading speed: 5.00 Gb/s (5.00 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00005.tmp:
+#   Calculated            : A = 0xcc59621b B = 0xe3bff36b.
+#   Read from LIME headers: A = 0xcc59621b B = 0xe3bff36b.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00005.tmp to conf.save.
+#
+# Starting trajectory no 6
+# : Time for gauge_heatbath 5.558073e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.104594e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.063792e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079258e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078769e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018748e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086240e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027496e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086069e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080808e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017070e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075082e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029888e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076105e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021589e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069560e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032579e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066358e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083175e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008056e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074986e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029271e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070290e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083103e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.005114e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073170e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030298e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089375e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084197e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010904e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088896e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028336e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082595e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068975e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018013e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080820e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066176e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070619e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.006778e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075790e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025685e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077439e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080075e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009009e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075644e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026701e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072504e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084046e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008280e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085979e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026588e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073079e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078100e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009097e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086388e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027830e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087736e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077437e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015516e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079066e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030055e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079235e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.087057e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020883e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077063e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027300e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082289e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018633e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081578e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.035066e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073533e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069863e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007733e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080851e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034336e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080069e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069629e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033681e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069386e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027766e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071638e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074808e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022521e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068603e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021700e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072728e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075988e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.004067e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081191e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024768e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088021e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078413e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012551e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067480e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025228e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066857e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068395e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024495e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069900e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029013e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.088590e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085501e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027001e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068677e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024703e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065487e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072545e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016516e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078389e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026303e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077722e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080515e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.004383e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074021e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032482e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072796e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067434e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.062101e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076813e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.092760e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.487631e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.031374e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.107907e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 6 instance 3 rank 2 
+# Writing gauge field to .conf.t00006.tmp.
+# Constructing LEMON writer for file .conf.t00006.tmp for append = 0
+# Time spent writing 2.36 Mb was 78.4 ms.
+# Writing speed: 30.1 Mb/s (30.1 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00006.tmp:
+#   Calculated            : A = 0x4cf2b1a4 B = 0x6b0d6fd5.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00006.tmp ...
+# Time spent reading 2.36 Mb was 486 us.
+# Reading speed: 4.86 Gb/s (4.86 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00006.tmp:
+#   Calculated            : A = 0x4cf2b1a4 B = 0x6b0d6fd5.
+#   Read from LIME headers: A = 0x4cf2b1a4 B = 0x6b0d6fd5.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00006.tmp to conf.save.
+#
+# Starting trajectory no 7
+# : Time for gauge_heatbath 5.162030e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.079038e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.049338e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069888e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019791e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074753e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031591e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067827e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071337e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014960e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071062e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032270e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072857e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085891e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.002513e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077044e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030824e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074945e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077698e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011624e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077326e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030738e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077078e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077464e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009973e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067116e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028730e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067733e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073338e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016600e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075216e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025310e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068527e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.079932e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011010e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080503e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025786e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077127e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076266e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012929e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067871e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025362e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070671e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067171e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029030e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073105e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029638e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083908e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.085883e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013155e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069078e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028241e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.064810e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077417e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010175e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071706e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028486e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082722e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.089060e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017004e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076503e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028556e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079157e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.066604e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014946e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070634e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028337e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074003e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069852e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.005745e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077687e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032303e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084542e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075611e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011456e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084679e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028472e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083451e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073893e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.004678e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067504e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029165e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078526e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068417e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.003735e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074622e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025328e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080740e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.081905e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012579e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074792e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.039955e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.090908e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071450e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025796e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067609e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032548e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.066887e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069517e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013748e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072164e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028010e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073040e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078219e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.001682e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084627e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028467e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089929e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.087278e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017918e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.064152e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.034569e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067555e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069841e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018221e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067905e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025567e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070453e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084342e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007122e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079506e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.080309e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.499386e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.019837e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.246275e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 7 instance 3 rank 2 
+# Writing gauge field to .conf.t00007.tmp.
+# Constructing LEMON writer for file .conf.t00007.tmp for append = 0
+# Time spent writing 2.36 Mb was 93.3 ms.
+# Writing speed: 25.3 Mb/s (25.3 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00007.tmp:
+#   Calculated            : A = 0xe04b1af3 B = 0xe9a210ea.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00007.tmp ...
+# Time spent reading 2.36 Mb was 447 us.
+# Reading speed: 5.28 Gb/s (5.28 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00007.tmp:
+#   Calculated            : A = 0xe04b1af3 B = 0xe9a210ea.
+#   Read from LIME headers: A = 0xe04b1af3 B = 0xe9a210ea.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00007.tmp to conf.save.
+#
+# Starting trajectory no 8
+# : Time for gauge_heatbath 5.245591e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.065609e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.069050e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069868e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.082915e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008494e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079804e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024739e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067366e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086662e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.017049e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070580e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021321e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085199e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068197e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018031e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.477631e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.103749e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073304e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074502e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009515e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079252e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028029e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081404e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.090008e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013390e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086563e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029954e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.090562e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.095709e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021212e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077252e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.038998e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075412e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086327e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.023281e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073483e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030128e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076550e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072281e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015525e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072284e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.040169e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086802e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.094267e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.014690e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070950e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027196e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068495e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.092481e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.020230e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075375e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033903e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073189e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077891e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022531e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072260e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029617e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084323e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071868e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024730e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.090396e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029374e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074807e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.089726e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012503e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.097085e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029526e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.092569e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.094929e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019634e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076572e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026719e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078616e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088525e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007668e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082900e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030498e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082957e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.092822e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018110e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077313e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026272e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.065997e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.087711e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.022501e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076973e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.039028e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067065e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071505e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015759e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072479e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.041656e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.090156e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.081061e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019332e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082762e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030523e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087916e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.089253e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021888e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089204e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028524e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069607e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.075455e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021308e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072434e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.035303e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070992e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.083203e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030357e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074340e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027667e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078512e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078105e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011929e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086293e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029471e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087368e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.088023e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021701e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075366e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.132400e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.564604e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.089428e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.349132e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 8 instance 3 rank 2 
+# Writing gauge field to .conf.t00008.tmp.
+# Constructing LEMON writer for file .conf.t00008.tmp for append = 0
+# Time spent writing 2.36 Mb was 127 ms.
+# Writing speed: 18.6 Mb/s (18.6 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00008.tmp:
+#   Calculated            : A = 0xaef44ead B = 0x41a4f32b.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00008.tmp ...
+# Time spent reading 2.36 Mb was 473 us.
+# Reading speed: 4.98 Gb/s (4.98 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00008.tmp:
+#   Calculated            : A = 0xaef44ead B = 0x41a4f32b.
+#   Read from LIME headers: A = 0xaef44ead B = 0x41a4f32b.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00008.tmp to conf.save.
+#
+# Starting trajectory no 9
+# : Time for gauge_heatbath 5.232271e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_heatbath
+# : Time for gauge_derivative 2.081660e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.065012e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080994e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.077452e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021093e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076788e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031338e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072915e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069091e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.015701e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077604e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030353e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078670e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084106e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021438e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069561e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.037802e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069343e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.078789e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.021263e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074053e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031334e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084870e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.068834e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.008980e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077747e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028941e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070073e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070193e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026308e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069705e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.026369e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.074411e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.074501e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.013454e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084494e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030214e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078598e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070702e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.009771e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081967e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.045125e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085080e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086119e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.011185e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.110057e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028370e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.076782e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071397e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018498e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069455e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030530e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068139e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.076184e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025002e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.081502e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029409e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.084254e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.089386e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.019827e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072677e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.032376e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067730e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.070245e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016965e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.072169e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.029695e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083042e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.072828e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.012640e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078250e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.027866e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.077291e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.084943e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.016343e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.086348e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.033485e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.085539e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.073145e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007821e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.087795e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.043467e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.075911e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086372e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018699e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067349e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.031763e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067631e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.086342e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.025691e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.080250e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.037425e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.067697e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071533e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.007267e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.078131e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028412e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.079161e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.080552e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.010216e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.082069e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030114e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.083576e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.067954e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030168e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.069409e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.030075e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.073774e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.071473e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.018650e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.070751e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028399e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.089235e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069918e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.035457e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068521e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.024778e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.071943e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_derivative 2.069937e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for update_gauge 1.028110e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/update_gauge
+# : Time for gauge_derivative 2.068708e-02 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_derivative
+# : Time for gauge_acc 5.159890e-03 s level: 2 proc_id: 0 /HMC/ptbc_update_tm/GAUGE:gauge_acc
+# Trajectory is accepted.
+# inst3: Time for ptbc_update_tm 2.559468e+00 s level: 1 proc_id: 0 /HMC/ptbc_update_tm
+# inst3: Time for ptbc_swap_dh 1.033422e-02 s level: 2 proc_id: 0 /HMC/ptbc_swap/ptbc_swap_dh
+# inst3: Time for ptbc_swap 3.184041e-02 s level: 1 proc_id: 0 /HMC/ptbc_swap
+
+I am step 9 instance 3 rank 2 
+# Writing gauge field to .conf.t00009.tmp.
+# Constructing LEMON writer for file .conf.t00009.tmp for append = 0
+# Time spent writing 2.36 Mb was 61.1 ms.
+# Writing speed: 38.6 Mb/s (38.6 Mb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00009.tmp:
+#   Calculated            : A = 0xdcc5ac21 B = 0xfb115aca.
+# Write completed, verifying write...
+# Constructing LEMON reader for file .conf.t00009.tmp ...
+# Time spent reading 2.36 Mb was 501 us.
+# Reading speed: 4.71 Gb/s (4.71 Gb/s per MPI process).
+# Scidac checksums for gaugefield .conf.t00009.tmp:
+#   Calculated            : A = 0xdcc5ac21 B = 0xfb115aca.
+#   Read from LIME headers: A = 0xdcc5ac21 B = 0xfb115aca.
+# Reading ildg-format record:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Input parameters:
+#   Precision = 64 bits (double).
+#   Lattice size: LX = 8, LY = 8, LZ = 8, LT = 8.
+# Write successfully verified.
+# Renaming .conf.t00009.tmp to conf.save.
+# Acceptance rate was 100.00 percent, 10 out of 10 trajectories accepted.
+# : Time for HMC 2.970926e+01 s level: 0 proc_id: 0 /HMC
