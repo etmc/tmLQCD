@@ -321,7 +321,8 @@ void write_ptbc_rng_state(void) {
 bool static read_ptbc_rng_state(void) {
   FILE *fp = fopen(PTBC_RNG_STATE_FILE, "r");
   if (fp == NULL) return false;  // fresh start: seed from ptbc.seed instead
-
+  else printf("Restoring PTBC RNG state from %s\n", PTBC_RNG_STATE_FILE);
+  
   int state[PTBC_RNG_STATE_SIZE];
   for (int i = 0; i < PTBC_RNG_STATE_SIZE; i++) {
     if (fscanf(fp, "%d", &state[i]) != 1) {
