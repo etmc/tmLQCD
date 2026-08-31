@@ -1,0 +1,140 @@
+name: basic-build
+
+on: [push]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # handling of environment variable: https://stackoverflow.com/a/57969570
+      - name: lscpu
+        if: ${{ always() }}
+        run: |
+          lscpu; \
+          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: gcc_version
+        if: ${{ always() }}
+        run: gcc --version
+
+      - name: echo_nb_cores
+        if: ${{ always() }}
+        run: echo "Number of cores ${nb_cores}"
+
+      - name: get_packages
+        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
+
+      - name: mpicc_version
+        if: ${{ always() }}
+        run: mpicc --version
+
+      - name: get_lime
+        uses: actions/checkout@v6
+        with:
+          repository: usqcd-software/c-lime
+          path: lime
+
+      - name: create_builddir_lime
+        working-directory: ${{github.workspace}}/lime
+        run: mkdir build
+
+      - name: build_lime
+        working-directory: ${{github.workspace}}/lime/build
+        run: |
+          CC=gcc \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir .. >> config.log
+          make -j
+          make install
+
+      - name: Archive lime config.log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: lime_config_output
+          path: ${{github.workspace}}/lime/build/config.log 
+
+      - name: get_lemon
+        uses: actions/checkout@v6
+        with:
+          repository: etmc/lemon
+          path: lemon
+
+      - name: create_builddir_lemon
+        working-directory: ${{github.workspace}}/lemon
+        run: |
+          mkdir build
+
+      - name: build_lemon
+        working-directory: ${{github.workspace}}/lemon/build
+        run: |
+          CC=mpicc \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir ..
+          make -j
+          make install > config.log
+      
+      - name: Archive lemon config.log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: lemon_config_output
+          path: ${{github.workspace}}/lemon/build/config.log 
+
+      - name: get_tmlqcd
+        uses: actions/checkout@v6
+        with:
+          path: main
+
+      - name: create_builddir
+        shell: bash
+        run: mkdir ${{github.workspace}}/main/build
+
+      - name: configure_and_build
+        shell: bash
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir" \
+            -DTM_USE_MPI=ON \
+            -DTM_USE_OMP=ON \
+            -DTM_USE_LEMON=ON \
+            .. > config.log
+            cat config.log
+            make -j
+
+      - name: Archive tmLQCD config.log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: tmlqcd_config_output
+          path: ${{github.workspace}}/main/build/config.log 
+      
+      - name: nf2_rgmixedcg_hmc_tmcloverdetratio
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          mpirun -np 4 src/bin/hmc_tm \
+            -f ../doc/sample-input/sample-ptbc.input
+      
+      - name: Archive nf2_rgmixedcg_hmc_tmcloverdetratio output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: tmlqcd_test_output
+          path: ${{github.workspace}}/main/build/instance_*/output.data
+
+      - name: compare_nf2_rgmixedcg_hmc_tmcloverdetratio
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          for id in $(seq 0 1 3); do
+            instdir=instance_$(printf %02d $id)
+            refpath=${{github.workspace}}/main/doc/sample-output/hmc-ptbc/${instdir}
+            numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 ${instdir}/output.data ${refpath}/output.data
+          done
+
+
