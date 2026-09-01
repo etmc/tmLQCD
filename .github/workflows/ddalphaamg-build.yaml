@@ -1,4 +1,4 @@
-name: ddalphaamg-build
+name: ddalphaamg-nf2-hmc-tmclover
 
 on: [push]
 

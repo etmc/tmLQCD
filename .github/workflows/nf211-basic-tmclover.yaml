@@ -1,4 +1,4 @@
-name: basic-build
+name: basic-nf211-hmc-clover
 
 on: [push]
 

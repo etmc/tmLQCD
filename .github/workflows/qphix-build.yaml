@@ -1,4 +1,4 @@
-name: qphix-build
+name: qphix-nf2-hmc-tmclover
 
 on: [push]
 

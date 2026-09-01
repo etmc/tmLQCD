@@ -1,4 +1,4 @@
-name: basic-build
+name: basic-nf2-hmc-tmclover
 
 on: [push]
 
