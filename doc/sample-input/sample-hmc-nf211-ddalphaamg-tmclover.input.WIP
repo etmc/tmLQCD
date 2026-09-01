@@ -15,6 +15,21 @@ thermalisationsweeps = 0
 
 seed=146555
 
+BeginDDalphaAMG
+  MGBlockX = 4
+  MGBlockY = 4
+  MGBlockZ = 4
+  MGBlockT = 4
+  MGSetupIter = 3
+  MGCoarseSetupIter = 3
+  MGNumberOfVectors = 8
+  MGNumberOfLevels = 2
+  MGCoarseMuFactor = 2.0
+  # 1.0 / (2 * 4 + 2) = 0.1
+  MGdtauUpdate = 0.1
+  MGUpdateSetupIter = 1
+EndDDalphaAMG
+
 Startcondition = hot
 InitialStoreCounter = 0
 
@@ -57,7 +72,6 @@ BeginMonomial CLOVERDET
   ForcePrecision = 1.e-24
   Name = cloverdetlight
   solver = ddalphaamg
-#  solver= rgmixedcg
 EndMonomial
 
 BeginMonomial CLOVERDETRATIO
@@ -72,7 +86,6 @@ BeginMonomial CLOVERDETRATIO
   ForcePrecision = 1.e-24
   Name = cloverdetratio1light
   solver = ddalphaamg
-#  solver = rgmixedcg
 EndMonomial
 
 BeginMonomial CLOVERDETRATIO
@@ -87,7 +100,6 @@ BeginMonomial CLOVERDETRATIO
   ForcePrecision = 1.e-24
   Name = cloverdetratio2light
   solver = ddalphaamg
-#  solver = rgmixedcg
 EndMonomial
 
 BeginMonomial NDCLOVERRAT
@@ -106,8 +118,7 @@ BeginMonomial NDCLOVERRAT
   2KappaMuBar = 0.05875149727400
   2KappaEpsBar = 0.04103923289600
   AddTrLog = yes
-  solver = ddalphaamg
-#  solver = cgmmsnd
+  solver = cgmmsnd
   MaxSolverIterations = 5000
 EndMonomial
 
@@ -128,7 +139,6 @@ BeginMonomial NDCLOVERRAT
   2KappaEpsBar = 0.04103923289600
   AddTrLog = no
   solver = ddalphaamg
-#  solver= cgmmsnd
 EndMonomial
 
 BeginMonomial NDCLOVERRATCOR
@@ -145,7 +155,6 @@ BeginMonomial NDCLOVERRATCOR
   2KappaMuBar = 0.05875149727400
   2KappaEpsBar = 0.04103923289600
   solver = ddalphaamg
-#  solver= cgmmsnd
   MaxSolverIterations = 15000
 EndMonomial
 

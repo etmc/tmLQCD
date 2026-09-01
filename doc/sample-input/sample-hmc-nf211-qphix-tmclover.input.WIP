@@ -58,7 +58,6 @@ BeginMonomial CLOVERDET
   Name = cloverdetlight
   useexternalinverter = qphix
   solver = mixedcg
-#  solver = rgmixedcg
   usesloppyprecision = single
   usecompression = 12
 EndMonomial
@@ -76,7 +75,6 @@ BeginMonomial CLOVERDETRATIO
   Name = cloverdetratio1light
   useexternalinverter = qphix
   solver = mixedcg
-#  solver = rgmixedcg
   usesloppyprecision = single
   usecompression = 12
 EndMonomial
@@ -94,7 +92,6 @@ BeginMonomial CLOVERDETRATIO
   Name = cloverdetratio2light
   useexternalinverter = qphix
   solver = mixedcg
-#  solver = rgmixedcg
   usesloppyprecision = single
   usecompression = 12
 EndMonomial
@@ -116,9 +113,7 @@ BeginMonomial NDCLOVERRAT
   2KappaEpsBar = 0.04103923289600
   AddTrLog = yes
   useexternalinverter = qphix
-  solver = mixedcg
-#  solver = cgmmsnd
-  usesloppyprecision = single
+  solver = cgmmsnd
   usecompression = 12
   MaxSolverIterations = 5000
 EndMonomial
@@ -140,9 +135,7 @@ BeginMonomial NDCLOVERRAT
   2KappaEpsBar = 0.04103923289600
   AddTrLog = no
   useexternalinverter = qphix
-  solver = mixedcg
-#  solver= cgmmsnd
-  usesloppyprecision = single
+  solver= cgmmsnd
   usecompression = 12
 EndMonomial
 
@@ -160,9 +153,7 @@ BeginMonomial NDCLOVERRATCOR
   2KappaMuBar = 0.05875149727400
   2KappaEpsBar = 0.04103923289600
   useexternalinverter = qphix
-  solver = mixedcg
-#  solver= cgmmsnd
-  usesloppyprecision = single
+  solver= cgmmsnd
   usecompression = 12
   MaxSolverIterations = 15000
 EndMonomial
@@ -190,7 +181,6 @@ BeginOperator CLOVER
   useevenodd = yes
   useexternalinverter = qphix
   solver = mixedcg
-#  solver = rgmixedcg
   usesloppyprecision = single
   usecompression = 12
   MaxSolverIterations = 5000
