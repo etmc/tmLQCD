@@ -1,4 +1,4 @@
-name: basic-nf211-hmc-tmclover
+name: ddalphaamg-nf211-hmc-tmclover
 
 on: [push]
 
@@ -85,10 +85,19 @@ jobs:
           name: lemon_config_output
           path: ${{github.workspace}}/lemon/build/config.log 
 
-      - name: get_tmlqcd
+      - name: get_ddalphaamg
         uses: actions/checkout@v6
         with:
-          path: main
+          repository: kostrzewa/ddalphaamg
+          ref: fix_main_build
+          path: ddalphaamg
+
+      - name: build_ddalphaamg
+        working-directory: ${{github.workspace}}/ddalphaamg
+        run: |
+          patch Makefile ${{ github.workspace }}/main/.github/patches/DDalphaAMG.patch
+          LIMEDIR=${{github.workspace}}/lime/build/install_dir \
+            make -j
 
       - name: create_builddir
         shell: bash
@@ -101,10 +110,11 @@ jobs:
           CC=mpicc CXX=mpicxx \
           CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
           CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
-          cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir" \
+          cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/ddalphaamg" \
             -DTM_USE_MPI=ON \
             -DTM_USE_OMP=ON \
             -DTM_USE_LEMON=ON \
+            -DTM_USE_DDalphaAMG=ON \
             .. > config.log
             cat config.log
           make -j
@@ -116,23 +126,23 @@ jobs:
           name: tmlqcd_config_output
           path: ${{github.workspace}}/main/build/config.log 
 
-      - name: nf211_hmc_tmclover
+      - name: nf211_ddalphaamg_hmc_tmclover
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 src/bin/hmc_tm \
-            -f ../doc/sample-input/sample-hmc-nf211-tmclover.input
+            -f ../doc/sample-input/sample-hmc-nf211-ddalphaamg-tmclover.input
 
-      - name: Archive nf211_hmc_tmclover output
+      - name: Archive nf211_ddalphaamg_hmc_tmclover output
         if: ${{ always() }}
         uses: actions/upload-artifact@v6
         with:
           name: tmlqcd_test_output
           path: ${{github.workspace}}/main/build/output.data
 
-      - name: compare_nf211_hmc_tmclover
+      - name: compare_nf211_ddalphaamg_hmc_tmclover
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/doc/sample-output/hmc-nf211-tmclover
+          refpath=${{github.workspace}}/main/doc/sample-output/hmc-nf211-ddalphaamg-tmclover
           numdiff -r 1e-4 -X 1:18 -X 1:5-16 -X 2:18 -X 2:5-16 output.data ${refpath}/output.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
