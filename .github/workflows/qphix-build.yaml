@@ -77,7 +77,7 @@ jobs:
             cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir ..
           make -j
           make install > config.log
-      
+
       - name: Archive lemon config.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v6

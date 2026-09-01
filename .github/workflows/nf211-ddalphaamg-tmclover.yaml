@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: get_tmlqcd
+        uses: actions/checkout@v6
+        with:
+          path: main
+
+
       # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
         if: ${{ always() }}
@@ -26,7 +32,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
+        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
 
       - name: mpicc_version
         if: ${{ always() }}
@@ -88,7 +94,7 @@ jobs:
       - name: get_ddalphaamg
         uses: actions/checkout@v6
         with:
-          repository: kostrzewa/ddalphaamg
+          repository: kostrzewa/ddalphaamg #sbacchio/ddalphaamg
           ref: fix_main_build
           path: ddalphaamg
 
@@ -108,6 +114,7 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
+          LDFLAGS="-fopenmp" \
           CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
           CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
           cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/ddalphaamg" \

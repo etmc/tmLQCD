@@ -10,31 +10,27 @@ ompnumthreads=1
 BarrierMonomialsConverge = yes
 
 Measurements = 20
-
-thermalisationsweeps = 0
-
-seed=146555
-
 Startcondition = hot
-InitialStoreCounter = 0
-
 2KappaMu = 0.023801411000
+CSW = 1.7112
+kappa = 0.1400083
+NSave = 10
 2KappaMuBar = 0.05875149727400
 2KappaEpsBar = 0.04103923289600
-CSW = 1.7112
-kappa =    0.1400083
-NSave = 10
 ThetaT = 1.0
 UseEvenOdd = yes
-userelativeprecision=yes
-
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 10
-
+InitialStoreCounter = 0
 DebugLevel = 2
 
-ReproduceRandomNumbers = yes
+userelativeprecision=yes
 RanluxdLevel = 2
+thermalisationsweeps = 0
+
+ReproduceRandomNumbers = yes
+seed=146555
+
 
 BeginMeasurement CORRELATORS
   Frequency = 2
@@ -48,24 +44,24 @@ EndMonomial
 
 BeginMonomial CLOVERDET
   Timescale = 1
-  kappa =    0.1400083
   2KappaMu = 0.023801411000
   CSW = 1.7112
   rho = 0.45
+  kappa = 0.1400083
   MaxSolverIterations = 5000
   AcceptancePrecision =  1.e-26
   ForcePrecision = 1.e-24
   Name = cloverdetlight
-  solver= rgmixedcg
+  solver = rgmixedcg
 EndMonomial
 
 BeginMonomial CLOVERDETRATIO
   Timescale = 1
-  kappa =    0.1400083
   2KappaMu = 0.023801411000
   rho = 0.030
   rho2 = 0.45
   CSW = 1.7112
+  kappa = 0.1400083
   MaxSolverIterations = 1000
   AcceptancePrecision =  1.e-26
   ForcePrecision = 1.e-24
@@ -75,11 +71,11 @@ EndMonomial
 
 BeginMonomial CLOVERDETRATIO
   Timescale = 2
-  kappa =    0.1400083
   2KappaMu = 0.023801411000
   rho = 0.0
   rho2 = 0.030
   CSW = 1.7112
+  kappa = 0.1400083
   MaxSolverIterations = 1000
   AcceptancePrecision =  1.e-26
   ForcePrecision = 1.e-24
@@ -89,7 +85,7 @@ EndMonomial
 
 BeginMonomial NDCLOVERRAT
   Timescale = 1
-  kappa =    0.1400083
+  kappa = 0.1400083
   CSW = 1.7112
   AcceptancePrecision =  1e-26
   ForcePrecision = 1e-24
@@ -109,7 +105,7 @@ EndMonomial
 
 BeginMonomial NDCLOVERRAT
   Timescale = 2
-  kappa =    0.1400083
+  kappa = 0.1400083
   CSW = 1.7112
   AcceptancePrecision =  1e-26
   ForcePrecision = 1e-24
@@ -123,12 +119,12 @@ BeginMonomial NDCLOVERRAT
   2KappaMuBar = 0.05875149727400
   2KappaEpsBar = 0.04103923289600
   AddTrLog = no
-  solver= cgmmsnd
+  solver = cgmmsnd
 EndMonomial
 
 BeginMonomial NDCLOVERRATCOR
   Timescale = 1
-  kappa =    0.1400083
+  kappa = 0.1400083
   CSW = 1.7112
   AcceptancePrecision =  1e-26
   ForcePrecision = 1e-24
@@ -139,7 +135,7 @@ BeginMonomial NDCLOVERRATCOR
   ComputeEVFreq = 0
   2KappaMuBar = 0.05875149727400
   2KappaEpsBar = 0.04103923289600
-  solver= cgmmsnd
+  solver = cgmmsnd
   MaxSolverIterations = 15000
 EndMonomial
 
@@ -151,20 +147,20 @@ BeginIntegrator
   IntegrationSteps1 = 1
   IntegrationSteps2 = 1
   tau = 0.10
-  Lambda0 =  0.19318332750
+  Lambda0 = 0.19318332750
   Lambda1 = 0.194
   Lambda2 = 0.196
-  NumberOfTimescales =  3
+  NumberOfTimescales = 3
   MonitorForces = no
 EndIntegrator
 
 BeginOperator CLOVER
-  CSW = 1.7112
-  kappa =    0.1400083
   2KappaMu = 0.023801411000
+  CSW = 1.7112
+  kappa = 0.1400083
   SolverPrecision = 1e-26
+  MaxSolverIterations = 5000
   useevenodd = yes
   solver = rgmixedcg
-  MaxSolverIterations = 5000
 EndOperator
 
