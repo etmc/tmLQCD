@@ -44,6 +44,7 @@ BeginDDalphaAMG
   # 1.0 / (2 * 4 + 2) = 0.1
   MGdtauUpdate = 0.1
   MGUpdateSetupIter = 1
+  MGNumberOfShifts = 2
 EndDDalphaAMG
 
 BeginMeasurement CORRELATORS
