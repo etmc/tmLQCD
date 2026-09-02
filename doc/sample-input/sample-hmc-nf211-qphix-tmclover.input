@@ -31,6 +31,27 @@ thermalisationsweeps = 0
 ReproduceRandomNumbers = yes
 seed=146555
 
+BeginExternalInverter QPHIX
+  # physical cores per MPI task
+  NCores = 1
+  
+  # block sizes (see qphix papers for details)
+  By = 4
+  Bz = 4
+
+  # minimum number of time slices per thread
+  MinCt = 1
+  
+  # thread geometry
+  # ompnumthreads = Ncores * Sy * Sz
+  # hyperthreads (if used) should be specified here
+  Sy = 1
+  Sz = 1
+  
+  # paddings in XY and XYZ blocks
+  PadXY = 0
+  PadXYZ = 0
+EndExternalInverter
 
 BeginMeasurement CORRELATORS
   Frequency = 2
