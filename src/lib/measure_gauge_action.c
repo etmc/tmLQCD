@@ -41,7 +41,7 @@
 #include "su3adj.h"
 #include "ptbc.h"
 
-double measure_plaquette(const su3 *const *const gf) {
+double measure_plaquette(const su3 *const *const gf, int const apply_ptbc) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -77,11 +77,11 @@ double measure_plaquette(const su3 *const *const gf) {
           // local parallel tempering factor: fac_1 * fac_2 * fac_3 * fac_4.
           // ix1 = ix + e_mu1 and ix2 = ix + e_mu2 may be halo sites, so the
           // coefficients are addressed by displacement from the local site ix.
-          double const ptbc_fac = ptbc_coeff0(ix,          mu1)
-                                * ptbc_coeff1(ix, mu1,  1, mu2)
-                                * ptbc_coeff0(ix,          mu2)
-                                * ptbc_coeff1(ix, mu2,  1, mu1);
-          //double const ptbc_fac = 1.;
+          double const ptbc_fac = apply_ptbc ? (ptbc_coeff0(ix,          mu1)
+                                              * ptbc_coeff1(ix, mu1,  1, mu2)
+                                              * ptbc_coeff0(ix,          mu2)
+                                              * ptbc_coeff1(ix, mu2,  1, mu1))
+                                             : 1.0;
           _trace_su3_times_su3d(ac, pr1, pr2);
           tr = ac*ptbc_fac + kc;
           ts = tr + ks;
@@ -111,7 +111,8 @@ double measure_plaquette(const su3 *const *const gf) {
   return res;
 }
 
-double measure_gauge_action(const su3 *const *const gf, const double lambda) {
+double measure_gauge_action(const su3 *const *const gf, const double lambda,
+                            int const apply_ptbc) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -146,10 +147,11 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
         _su3_times_su3(pr2, *v, *w);
         // parallel tempering factor = fac_1 * fac_2 * fac_3 * fac_4.
         // ix1 = ix + e_0, ix2 = ix + e_mu2 (either may be a halo site)
-        double const ptbc_fac = ptbc_coeff0(ix,         0)
-                              * ptbc_coeff1(ix, 0,   1, mu2)
-                              * ptbc_coeff0(ix,         mu2)
-                              * ptbc_coeff1(ix, mu2, 1, 0);
+        double const ptbc_fac = apply_ptbc ? (ptbc_coeff0(ix,         0)
+                                            * ptbc_coeff1(ix, 0,   1, mu2)
+                                            * ptbc_coeff0(ix,         mu2)
+                                            * ptbc_coeff1(ix, mu2, 1, 0))
+                                           : 1.0;
         _trace_su3_times_su3d(ac, pr1, pr2);
         ac *= (1 + lambda);
         tr = ac*ptbc_fac + kc;
@@ -162,7 +164,7 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
       // magnetic part
       for (int mu1 = 1; mu1 < 3; mu1++) {
         ix1 = g_iup[ix][mu1];
-        double const ptbc_fac1 = ptbc_coeff0(ix, mu1);
+        double const ptbc_fac1 = apply_ptbc ? ptbc_coeff0(ix, mu1) : 1.0;
         for (int mu2 = mu1 + 1; mu2 < 4; mu2++) {
           ix2 = g_iup[ix][mu2];
           v = &gf[ix][mu1];
@@ -172,9 +174,10 @@ double measure_gauge_action(const su3 *const *const gf, const double lambda) {
           w = &gf[ix2][mu1];
           _su3_times_su3(pr2, *v, *w);
           // ix1 = ix + e_mu1, ix2 = ix + e_mu2 (either may be a halo site)
-          double const ptbc_fac2 = ptbc_coeff1(ix, mu1, 1, mu2)
-                                 * ptbc_coeff0(ix,        mu2)
-                                 * ptbc_coeff1(ix, mu2, 1, mu1);
+          double const ptbc_fac2 = apply_ptbc ? (ptbc_coeff1(ix, mu1, 1, mu2)
+                                               * ptbc_coeff0(ix,        mu2)
+                                               * ptbc_coeff1(ix, mu2, 1, mu1))
+                                              : 1.0;
           _trace_su3_times_su3d(ac, pr1, pr2);
           //ac *= (1 - lambda);
           tr = ac*(1 - lambda)*(ptbc_fac2*ptbc_fac1) + kc;

@@ -47,7 +47,7 @@
 #include "su3adj.h"
 #include "ptbc.h"
 
-double measure_rectangles(const su3 **const gf) {
+double measure_rectangles(const su3 **const gf, int const apply_ptbc) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -88,9 +88,10 @@ double measure_rectangles(const su3 **const gf) {
             v = &gf[k][nu];
             _su3_times_su3(pr1, tmp, *v);
             // j = i + e_mu, k = i + e_mu + e_nu (either may be a halo site)
-            double const ptbc_fac0 = ptbc_coeff0(i,              mu)
-                                   * ptbc_coeff1(i, mu, 1,       nu)
-                                   * ptbc_coeff2(i, mu, 1, nu, 1, nu);
+            double const ptbc_fac0 = apply_ptbc ? (ptbc_coeff0(i,              mu)
+                                                 * ptbc_coeff1(i, mu, 1,       nu)
+                                                 * ptbc_coeff2(i, mu, 1, nu, 1, nu))
+                                                : 1.0;
             /*
               ->
               ^
@@ -106,9 +107,10 @@ double measure_rectangles(const su3 **const gf) {
             v = &gf[k][mu];
             _su3_times_su3(pr2, tmp, *v);
             // j = i + e_nu, k = i + 2*e_nu (either may be a halo site)
-            double const ptbc_fac1 = ptbc_coeff0(i,        nu)
-                                   * ptbc_coeff1(i, nu, 1, nu)
-                                   * ptbc_coeff1(i, nu, 2, mu);
+            double const ptbc_fac1 = apply_ptbc ? (ptbc_coeff0(i,        nu)
+                                                 * ptbc_coeff1(i, nu, 1, nu)
+                                                 * ptbc_coeff1(i, nu, 2, mu))
+                                                : 1.0;
 
             /* Trace it */
             _trace_su3_times_su3d(ac, pr1, pr2);
