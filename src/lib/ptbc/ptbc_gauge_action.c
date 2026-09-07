@@ -65,9 +65,9 @@ static int gauge_mnl_id(void) {
  */
 static double ptbc_gauge_action(void) {
   monomial const *mnl = &monomial_list[gauge_mnl_id()];
-  double s = g_beta * (mnl->c0 * measure_gauge_action((const su3 **)g_gauge_field, mnl->glambda));
+  double s = g_beta * (mnl->c0 * measure_gauge_action((const su3 **)g_gauge_field, mnl->glambda, 1));
   if (mnl->use_rectangles) {
-    s += g_beta * (mnl->c1 * measure_rectangles((const su3 **)g_gauge_field));
+    s += g_beta * (mnl->c1 * measure_rectangles((const su3 **)g_gauge_field, 1));
   }
   return s;
 }
