@@ -62,6 +62,17 @@ typedef enum strategy_t {
    UP_DOWN = 1,
 } strategy_t;
 
+/**
+ * @brief      The rank topology struct
+ */
+typedef struct {
+    int number_of_nodes;    // total number of nodes in the job
+    int number_of_ranks;    // total number of processes in the job, i.e. size of the world communicator
+    int ranks_per_node;     // number of ranks per node
+    int node_index;         // index enumerating the node (unique per node)
+    int node_rank;          // rank number inside the node
+} RankTopology;
+
 
 typedef struct {
     MPI_Comm comm;          // MPI instance communicator
@@ -72,8 +83,6 @@ typedef struct {
 
 typedef struct {
     bool active;        // Whether the defect is active or not
-    //int Ld[3];          // Extents of the defect
-    //direction_t along;  // Along which dimension
     int pos[4];          // Position of the defect
     int Ld[4];           // Extent of the defect
 } PTBCDefect;
@@ -101,10 +110,10 @@ typedef struct {
     void (*initialize)(void);                   // PTBC algorithm initializer
 } PTBCContext;
 
-
 typedef struct {
     MPIContext mpi;     // MPI context
     PTBCContext ptbc;   // PTBC context
+    RankTopology topo;  // Rank topology, relevant for GPU assignment
 } AppContext;
 
 

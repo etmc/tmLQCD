@@ -157,9 +157,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_plaquette((const su3 **)hf.gaugefield);
+    new_plaquette_energy = measure_plaquette((const su3 **)hf.gaugefield, 0);
     if (g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_rectangle_energy = measure_rectangles((const su3 **)hf.gaugefield);
+      new_rectangle_energy = measure_rectangles((const su3 **)hf.gaugefield, 0);
     }
   }
   if (g_proc_id == 0 && g_debug_level > 3)

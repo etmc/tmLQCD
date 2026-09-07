@@ -221,7 +221,7 @@ int tmLQCD_read_gauge(const int nconfig) {
 #endif
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
 
-  double plaquette = measure_plaquette((const su3** const)g_gauge_field) / (6. * VOLUME * g_nproc);
+  double plaquette = measure_plaquette((const su3** const)g_gauge_field, 0) / (6. * VOLUME * g_nproc);
   if (g_cart_id == 0) {
     printf("# The computed plaquette value is %.16e.\n", plaquette);
   }

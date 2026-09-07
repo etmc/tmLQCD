@@ -43,7 +43,6 @@
 #include "gradient_flow.h"
 #include "matrix_utils.h"
 #include "meas/field_strength_types.h"
-#include "ptbc.h"
 #include "meas/measurements.h"
 #include "measure_clover_field_strength_observables.h"
 #include "measure_gauge_action.h"
@@ -88,15 +87,16 @@ void step_gradient_flow(su3 **x0, su3 **x1, su3 **x2, su3 **z, const unsigned in
         for (int mu = 0; mu < 4; ++mu) {
           su3 ALIGN z_tmp;
           su3 ALIGN w, w1;
-          get_staples(&w1, x, mu, (const su3 **)fields[f]);
+          // The flow is driven by the *plain* Wilson action, not by the PTBC-defected one
+          // that the ensemble is sampled with: the Wilson flow is a fixed smoothing
+          // definition (t0, w0 and t^2<E> are all defined with respect to it), so it must
+          // be the same operator on every replica for the flowed observables to be
+          // comparable. It also matches the unweighted clover observables measured below.
+          // On the periodic replica all coefficients are 1, so this is a no-op there.
+          get_staples(&w1, x, mu, (const su3 **)fields[f], 0);
           // usually we dagger the staples, but the sign convention seems to require this
           _su3_times_su3d(z_tmp, w1, fields[f][x][mu]);
           project_traceless_antiherm(&z_tmp);
-          /* apply the PTBC weight */
-          double const c_self = ptbc_coeff0(x, mu);
-          if (c_self != 1.0) {
-            _real_times_su3(z_tmp, c_self, z_tmp);
-          }
 
           // implementing the Iwasaki, Symanzik or DBW2 flow from here should be a trivial extension
           // but it will require adding some (more) parameters and making sure that g_dbw2rand
@@ -193,7 +193,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
 
     measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[2]);
-    P[2] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
+    P[2] = measure_plaquette((const su3 *const *const)vt.field, 0) / (6.0 * VOLUME * g_nproc);
 
     while (t[1] < tmax) {
       t[0] = t[2];
@@ -204,7 +204,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         t[step] = t[step - 1] + eps;
         step_gradient_flow(vt.field, x1.field, x2.field, z.field, 0, eps);
         measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[step]);
-        P[step] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
+        P[step] = measure_plaquette((const su3 *const *const)vt.field, 0) / (6.0 * VOLUME * g_nproc);
       }
       W = t[1] * t[1] * (2 * fso[1].E + t[1] * ((fso[2].E - fso[0].E) / (2 * eps)));
       tsqE = t[1] * t[1] * fso[1].E;

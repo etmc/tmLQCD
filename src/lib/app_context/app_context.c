@@ -36,18 +36,6 @@
 
 
 /**
- * @brief      The rank topology struct
- */
-typedef struct {
-    int number_of_nodes;    // total number of nodes in the job
-    int number_of_ranks;    // total number of processes in the job, i.e. size of the world communicator
-    int ranks_per_node;     // number of ranks per node
-    int node_index;         // index enumerating the node (unique per node)
-    int node_rank;          // rank number inside the node
-} RankTopology;
-
-
-/**
  * @brief      Gracefully error with function name, file and line number along
  *             the error message
  *
@@ -139,6 +127,8 @@ static RankTopology get_topology(void)
 
     topo.ranks_per_node = topo.number_of_ranks/topo.number_of_nodes;
 
+    MPI_Comm_free(&node_comm);
+    if (is_leader) MPI_Comm_free(&leader_comm);
     return topo;
 }
 
@@ -155,12 +145,13 @@ static void initialize(void)
     err(!flag, "Initialize has to be called *after* MPI_Init().");
 
     MPI_Comm_rank(app_instance.mpi.world_comm, &app_instance.mpi.world_rank);
-
+    app_instance.topo = get_topology();
+    
     // do nothing in case of a single chain
     if (app_instance.ptbc.n_instances == 1) return;
 
     app_instance.ptbc.active = true;
-    RankTopology topo = get_topology();
+    RankTopology const topo = app_instance.topo;
 
     int instance_size = topo.number_of_ranks / app_instance.ptbc.n_instances;
 
@@ -247,9 +238,8 @@ static void initialize(void)
     chdir(subdir);
 
     // Only the leader of each instance keeps a log, at instance_xx/hmc.log. Every other rank
-    // sends stdout to /dev/null: their output duplicates the leader's, and anything that must
-    // survive goes to stderr (fatal_error included), which is never redirected.
-    // NB: g_proc_id is not usable here. It is still the world rank at this point and is only
+    // sends stdout to /dev/null.
+    // Note: g_proc_id is not usable here. It is still the world rank at this point and is only
     // reset to the instance-local rank later, in tmlqcd_mpi_init(). Use instance_rank.
     char const *logfile = (instance_rank == 0) ? "hmc.log" : "/dev/null";
     err(freopen(logfile, "w", stdout) == NULL, "Could not reopen stdout on the instance logfile");
