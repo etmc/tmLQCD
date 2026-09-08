@@ -1,4 +1,4 @@
-name: qphix-build
+name: qphix-nf211-hmc-tmclover
 
 on: [push]
 
@@ -77,7 +77,7 @@ jobs:
             cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir ..
           make -j
           make install > config.log
-      
+
       - name: Archive lemon config.log
         if: ${{ always() }}
         uses: actions/upload-artifact@v6
@@ -170,6 +170,8 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
+          #CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+          #CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
           cmake -DCMAKE_PREFIX_PATH="${{github.workspace}}/lime/build/install_dir;${{github.workspace}}/lemon/build/install_dir;${{github.workspace}}/qmp/build/install_dir;${{github.workspace}}/qphix/build/install_dir" \
            -DTM_USE_MPI=ON \
            -DTM_USE_OMP=ON \
@@ -179,8 +181,9 @@ jobs:
            -DCMAKE_C_FLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
            -DQPHIX_DIR="${{github.workspace}}/qphix/build/install_dir" \
            -DQMP_DIR="${{github.workspace}}/qmp/build/install_dir" \
-            ..
-          make -j > config.log
+            .. > config.log
+          cat config.log
+          make -j
 
       - name: Archive tmLQCD config.log
         if: ${{ always() }}
@@ -189,13 +192,13 @@ jobs:
           name: tmlqcd_config_output
           path: ${{github.workspace}}/main/build/config.log 
 
-      - name: nf2_qphix_hmc_tmcloverdetratio
+      - name: nf211_qphix_hmc_tmclover
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 src/bin/hmc_tm \
-            -f ../doc/sample-input/sample-hmc-qphix-tmcloverdetratio.input
+            -f ../doc/sample-input/sample-hmc-nf211-qphix-tmclover.input
 
-      - name: Archive nf2_qphix_hmc_tmcloverdetratio output
+      - name: Archive nf211_qphix_hmc_tmclover output
         if: ${{ always() }}
         uses: actions/upload-artifact@v6
         with:
@@ -203,13 +206,13 @@ jobs:
           path: ${{github.workspace}}/main/build/output.data
 
 
-      - name: compare_nf2_qphix_hmc_tmcloverdetratio
+      - name: compare_nf211_qphix_hmc_tmclover
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/doc/sample-output/hmc-qphix-tmcloverdetratio
-          numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
+          refpath=${{github.workspace}}/main/doc/sample-output/hmc-nf211-qphix-tmclover
+          numdiff -r 1e-4 -X 1:18 -X 1:5-16 -X 2:18 -X 2:5-16 output.data ${refpath}/output.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
-            numdiff -r 1e-4 ${f} ${refpath}/${f}; \
+            numdiff -r 1e-5 ${f} ${refpath}/${f}; \
           done
 
