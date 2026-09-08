@@ -69,10 +69,10 @@ foreach(
   ROCM_PREFIX
   CRAY_ROCM_DIR
   ROCM_PATH)
-  if($ENV{${__var}})
-    list(APPEND CMAKE_PREFIX_PATH $ENV{__var})
+  if(DEFINED ENV{${__var}})
+    list(APPEND CMAKE_PREFIX_PATH $ENV{${__var}})
     set(ROCM_PATH
-        $ENV{__var}
+        $ENV{${__var}}
         CACHE PATH "Path to ROCm installation")
   endif()
 endforeach()
@@ -102,6 +102,7 @@ option(TM_USE_HALFSPINOR "Use a Dirac Op. with halfspinor exchange" ON)
 option(TM_USE_QPHIX "Enable QPhiX" OFF)
 option(TM_USE_SHMEM "Use shmem API" OFF)
 option(TM_USE_QUDA "Enable QUDA support" OFF)
+option(TM_USE_HDF5 "Enable HDF5 support" OFF)
 option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
 option(TM_ENABLE_TESTS "Enable tests" OFF)
 set(TM_QPHIX_SOALEN
@@ -115,18 +116,30 @@ cmake_dependent_option(
   TM_NONBLOCKING_MPI "Use non-blocking MPI calls for spinor and gauge" ON
   "TM_USE_MPI" OFF)
 
-# need to do it properly. Just a place holder
-cmake_dependent_option(
-  TM_MPI_DIMENSION "Use n dimensional parallelisation [default=4]" 4
-  "TM_USE_MPI" OFF)
+# cmake_dependent_option always creates a BOOL cache variable, but this setting
+# is string-valued (compared against "1".."4","X","XY","XYZ" below), so it must
+# be declared as a plain STRING cache variable instead.
+set(TM_MPI_DIMENSION
+    "4"
+    CACHE STRING "Use n dimensional parallelisation [default=4]")
+set_property(
+  CACHE TM_MPI_DIMENSION
+  PROPERTY STRINGS
+           "1"
+           "2"
+           "3"
+           "4"
+           "X"
+           "XY"
+           "XYZ")
 
 # HIP dependent options
 cmake_dependent_option(TM_USE_CUDA_HIP "Enable CUDA support in HIP" OFF
                        "TM_USE_HIP" OFF)
 
 # clime and lemon depend on MPI
-cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF "TM_USE_MPI"
-                       ON)
+cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" ON "TM_USE_MPI"
+                       OFF)
 
 # GPU dependent options
 cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
@@ -149,8 +162,8 @@ cmake_dependent_option(DDalphaAMG_ENABLE_TRACK_RES "Enable track res support"
                        ON "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
-  DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI OFF
-  "Enable paramount output support" OFF "TM_USE_DDalphaAMG" OFF)
+  DDalphaAMG_ENABLE_SINGLE_ALLREDUCE_ARNOLDI
+  "Enable single all-reduce Arnoldi support" OFF "TM_USE_DDalphaAMG" OFF)
 
 cmake_dependent_option(
   DDalphaAMG_ENABLE_COARSE_RES "Enable paramount output support" OFF
@@ -261,13 +274,13 @@ if(TM_USE_QUDA)
 endif()
 
 if(TM_USE_SHMEM)
-  message(INFO "SHMEM needs to be included")
+  message(STATUS "SHMEM needs to be included")
 endif()
 
 if(TM_USE_CUDA AND TM_USE_HIP)
   message(
-    ERROR
-    "HIP and CUDA are mutually exclusive. Please choose one GPU support only")
+    FATAL_ERROR
+      "HIP and CUDA are mutually exclusive. Please choose one GPU support only")
 endif()
 
 if(TM_USE_CUDA OR QUDA_TARGET_CUDA)
@@ -399,6 +412,7 @@ endif()
 configure_file(cmake/git_hash.c.in git_hash.c @ONLY)
 add_subdirectory(src/lib)
 add_subdirectory(src/bin)
+add_subdirectory(tests)
 
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}/tmLQCDConfigVersion.cmake"
