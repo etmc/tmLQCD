@@ -125,7 +125,7 @@ cmake_dependent_option(TM_USE_CUDA_HIP "Enable CUDA support in HIP" OFF
                        "TM_USE_HIP" OFF)
 
 # clime and lemon depend on MPI
-cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF "TM_USE_MPI"
+cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" ON "TM_USE_MPI"
                        ON)
 
 # GPU dependent options
