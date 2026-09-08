@@ -5,8 +5,6 @@ NrXProcs = 1
 NrYProcs = 1
 NrZprocs = 1
 
-ompnumthreads=1
-
 BarrierMonomialsConverge = yes
 
 Measurements = 20
@@ -43,7 +41,6 @@ BeginExternalInverter QPHIX
   MinCt = 1
   
   # thread geometry
-  # ompnumthreads = Ncores * Sy * Sz
   # hyperthreads (if used) should be specified here
   Sy = 1
   Sz = 1

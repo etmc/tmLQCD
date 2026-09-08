@@ -22,9 +22,9 @@
  *   g_omp_acc_re
  *   g_omp_acc_cp
  *
- * have as many elements as there are threads (set by ompnumthreads input parameter,
- * stored in omp_num_threads configuration variable). They are initialiazed
- * upon program launch and serve to hold thread-local values over the boundaries
+ * have as many elements as there are threads, stored in omp_num_threads 
+ * configuration variable). They are initialiazed upon program launch and 
+ * serve to hold thread-local values over the boundaries
  * of parallel sections, such as for Kahan summations. _re is of type
  * "double" while _cp is of type "_Complex double". They are declared in global.h */
 
