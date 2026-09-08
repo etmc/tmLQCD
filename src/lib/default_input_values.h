@@ -188,7 +188,7 @@
 #define _default_MDPolyDetRatio 0
 
 /* default OpenMP values */
-#define _default_omp_num_threads 0
+#define _default_omp_num_threads 1
 
 /* default mixed precision solver values */
 #define _default_mixcg_innereps 5.0e-5
