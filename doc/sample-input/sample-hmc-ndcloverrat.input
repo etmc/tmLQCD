@@ -17,7 +17,6 @@ ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 InitialStoreCounter = 0
 DebugLevel = 1
-# OmpNumThreads = 1
 ReproduceRandomNumbers = yes
 
 BeginMeasurement CORRELATORS
