@@ -721,7 +721,7 @@ void _loadGaugeQuda(const CompressionType compression) {
     }
   }
 
-  if (check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0,
+  if (check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, 0,
                              &gauge_param)) {
     return;
   } else {
@@ -739,7 +739,7 @@ void _loadGaugeQuda(const CompressionType compression) {
   loadGaugeQuda((void *)gauge_quda, &gauge_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, 0, &gauge_param);
 }
 
 void _saveGaugeQuda(su3 **gaugefield, const int savegaugetype, const CompressionType compression) {

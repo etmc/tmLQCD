@@ -87,12 +87,7 @@ void step_gradient_flow(su3 **x0, su3 **x1, su3 **x2, su3 **z, const unsigned in
         for (int mu = 0; mu < 4; ++mu) {
           su3 ALIGN z_tmp;
           su3 ALIGN w, w1;
-          // The flow is driven by the *plain* Wilson action, not by the PTBC-defected one
-          // that the ensemble is sampled with: the Wilson flow is a fixed smoothing
-          // definition (t0, w0 and t^2<E> are all defined with respect to it), so it must
-          // be the same operator on every replica for the flowed observables to be
-          // comparable. It also matches the unweighted clover observables measured below.
-          // On the periodic replica all coefficients are 1, so this is a no-op there.
+          
           get_staples(&w1, x, mu, (const su3 **)fields[f], 0);
           // usually we dagger the staples, but the sign convention seems to require this
           _su3_times_su3d(z_tmp, w1, fields[f][x][mu]);
