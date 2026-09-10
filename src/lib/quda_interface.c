@@ -120,6 +120,7 @@
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "tm_debug_printf.h"
+#include "ptbc.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely
@@ -407,6 +408,30 @@ void _initQuda() {
                     "# TM_QUDA: Setting environment variable QUDA_ENABLE_PINNED_MEMORY_POOL=0\n");
   }
 
+  // if multiple instances per node, rotate device id
+  // initQuda(id) does not work because initommsGridQuda still computes a gpuid starting 0 in quda 
+  // the gpuid will be wrong for the second instance if there are 2 instances per node
+/*   if (app()->ptbc.active && app()->ptbc.n_instances > app()->topo.number_of_nodes) {
+    const int n_dev = app()->topo.ranks_per_node;   // assumes one GPU per rank
+    const int base = app()->topo.node_rank;     // rank number is GPU id
+    char devs[256];
+    int off = 0;
+    for (int i = 0; i < n_dev; i++) {
+      int const dev_id = (base + i) % n_dev;
+      if (i > 0) devs[off++] = ',';
+      off += snprintf(devs + off, sizeof(devs) - off, "%d", dev_id);
+    }
+  #ifdef TM_USE_HIP
+    setenv("HIP_VISIBLE_DEVICES", devs, 1);
+  #else
+    setenv("CUDA_VISIBLE_DEVICES", devs, 1);
+  #endif
+
+    tm_debug_printf(0, 0, "# TM_QUDA: Setting CUDA_VISIBLE_DEVICES=%s\n", devs);
+
+  }
+ */
+
   gauge_param = newQudaGaugeParam();
   f_gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
@@ -425,6 +450,8 @@ void _initQuda() {
   int grid[4] = {g_nproc_x, g_nproc_y, g_nproc_z, g_nproc_t};
 #endif
 
+  // give quda the correct communicator, relevant for ptbc
+  setMPICommHandleQuda(&appm()->mpi.comm); 
   initCommsGridQuda(4, grid, commsMap, NULL);
 
   // alloc gauge_quda
@@ -447,7 +474,8 @@ void _initQuda() {
 
   // initialize the QUDA library
 #ifdef TM_USE_MPI
-  initQuda(-1);  // sets device numbers automatically
+  initQuda(app()->topo.node_rank); // set device number to node rank, assumes one GPU per rank
+  //initQuda(-1);  // sets device numbers automatically
 #else
   initQuda(0);  // scalar build: use device 0
 #endif
@@ -494,7 +522,7 @@ void _loadCloverQuda(QudaInvertParam *inv_param) {
   }
 }
 
-void reorder_gauge_toQuda(su3 **gaugefield, const CompressionType compression) {
+void reorder_gauge_toQuda(su3 **gaugefield, const CompressionType compression, const int apply_ptbc) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
@@ -517,8 +545,8 @@ void reorder_gauge_toQuda(su3 **gaugefield, const CompressionType compression) {
             int j = x3 + LZ * x2 + LY * LZ * x1 + LX * LY * LZ * x0;
             int tm_idx = x1 + LX * x2 + LY * LX * x3 + LZ * LY * LX * x0;
 #else
-          int j = x1 + LX * x2 + LY * LX * x3 + LZ * LY * LX * x0;
-          int tm_idx = x3 + LZ * x2 + LY * LZ * x1 + LX * LY * LZ * x0;
+            int j = x1 + LX * x2 + LY * LX * x3 + LZ * LY * LX * x0;
+            int tm_idx = x3 + LZ * x2 + LY * LZ * x1 + LX * LY * LZ * x0;
 #endif
             int oddBit = (x0 + x1 + x2 + x3) & 1;
             int quda_idx = 18 * (oddBit * VOLUME / 2 + j / 2);
@@ -529,11 +557,26 @@ void reorder_gauge_toQuda(su3 **gaugefield, const CompressionType compression) {
             memcpy(&(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][1]), 18 * gSize);
             memcpy(&(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18 * gSize);
 #else
-          memcpy(&(gauge_quda[0][quda_idx]), &(gaugefield[tm_idx][1]), 18 * gSize);
-          memcpy(&(gauge_quda[1][quda_idx]), &(gaugefield[tm_idx][2]), 18 * gSize);
-          memcpy(&(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][3]), 18 * gSize);
-          memcpy(&(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18 * gSize);
+            memcpy(&(gauge_quda[0][quda_idx]), &(gaugefield[tm_idx][1]), 18 * gSize);
+            memcpy(&(gauge_quda[1][quda_idx]), &(gaugefield[tm_idx][2]), 18 * gSize);
+            memcpy(&(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][3]), 18 * gSize);
+            memcpy(&(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18 * gSize);
 #endif
+            if (apply_ptbc) {
+              // gauge_quda[0..3] were filled from gaugefield[tm_idx][1,2,3,0]
+              // ({3,2,1,0} under USE_LZ_LY_LX_T), so ask PTBC for the tmLQCD direction.
+              // The PTBC coefficient is real, so a flat scale of all 18 doubles is c*U.
+#if USE_LZ_LY_LX_T
+              const int tm_dir[4] = {3, 2, 1, 0};
+#else
+              const int tm_dir[4] = {1, 2, 3, 0};
+#endif
+              for (int d = 0; d < 4; d++) {
+                const double c = ptbc_coeff0(tm_idx, tm_dir[d]);
+                if (c != 1.0)
+                  for (int i = 0; i < 18; i++) gauge_quda[d][quda_idx + i] *= c;
+              }
+            }
             if (compression == NO_COMPRESSION && quda_input.fermionbc == TM_QUDA_THETABC) {
               // apply theta boundary conditions if compression is not used
               for (int i = 0; i < 9; i++) {
@@ -678,7 +721,7 @@ void _loadGaugeQuda(const CompressionType compression) {
     }
   }
 
-  if (check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0,
+  if (check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, 0,
                              &gauge_param)) {
     return;
   } else {
@@ -690,13 +733,13 @@ void _loadGaugeQuda(const CompressionType compression) {
     reset_quda_gauge_state(&quda_gauge_state);
   }
 
-  reorder_gauge_toQuda(g_gauge_field, compression);
+  reorder_gauge_toQuda(g_gauge_field, compression, 0);
 
   tm_stopwatch_push(&g_timers, "loadGaugeQuda", "");
   loadGaugeQuda((void *)gauge_quda, &gauge_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, 0, &gauge_param);
 }
 
 void _saveGaugeQuda(su3 **gaugefield, const int savegaugetype, const CompressionType compression) {
@@ -2282,7 +2325,7 @@ int invert_eo_degenerate_quda(spinor *const out, spinor *const in, const double 
           char outname[200];
           snprintf(outname, 200, "conf_mg_refresh_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
           paramsXlfInfo *xlfInfo = construct_paramsXlfInfo(
-              measure_plaquette((const su3 **)g_gauge_field) / (6. * VOLUME * g_nproc), nstore);
+              measure_plaquette((const su3 **)g_gauge_field, 0) / (6. * VOLUME * g_nproc), nstore);
           write_gauge_field(outname, 64, xlfInfo);
           free(xlfInfo);
 
@@ -2542,7 +2585,7 @@ void compute_gauge_derivative_quda(monomial *const mnl, hamiltonian_field_t *con
       loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
   }
 
-  reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
+  reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION, 1);
   // the reordering above overwrites gauge_quda
   // to make sure that things become synchronised again at the
   // next _loadGaugeQuda, we reset the QUDA gauge state here
@@ -2929,20 +2972,20 @@ void quda_mg_tune_params(void *spinorOut, void *spinorIn, const int max_iter) {
     copy_quda_mg_tunable_params(&tunable_params[0], &cur_params);
     print_tunable_params_pair(&cur_params, &tunable_params[0], mg_n_level);
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", "");
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
   }
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   tm_stopwatch_push(&g_timers, "invertQuda", "");
   invertQuda(spinorOut, spinorIn, &inv_param);
   tunable_params[0].tts = inv_param.secs;
   tunable_params[0].iter = inv_param.iter;
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 
   for (i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++) {
     // the best params from all previous iterations
@@ -2987,16 +3030,16 @@ void quda_mg_tune_params(void *spinorOut, void *spinorIn, const int max_iter) {
 
     print_tunable_params_pair(&cur_params, &tunable_params[i], mg_n_level);
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", "");
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 
     tm_stopwatch_push(&g_timers, "invertQuda", "");
     invertQuda(spinorOut, spinorIn, &inv_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 
     tunable_params[i].tts = inv_param.secs;
     tunable_params[i].iter = inv_param.iter;

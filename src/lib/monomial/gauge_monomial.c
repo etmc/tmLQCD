@@ -40,6 +40,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #include "monomial/monomial.h"
+#include "ptbc.h"
 #include "ranlxd.h"
 #include "read_input.h"
 #include "start.h"
@@ -97,14 +98,16 @@ void gauge_derivative(const int id, hamiltonian_field_t *const hf) {
         for (mu = 0; mu < 4; mu++) {
           z = &hf->gaugefield[i][mu];
           xm = &hf->derivative[i][mu];
-          get_staples(&v, i, mu, (const su3 **)hf->gaugefield);
+          // Appply ptbc weight to z
+          double const c_self = ptbc_coeff0(i, mu);
+          get_staples(&v, i, mu, (const su3 **)hf->gaugefield, 1);
           _su3_times_su3d(w, *z, v);
-          _trace_lambda_mul_add_assign((*xm), factor, w);
+          _trace_lambda_mul_add_assign((*xm), factor * c_self, w);
 
           if (mnl->use_rectangles) {
-            get_rectangle_staples(&v, i, mu);
+            get_rectangle_staples(&v, i, mu, 1);
             _su3_times_su3d(w, *z, v);
-            _trace_lambda_mul_add_assign((*xm), factor * mnl->c1 / mnl->c0, w);
+            _trace_lambda_mul_add_assign((*xm), factor * c_self * mnl->c1 / mnl->c0, w);
           }
         }
       }
@@ -143,32 +146,35 @@ void gauge_EMderivative(const int id, hamiltonian_field_t *const hf) {
       // electric part
       z = &hf->gaugefield[i][0];
       xm = &hf->derivative[i][0];
-      get_staples(&v, i, 0, (const su3 **)hf->gaugefield);
+      /* apply ptbc weight to everywhere z appears */
+      double const c_self0 = ptbc_coeff0(i, 0);
+      get_staples(&v, i, 0, (const su3 **)hf->gaugefield, 1);
       _su3_times_su3d(w, *z, v);
-      _trace_lambda_mul_add_assign((*xm), (1. + mnl->glambda) * factor, w);
+      _trace_lambda_mul_add_assign((*xm), (1. + mnl->glambda) * factor * c_self0, w);
       // lambda only acts on the plaquette, effectively changing c0 in the spatial and temporal
       // parts, c1 remains untouched
       if (mnl->use_rectangles) {
-        get_rectangle_staples(&v, i, 0);
+        get_rectangle_staples(&v, i, 0, 1);
         _su3_times_su3d(w, *z, v);
-        _trace_lambda_mul_add_assign((*xm), factor * mnl->c1 / mnl->c0, w);
+        _trace_lambda_mul_add_assign((*xm), factor * c_self0 * mnl->c1 / mnl->c0, w);
       }
       // magnetic part
       for (mu = 1; mu < 4; mu++) {
         z = &hf->gaugefield[i][mu];
         xm = &hf->derivative[i][mu];
+        double const c_self = ptbc_coeff0(i, mu);
 
-        get_spacelike_staples(&v, i, mu, (const su3 **)hf->gaugefield);
+        get_spacelike_staples(&v, i, mu, (const su3 **)hf->gaugefield, 1);
         _su3_times_su3d(w, *z, v);
-        _trace_lambda_mul_add_assign((*xm), (1. - mnl->glambda) * factor, w);
+        _trace_lambda_mul_add_assign((*xm), (1. - mnl->glambda) * factor * c_self, w);
 
-        get_timelike_staples(&v, i, mu, (const su3 **)hf->gaugefield);
+        get_timelike_staples(&v, i, mu, (const su3 **)hf->gaugefield, 1);
         _su3_times_su3d(w, *z, v);
-        _trace_lambda_mul_add_assign((*xm), (1. + mnl->glambda) * factor, w);
+        _trace_lambda_mul_add_assign((*xm), (1. + mnl->glambda) * factor * c_self, w);
         if (mnl->use_rectangles) {
-          get_rectangle_staples(&v, i, mu);
+          get_rectangle_staples(&v, i, mu, 1);
           _su3_times_su3d(w, *z, v);
-          _trace_lambda_mul_add_assign((*xm), factor * mnl->c1 / mnl->c0, w);
+          _trace_lambda_mul_add_assign((*xm), factor * c_self * mnl->c1 / mnl->c0, w);
         }
       }
     }
@@ -187,9 +193,9 @@ void gauge_heatbath(const int id, hamiltonian_field_t *const hf) {
   if (mnl->use_rectangles) mnl->c0 = 1. - 8. * mnl->c1;
 
   mnl->energy0 =
-      g_beta * (mnl->c0 * measure_gauge_action((const su3 **)hf->gaugefield, mnl->glambda));
+      g_beta * (mnl->c0 * measure_gauge_action((const su3 **)hf->gaugefield, mnl->glambda, 1));
   if (mnl->use_rectangles) {
-    mnl->energy0 += g_beta * (mnl->c1 * measure_rectangles((const su3 **)hf->gaugefield));
+    mnl->energy0 += g_beta * (mnl->c1 * measure_rectangles((const su3 **)hf->gaugefield, 1));
   }
   if (g_proc_id == 0) {
     if (g_debug_level > 3) {
@@ -204,9 +210,9 @@ double gauge_acc(const int id, hamiltonian_field_t *const hf) {
   monomial *mnl = &monomial_list[id];
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   mnl->energy1 =
-      g_beta * (mnl->c0 * measure_gauge_action((const su3 **)hf->gaugefield, mnl->glambda));
+      g_beta * (mnl->c0 * measure_gauge_action((const su3 **)hf->gaugefield, mnl->glambda, 1));
   if (mnl->use_rectangles) {
-    mnl->energy1 += g_beta * (mnl->c1 * measure_rectangles((const su3 **)hf->gaugefield));
+    mnl->energy1 += g_beta * (mnl->c1 * measure_rectangles((const su3 **)hf->gaugefield, 1));
   }
   if (g_proc_id == 0) {
     if (g_debug_level > 3) {

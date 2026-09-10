@@ -51,6 +51,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #include "ranlxd.h"
+#include "ranlxs.h"
 #include "start.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
@@ -73,6 +74,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
+#include "ptbc.h"
 
 extern int nstore;
 
@@ -142,6 +144,13 @@ int main(int argc, char *argv[]) {
   NO_OF_SPINORFIELDS_32 = 6;
 
   tmlqcd_mpi_init(argc, argv);
+
+  // initialise ptbc
+  if (app()->ptbc.active) {
+    init_ptbc_tree();
+    if (g_proc_id == 0) print_ptbc_topo();
+  }
+
   tm_stopwatch_push(&g_timers, "HMC", "");
 
   if (nstore == -1) {
@@ -330,9 +339,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+  plaquette_energy = measure_plaquette((const su3 **)g_gauge_field, 0);
   if (g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles((const su3 **)g_gauge_field);
+    rectangle_energy = measure_rectangles((const su3 **)g_gauge_field, 0);
     if (g_proc_id == 0) {
       fprintf(parameterfile, "# Computed rectangle value: %14.12f.\n",
               rectangle_energy / (12. * VOLUME * g_nproc));
@@ -383,9 +392,52 @@ int main(int argc, char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter % return_check_interval == 0);
 
+    int const ptbc_inst_before_update = app()->ptbc.instance_id;
+    tm_stopwatch_push(&g_timers, "ptbc_update_tm", "");
     accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check,
                        trajectory_counter >= Ntherm, trajectory_counter);
+    tm_stopwatch_pop(&g_timers, 0, 1, app()->ptbc.active ? ptbc_timer_tag(ptbc_inst_before_update) : "");
     Rate += accept;
+    
+    MPI_Barrier(app()->mpi.world_comm);
+    if (app()->ptbc.active) {
+      int const ptbc_inst_at_swap = app()->ptbc.instance_id;
+      tm_stopwatch_push(&g_timers, "ptbc_swap", "");
+
+      if (app()->ptbc.do_swap) {
+        // rank 0 decides how to swap
+        double rand_num;
+        if (app()->mpi.world_rank == 0) {
+          int tmp[105];
+          rlxd_get(tmp);
+          rlxd_reset(app()->ptbc.rng_state);
+          ranlxd(&rand_num, 1); // float [0, 1)
+          rlxd_get(app()->ptbc.rng_state);
+          rlxd_reset(tmp);
+        }
+        MPI_Bcast(&rand_num, 1, MPI_DOUBLE, 0, app()->mpi.world_comm);
+
+        // 50-50 on the sweep order, so that neither end of the chain is systematically favoured
+        if (app()->ptbc.strat == EVEN_ODD) {
+          if (rand_num < 0.5) even_odd_swap(&Rate);
+          else odd_even_swap(&Rate);
+        }
+        else if (app()->ptbc.strat == UP_DOWN) { // UP_DOWN
+          if (rand_num < 0.5)up_swap(&Rate);
+          else down_swap(&Rate);
+
+        }
+      }
+
+      tm_stopwatch_pop(&g_timers, 0, 1, ptbc_timer_tag(ptbc_inst_at_swap));
+
+      ptbc_chdir_instance();
+
+      // print post swap status
+      if (g_proc_id == 0) 
+        printf("\nI am step %d instance %d rank %d \n", j, app()->ptbc.instance_id, app()->mpi.world_rank);
+
+    }
 
     /* Save gauge configuration all Nsave times */
     if ((Nsave != 0) && (trajectory_counter % Nsave == 0) && (trajectory_counter != 0)) {
@@ -393,8 +445,8 @@ int main(int argc, char *argv[]) {
       if (g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
         fprintf(countfile,
-                "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
-                nstore, j, Nmeas, Nsave, plaquette_energy / (6. * VOLUME * g_nproc),
+                "Instance %d, %.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
+                app()->ptbc.instance_id, nstore, j, Nmeas, Nsave, plaquette_energy / (6. * VOLUME * g_nproc),
                 trajectory_counter);
         fclose(countfile);
       }
@@ -479,7 +531,7 @@ int main(int argc, char *argv[]) {
 
           sleep(io_timeout);
 #ifdef TM_USE_MPI
-          MPI_Barrier(MPI_COMM_WORLD);
+          MPI_Barrier(app()->mpi.comm);
 #endif
         }
       /* Now move .conf.tmp into place */
@@ -496,6 +548,9 @@ int main(int argc, char *argv[]) {
         fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter + 1, gauge_filename);
         fclose(countfile);
       }
+      /* checkpoint the PTBC swap-decision RNG next to the instance_NN directories, so the
+         swap stream resumes rather than restarts. Only global rank 0 actually writes. */
+      if (app()->ptbc.active) write_ptbc_rng_state();
     }
 
     /* online measurements */
@@ -528,7 +583,7 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     if (ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
@@ -581,7 +636,7 @@ int main(int argc, char *argv[]) {
   _endQuda();
 #endif
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
 

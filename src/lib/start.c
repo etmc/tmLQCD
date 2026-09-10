@@ -218,7 +218,7 @@ void random_spinor_field_lexic(spinor *const k, const int repro, const enum RN_T
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     if (g_proc_id != 0) {
       rlxd_reset(rlxd_state);
     }
@@ -289,7 +289,7 @@ void random_spinor_field_eo(spinor *const k, const int repro, const enum RN_TYPE
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     if (g_proc_id != 0) {
       rlxd_reset(rlxd_state);
     }
@@ -432,7 +432,7 @@ void random_gauge_field(const int repro, su3 **const gf) {
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     rlxd_reset(rlxd_state);
 #endif
     for (t0 = 0; t0 < g_nproc_t * T; t0++) {
@@ -506,7 +506,7 @@ double random_su3adj_field(const int repro, su3adj **const momenta) {
     } else if (g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, app()->mpi.comm);
     rlxd_reset(rlxd_state);
 #endif
     for (int t0 = 0; t0 < g_nproc_t * T; t0++) {
@@ -589,7 +589,7 @@ double random_su3adj_field(const int repro, su3adj **const momenta) {
     kc = 0.5 * (ks + kc);
   }
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   return ks;
 #endif
   return kc;
@@ -830,15 +830,27 @@ void start_ranlux(int level, int seed) {
                       g_proc_coords[1] * g_nproc_y * g_nproc_z + g_proc_coords[2] * g_nproc_z +
                       g_proc_coords[3];
 
-  max_seed = 2147483647 / g_nproc;
+  int n_ranks = g_nproc;
+  if (app()->ptbc.active) {
+    MPI_Comm_size(app()->mpi.world_comm, &n_ranks);
+    MPI_Comm_rank(app()->mpi.world_comm, &step);
+  }
+  max_seed = 2147483647 / n_ranks;
+  
+  // offset for ptbc. If PTBC not active, instance_id=0, n_instances=1 ptbc_offset=0
+  unsigned int ptbc_offset = max_seed / app()->ptbc.n_instances * app()->ptbc.instance_id;
+  seed += ptbc_offset;
+
   loc_seed = (seed + step * max_seed) % 2147483647;
+
+    //printf("Instance %d leader seed is %d offset is %d \n", app()->ptbc.instance_id, loc_seed, ptbc_offset);
 
   if (loc_seed == 0) loc_seed++;
 
 #ifdef TM_USE_MPI
   unsigned int *seeds = calloc(g_nproc, sizeof(unsigned int));
   if (seeds == NULL) fatal_error("Memory allocation for seeds buffer failed!", "start_ranlux");
-  MPI_Gather(&loc_seed, 1, MPI_UNSIGNED, seeds, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+  MPI_Gather(&loc_seed, 1, MPI_UNSIGNED, seeds, 1, MPI_UNSIGNED, 0, app()->mpi.comm);
   if (g_proc_id == 0) {
     for (int i = 0; i < g_nproc; ++i) {
       for (int j = i + 1; j < g_nproc; ++j) {

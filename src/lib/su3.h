@@ -490,6 +490,17 @@ typedef struct {
   (u).c21 += (v).c20 * (w).c01 + (v).c21 * (w).c11 + (v).c22 * (w).c21; \
   (u).c22 += (v).c20 * (w).c02 + (v).c21 * (w).c12 + (v).c22 * (w).c22;
 
+#define _real_times_su3_times_su3_acc(u, v, w, r)                       \
+  (u).c00 += (r) * ((v).c00 * (w).c00 + (v).c01 * (w).c10 + (v).c02 * (w).c20); \
+  (u).c01 += (r) * ((v).c00 * (w).c01 + (v).c01 * (w).c11 + (v).c02 * (w).c21); \
+  (u).c02 += (r) * ((v).c00 * (w).c02 + (v).c01 * (w).c12 + (v).c02 * (w).c22); \
+  (u).c10 += (r) * ((v).c10 * (w).c00 + (v).c11 * (w).c10 + (v).c12 * (w).c20); \
+  (u).c11 += (r) * ((v).c10 * (w).c01 + (v).c11 * (w).c11 + (v).c12 * (w).c21); \
+  (u).c12 += (r) * ((v).c10 * (w).c02 + (v).c11 * (w).c12 + (v).c12 * (w).c22); \
+  (u).c20 += (r) * ((v).c20 * (w).c00 + (v).c21 * (w).c10 + (v).c22 * (w).c20); \
+  (u).c21 += (r) * ((v).c20 * (w).c01 + (v).c21 * (w).c11 + (v).c22 * (w).c21); \
+  (u).c22 += (r) * ((v).c20 * (w).c02 + (v).c21 * (w).c12 + (v).c22 * (w).c22);
+
 #define _su3_times_su3d(u, v, w)                                                         \
   (u).c00 = (v).c00 * conj((w).c00) + (v).c01 * conj((w).c01) + (v).c02 * conj((w).c02); \
   (u).c01 = (v).c00 * conj((w).c10) + (v).c01 * conj((w).c11) + (v).c02 * conj((w).c12); \
@@ -512,6 +523,17 @@ typedef struct {
   (u).c21 += (v).c20 * conj((w).c10) + (v).c21 * conj((w).c11) + (v).c22 * conj((w).c12); \
   (u).c22 += (v).c20 * conj((w).c20) + (v).c21 * conj((w).c21) + (v).c22 * conj((w).c22);
 
+#define _real_times_su3_times_su3d_acc(u, v, w, r)                                                      \
+  (u).c00 += (r) * ((v).c00 * conj((w).c00) + (v).c01 * conj((w).c01) + (v).c02 * conj((w).c02)); \
+  (u).c01 += (r) * ((v).c00 * conj((w).c10) + (v).c01 * conj((w).c11) + (v).c02 * conj((w).c12)); \
+  (u).c02 += (r) * ((v).c00 * conj((w).c20) + (v).c01 * conj((w).c21) + (v).c02 * conj((w).c22)); \
+  (u).c10 += (r) * ((v).c10 * conj((w).c00) + (v).c11 * conj((w).c01) + (v).c12 * conj((w).c02)); \
+  (u).c11 += (r) * ((v).c10 * conj((w).c10) + (v).c11 * conj((w).c11) + (v).c12 * conj((w).c12)); \
+  (u).c12 += (r) * ((v).c10 * conj((w).c20) + (v).c11 * conj((w).c21) + (v).c12 * conj((w).c22)); \
+  (u).c20 += (r) * ((v).c20 * conj((w).c00) + (v).c21 * conj((w).c01) + (v).c22 * conj((w).c02)); \
+  (u).c21 += (r) * ((v).c20 * conj((w).c10) + (v).c21 * conj((w).c11) + (v).c22 * conj((w).c12)); \
+  (u).c22 += (r) * ((v).c20 * conj((w).c20) + (v).c21 * conj((w).c21) + (v).c22 * conj((w).c22));
+
 #define _su3d_times_su3(u, v, w)                                                         \
   (u).c00 = conj((v).c00) * (w).c00 + conj((v).c10) * (w).c10 + conj((v).c20) * (w).c20; \
   (u).c01 = conj((v).c00) * (w).c01 + conj((v).c10) * (w).c11 + conj((v).c20) * (w).c21; \
@@ -533,6 +555,17 @@ typedef struct {
   (u).c20 += conj((v).c02) * (w).c00 + conj((v).c12) * (w).c10 + conj((v).c22) * (w).c20; \
   (u).c21 += conj((v).c02) * (w).c01 + conj((v).c12) * (w).c11 + conj((v).c22) * (w).c21; \
   (u).c22 += conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22;
+
+#define _real_times_su3d_times_su3_acc(u, v, w, r)                                                      \
+  (u).c00 += (r) * (conj((v).c00) * (w).c00 + conj((v).c10) * (w).c10 + conj((v).c20) * (w).c20); \
+  (u).c01 += (r) * (conj((v).c00) * (w).c01 + conj((v).c10) * (w).c11 + conj((v).c20) * (w).c21); \
+  (u).c02 += (r) * (conj((v).c00) * (w).c02 + conj((v).c10) * (w).c12 + conj((v).c20) * (w).c22); \
+  (u).c10 += (r) * (conj((v).c01) * (w).c00 + conj((v).c11) * (w).c10 + conj((v).c21) * (w).c20); \
+  (u).c11 += (r) * (conj((v).c01) * (w).c01 + conj((v).c11) * (w).c11 + conj((v).c21) * (w).c21); \
+  (u).c12 += (r) * (conj((v).c01) * (w).c02 + conj((v).c11) * (w).c12 + conj((v).c21) * (w).c22); \
+  (u).c20 += (r) * (conj((v).c02) * (w).c00 + conj((v).c12) * (w).c10 + conj((v).c22) * (w).c20); \
+  (u).c21 += (r) * (conj((v).c02) * (w).c01 + conj((v).c12) * (w).c11 + conj((v).c22) * (w).c21); \
+  (u).c22 += (r) * (conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22);
 
 #define _su3_minus_const_times_im_trace_su3(w, c, v)                     \
   (w).c00 -= I * c * (cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \
