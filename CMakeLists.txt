@@ -137,9 +137,9 @@ set_property(
 cmake_dependent_option(TM_USE_CUDA_HIP "Enable CUDA support in HIP" OFF
                        "TM_USE_HIP" OFF)
 
-# clime and lemon depend on MPI
+# lemon depends on MPI
 cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" ON "TM_USE_MPI"
-                       OFF)
+                       ON)
 
 # GPU dependent options
 cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
@@ -242,7 +242,7 @@ endif()
 if(TM_USE_MPI)
   find_package(MPI REQUIRED)
   if(TM_NONBLOCKING_MPI)
-    set(TM_NONBLOCKING ON)
+    set(TM_NON_BLOCKING ON)
   endif()
   if(TM_PERSISTENT_MPI)
     set(TM_PERSISTENT ON)
