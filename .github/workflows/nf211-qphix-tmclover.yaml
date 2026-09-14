@@ -128,7 +128,7 @@ jobs:
 
       - name: cache_qphix
         id: cache-qphix
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: qphix/build
           key: ${{ runner.os }}-haswell-qphix
