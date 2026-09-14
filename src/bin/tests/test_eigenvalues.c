@@ -390,14 +390,14 @@ int main(int argc, char *argv[]) {
       }
       rlxd_get(rlxd_state);
 #ifdef TM_USE_MPI
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc - 1, 99, MPI_COMM_WORLD, &status);
+      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, app()->mpi.comm);
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc - 1, 99, app()->mpi.comm, &status);
       rlxd_reset(rlxd_state);
 #endif
     }
 #ifdef TM_USE_MPI
     else {
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id - 1, 99, MPI_COMM_WORLD, &status);
+      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id - 1, 99, app()->mpi.comm, &status);
       rlxd_reset(rlxd_state);
       /* hot */
       if (startoption == 1) {
@@ -408,7 +408,7 @@ int main(int argc, char *argv[]) {
         k = 0;
       }
       rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, MPI_COMM_WORLD);
+      MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 99, app()->mpi.comm);
     }
 #endif
 

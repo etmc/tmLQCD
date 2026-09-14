@@ -22,7 +22,10 @@
 
 #include "su3.h"
 
-double measure_plaquette(const su3 *const *const gf);
-double measure_gauge_action(const su3 *const *const gf, const double lambda);
+/* apply_ptbc == 1 weights each plaquette with the product of the PTBC defect
+ * coefficients of its four links. */
+double measure_plaquette(const su3 *const *const gf, int const apply_ptbc);
+double measure_gauge_action(const su3 *const *const gf, const double lambda,
+                            int const apply_ptbc);
 
 #endif

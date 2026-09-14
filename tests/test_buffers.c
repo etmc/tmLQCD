@@ -13,7 +13,7 @@ TEST_SUITES{TEST_SUITE_ADD(BUFFERS_GAUGE), TEST_SUITES_CLOSURE};
 int main(int argc, char *argv[]) {
 #ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Comm_rank(app()->mpi.comm, &g_proc_id);
 #else
   g_proc_id = 0;
 #endif

@@ -171,7 +171,7 @@ double sw_trace(const int ieo, const double mu, const int single_flavor) {
 #endif
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return (fac * mres);
 #else
@@ -261,7 +261,7 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 #endif
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return (mres);
 #else

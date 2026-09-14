@@ -46,7 +46,7 @@ void fatal_error(char const *error, char const *function) {
   }
 
 #ifdef TM_USE_MPI
-  MPI_Abort(MPI_COMM_WORLD, 1);
+  MPI_Abort(app()->mpi.comm, 1);
   MPI_Finalize();
 #endif
 

@@ -99,7 +99,7 @@ int read_eospinor(spinor *const s, char *filename) {
                   "LIME read error occured with status = %d while reading file %s!\n Aborting...\n",
                   status, filename);
 #ifdef TM_USE_MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Abort(app()->mpi.comm, 1);
               MPI_Finalize();
 #endif
               exit(500);

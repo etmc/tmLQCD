@@ -91,7 +91,7 @@ double square_norm(const spinor *const P, const int N, const int parallel) {
 
 #ifdef TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif
@@ -142,7 +142,7 @@ double square_norm_ts(const spinor *const P, const int N, const int parallel) {
 
 #ifdef TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif

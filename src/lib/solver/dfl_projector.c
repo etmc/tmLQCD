@@ -428,7 +428,7 @@ void little_project(_Complex double *const out, _Complex double *const in, const
   }
 
 #ifdef TM_USE_MPI
-  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, app()->mpi.comm);
 #else
   memcpy(psi, phi, N * sizeof(_Complex double));
 #endif
@@ -487,7 +487,7 @@ void little_project2(_Complex double *const out, _Complex double *const in, cons
     phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks * N, 0);
   }
 #ifdef TM_USE_MPI
-  MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, app()->mpi.comm);
 #else
   memcpy(psi, phi, g_N_s * sizeof(_Complex double));
 #endif
@@ -1023,7 +1023,7 @@ void check_little_D_inversion(const int repro) {
   little_D(result, invvec); /* This should be a proper inverse now */
 
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
 #endif
 
   ldiff(invvec, result, inprod, nb_blocks * g_N_s);
