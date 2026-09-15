@@ -7,7 +7,7 @@
 
 #define EPS 5e-16
 
-int VOLUMEPLUSRAND = 10000;
+int VOLUMEPLUSRAND_ = 10000;
 
 /* g_gauge_buffers is defined in one of the includes! */
 extern gauge_buffers_t g_gauge_buffers;

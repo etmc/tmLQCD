@@ -420,10 +420,10 @@ target_link_libraries(
          $<$<BOOL:${TM_USE_LEMON}>:lemon::lemon>
          ${LAPACK_LIBRARIES}
          ${BLAS_LIBRARIES}
-         $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_C
-         MPI::MPI_CXX>
-         $<$<BOOL:${TM_USE_OMP}>:OpenMP::OpenMP_C
-         OpenMP::OpenMP_CXX>
+         $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_C>
+         $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_CXX>
+         $<$<BOOL:${TM_USE_OMP}>:OpenMP::OpenMP_C>
+         $<$<BOOL:${TM_USE_OMP}>:OpenMP::OpenMP_CXX>
          m)
 
 target_compile_definitions(
@@ -449,8 +449,7 @@ install(
 
 install(FILES "${CMAKE_SOURCE_DIR}/src/lib/include/tmLQCD.h"
               "${CMAKE_SOURCE_DIR}/src/lib/include/tmlqcd_config.h"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
-  )
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
 
 install(FILES "${CMAKE_BINARY_DIR}/tmlqcd_config_internal.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")

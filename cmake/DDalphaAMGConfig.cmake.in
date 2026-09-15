@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.23)
 
 if (NOT TARGET DDalphaAMG::DDalphaAMG)
-  
+
+  include(CMakeFindDependencyMacro)
+
   find_dependency(MPI REQUIRED)
 
   if (@DDalphaAMG_ENABLE_PARAMOUNT_OUTPUT@)
@@ -43,6 +45,9 @@ if (NOT TARGET DDalphaAMG::DDalphaAMG)
 
   if (@DDalphaAMG_ENABLE_HDF5@)
     set(DDalphaAMG_ENABLE_HDF5 @DDalphaAMG_ENABLE_HDF5@)
+    # the static hdf5-static target's link interface requires ZLIB::ZLIB
+    find_dependency(ZLIB)
+    find_dependency(HDF5 COMPONENTS C CONFIG)
   endif()
 
 
