@@ -1,0 +1,20 @@
+include:
+  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+
+
+.test/base:
+  stage: test
+  image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
+  variables:
+    WITH_UENV_VIEW: "default"
+  before_script:
+    - |
+      if test "${SLURM_LOCALID}" -eq "0"; then
+        tar xf ./builddir.tar -C /
+        touch preparation-done-${CI_JOB_ID}
+      fi
+    - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
+    - bindir=$(echo /dev/shm/spack-stage/*/spack-stage-tmlqcd-cicd-*/spack-build-*/src/bin)
+    - libdir=$(dirname $(echo /dev/shm/spack-stage/*/spack-stage-quda-cicd-*/spack-build-*/lib/libquda.so))
+    - export PATH=:${bindir}:$PATH
+    - export LD_LIBRARY_PATH=:${libdir}:$LD_LIBRARY_PATH

@@ -1,0 +1,10 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+libdir="${prefix}/@CMAKE_INSTALL_LIBDIR@"
+includedir="${prefix}/include"
+
+Name: tmlQCD
+Description: "tmlQCD"
+Version: "@PROJECT_VERSION@"
+Cflags: -I"${includedir}/include/tmlqcd"
+Libs: -L"${libdir}" -lhmc

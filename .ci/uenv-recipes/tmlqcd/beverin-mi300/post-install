@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+# remove offending environment variables
+jq '.views["default"].env.values.scalar["HIPCC_LINK_FLAGS_APPEND"]|="" | .views["default"].env.values.scalar["HIPCC_COMPILE_FLAGS_APPEND"]|="" ' /user-environment/meta/env.json > /tmp/env.json
+# copy file back to destination
+cp /tmp/env.json /user-environment/meta/env.json

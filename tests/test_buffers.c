@@ -8,12 +8,9 @@
 
 #include "test_buffers_gauge.h"
 
-TEST_SUITES {
-  TEST_SUITE_ADD(BUFFERS_GAUGE),
-  TEST_SUITES_CLOSURE
-};
+TEST_SUITES{TEST_SUITE_ADD(BUFFERS_GAUGE), TEST_SUITES_CLOSURE};
 
-int main(int argc,char *argv[]){
+int main(int argc, char *argv[]) {
 #ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
@@ -22,7 +19,7 @@ int main(int argc,char *argv[]){
 #endif
 
   CU_SET_OUT_PREFIX("regressions/");
-  CU_RUN(argc,argv);
+  CU_RUN(argc, argv);
 
 #ifdef TM_USE_MPI
   MPI_Finalize();
@@ -30,5 +27,3 @@ int main(int argc,char *argv[]){
 
   return 0;
 }
-
-

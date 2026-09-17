@@ -13,12 +13,11 @@ config.status
 *.mod.c
 *.opari.inc
 build/*
-tags
+tags*
 *.a
 hmc_tm
 invert
 offline_measurement
-lib/
 benchmark
 *.data
 *.para
@@ -42,3 +41,5 @@ doc/wrapper*
 doc/omeas_heavy_mesons.html
 history_hmc_tm
 .vscode/*
+*.sublime-project
+*.sublime-workspace

@@ -1,0 +1,17 @@
+include:
+  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+
+
+.build/base:
+  stage: build
+  image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
+  artifacts:
+    paths:
+      - builddir.tar
+  variables:
+    SLURM_TIMELIMIT: "01:00:00"
+  script:
+    - git clone --filter=tree:0 $(jq -r .spack.repo /user-environment/meta/configure.json) /dev/shm/spack-clone
+    - git -C /dev/shm/spack-clone checkout $(jq -r .spack.commit /user-environment/meta/configure.json)
+    - source /dev/shm/spack-clone/share/spack/setup-env.sh
+    - bwrap --dev-bind / / --tmpfs ~ -- ./.ci/build.sh

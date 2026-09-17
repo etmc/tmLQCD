@@ -1,0 +1,29 @@
+gcc-env:
+  compiler: [gcc, llvm-amdgpu]
+  network:
+      mpi: cray-mpich@8.1.32+rocm
+      specs: [ 'libfabric@2.3 +rocm' ]
+  unify: when_possible
+  duplicates:
+    strategy: full
+  specs:
+  # add GPU-specific packages here
+  - hip@6.3.3 ^mesa@23.3.6
+  - llvm-amdgpu
+  # tmlqcd and quda are not required, since we build their newest commits in the
+  # build stage. Although, we want all their dependencies in the base uenv.
+  - tmlqcd@master +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  - numdiff
+  variants:
+  - +mpi
+  - +rocm
+  - amdgpu_target=gfx942
+  - amdgpu_target_sram_ecc=gfx942
+  views:
+    default:
+      link: roots
+      exclude: ["llvm"]
+      uenv:
+        add_compilers: true
+        prefix_paths:
+          LD_LIBRARY_PATH: [lib, lib64]

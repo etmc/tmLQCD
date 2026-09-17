@@ -1,0 +1,18 @@
+# This file defines the uenv image built and deployed to CSCS. The variables
+# have the following meaning:
+#
+# * UENV_NAME: the base name of the uenv image to generate
+# * UENV_VERSION: its version identifier
+# * UENV_TAG: a tag
+#
+
+variables:
+  UENV_NAME: tmlqcd
+  UENV_VERSION: experimental
+  UENV_TAG: v0.0.8
+
+# These are the firecrest id and secret for the beverin pipeline
+.beverin-mi300-secrets:
+  variables:
+    F7T_CLIENT_ID: $F7T_TDS_CONSUMER_KEY
+    F7T_CLIENT_SECRET: $F7T_TDS_CONSUMER_SECRET

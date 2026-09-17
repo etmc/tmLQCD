@@ -270,8 +270,8 @@ operator 0 parsed line 229
 This is the hmc code for twisted mass Wilson QCD
 
 Version 5.2.0, commit 51cf008a89944ecdd9345cdb62aaf0a203a7f306
-# The code is compiled with -D_GAUGE_COPY
-# The code is compiled with -D_USE_HALFSPINOR
+# The code is compiled with -DTM_USE_GAUGE_COPY
+# The code is compiled with -DTM_USE_HALFSPINOR
 # the code is compiled for non-blocking MPI calls (spinor and gauge)
 # the code is compiled with openMP support
 # Non-Schroedinger (anti-periodic, periodic or twisted) boundary conditions are used
