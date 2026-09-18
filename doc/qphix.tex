@@ -151,7 +151,7 @@ EndExternalInverter
   \item{\texttt{PadXY(Z)}: Adds padding to the QPhiX data structures which may result in higer overall performance. Only value tested on KNL is \texttt{PadXY=1} and \texttt{PadXYZ=0}.}
 \end{itemize}
 
-\noindent\textbf{IMPORTANT}: The global setting \texttt{OmpNumThreads} should be set to \texttt{NCores * Sy * Sz}, otherwise the QPhiX interface will abort execution.
+\noindent\textbf{IMPORTANT}: The number of OMP threads controlled by the environment variable \texttt{OMP\_NUM\_THREADS} should be set to \texttt{NCores * Sy * Sz}, otherwise the QPhiX interface will abort execution.
 
 \noindent\textbf{QPhiX operator / monomial parameters}: QPhiX solvers are available in operators for inversions and monomials for performing HMC with the same parameters.
 For a clover determinant, using QPhiX solvers instead of tmLQCD-native ones would be achieved as follows:

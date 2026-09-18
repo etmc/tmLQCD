@@ -136,7 +136,7 @@ jobs:
       - name: nf211_ddalphaamg_hmc_tmclover
         working-directory: ${{github.workspace}}/main/build
         run: |
-          mpirun -np 2 src/bin/hmc_tm \
+          OMP_NUM_THREADS=1 mpirun -np 2 src/bin/hmc_tm \
             -f ../doc/sample-input/sample-hmc-nf211-ddalphaamg-tmclover.input
 
       - name: Archive nf211_ddalphaamg_hmc_tmclover output
