@@ -474,7 +474,8 @@ void _initQuda() {
 
   // initialize the QUDA library
 #ifdef TM_USE_MPI
-  initQuda(app()->topo.node_rank); // set device number to node rank, assumes one GPU per rank
+  // set device number to node rank, assumes one GPU per rank if ptbc
+  initQuda(app()->ptbc.active ? app()->topo.node_rank : -1);
   //initQuda(-1);  // sets device numbers automatically
 #else
   initQuda(0);  // scalar build: use device 0
