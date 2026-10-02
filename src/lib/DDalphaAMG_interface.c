@@ -21,6 +21,7 @@
  *
  *******************************************************************************/
 
+#include <omp.h>
 #include "DDalphaAMG_interface.h"
 
 #ifndef TM_USE_DDalphaAMG
@@ -29,7 +30,6 @@ int mg_setup_iter;
 int mg_coarse_setup_iter;
 int mg_update_setup_iter;
 int mg_update_gauge;
-int mg_omp_num_threads;
 int mg_Nvec;
 int mg_lvl;
 int mg_blk[4];
@@ -124,7 +124,6 @@ int mg_initialized = 0;
 int mg_setup_iter = 5;
 int mg_coarse_setup_iter = 3;
 int mg_update_setup_iter = 1;
-int mg_omp_num_threads = 0;
 int mg_Nvec = 24;
 int mg_lvl = 3;
 int mg_blk[4] = {0, 0, 0, 0};
@@ -1076,11 +1075,9 @@ void MG_init() {
   mg_init.theta[3] = X1;
 
   mg_init.number_of_levels = mg_lvl;
+
 #ifdef TM_USE_OMP
-  if (mg_omp_num_threads <= 0)
-    mg_init.number_openmp_threads = omp_num_threads;
-  else
-    mg_init.number_openmp_threads = mg_omp_num_threads;
+  mg_init.number_openmp_threads = omp_get_max_threads();
 #else
   mg_init.number_openmp_threads = 1;
 #endif

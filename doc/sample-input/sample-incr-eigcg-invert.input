@@ -5,9 +5,6 @@ NrXProcs = 1
 NrYProcs = 1
 NrZProcs = 1
 
-OmpNumThreads = 1
-
-
 DebugLevel            = 4
 InitialStoreCounter   = 200
 Measurements          = 1

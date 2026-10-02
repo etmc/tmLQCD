@@ -5,7 +5,6 @@ L=8
 T=8
 
 DebugLevel = 5
-ompnumthreads=4
 
 InitialStoreCounter = 0
 Measurements = 2
