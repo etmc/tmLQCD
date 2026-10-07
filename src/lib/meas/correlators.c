@@ -33,11 +33,14 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "operator.h"
+#include "operator/tm_operators_nd.h"
 #include "ranlxs.h"
 #include "solver/solver.h"
 #include "source_generation.h"
 #include "start.h"
 #include "su3spinor.h"
+
+#define TM_OMEAS_FILENAME_LENGTH 100
 
 /******************************************************
  *
@@ -519,13 +522,13 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						// (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s)
 						// stored temporarely in the propagator spinors (used as dummy)
 						if (F==0){
-							mul_one_pm_itau2_and_div_by_sqrt2(
+							mul_one_pm_itau2(
 							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
 							arr_eo_spinor[0][1][beta][F][i_eo][0], phi1, +1.0,
 							VOLUME / 2);
 						}
 						if (F==1){
-							mul_one_pm_itau2_and_div_by_sqrt2(
+							mul_one_pm_itau2(
 							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
 							phi2, arr_eo_spinor[0][1][beta][F][i_eo][1], +1.0,
 							VOLUME / 2);
@@ -619,7 +622,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd
 						// (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s)
 						// stored temporarely in phi1, phi2
-						mul_one_pm_itau2_and_div_by_sqrt2(phi1, phi2,
+						mul_one_pm_itau2(phi1, phi2,
 							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1], -1.0,
 							VOLUME / 2);
 
