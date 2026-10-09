@@ -670,6 +670,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				https://arxiv.org/pdf/1005.2042.pdf) I can build the correlators of eq. (20)
 			*/
 			const int f0 = 0;  // flavor index of the up
+			const double g5_diag[4] = {+1.0, +1.0, -1.0, -1.0};  // diagonal of gamma_5 in the chiral basis
 
 			/* now we sum only over local space for every t */
 			const int j_ts = t0-g_proc_coords[0]*T; // checkerboard index of the time at the source
@@ -703,30 +704,30 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						resp4 += _spinor_prod_im(psi_u, phi);
 					}
 					
-					// heavy correlators
+					// heavy correlators:
+					// g_{s2,s1} [S^h]_{s1,be} g_{be,be} [s^u*]_{s2,be}
+					// the matrix g can be 1 or gamma_5
 					for (size_t hi = 0; hi < 2; hi++) {
 						for (size_t hj = 0; hj < 2; hj++) {
 							for (size_t g1 = 0; g1 < 2; g1++) {
 								for (size_t g2 = 0; g2 < 2; g2++) {
 									double complex dum_tot = 0.0;
-									for (int alpha_1 = 0; alpha_1 < 4; alpha_1++){
-										spinor psi_h = arr_spinor[1][1][alpha_1][hj][hi][i];
-										if (g1 == 0){ // Gamma_1 = Id
+									for (int beta = 0; beta < 4; beta++) {  // source spin (dilution) index
+										spinor psi_h = arr_spinor[1][1][beta][hj][hi][i];
+										spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
+
+										if (g1 == 0) {
 											_gamma5(psi_h, psi_h);
 										}
-										su3_vector psi_h_su3[4];
-										spinor_dirac_array(&psi_h_su3[0], psi_h);
-										for (int alpha_2 = 0; alpha_2 < 4; alpha_2++){
-											spinor psi_u_star = arr_spinor[1][0][alpha_2][f0][f0][i];
-											if (g2 == 0){ // Gamma_2 = Id. NOTE: works because Gamma_2=Gamma_2* for Gamma_2=1,gamma_5
-												_gamma5(psi_u_star, psi_u_star);
-											}
-											su3_vector psi_u_star_su3[4];
-											spinor_dirac_array(&psi_u_star_su3[0], psi_u_star);
-											complex double dum_12 = 0.0;
-											_colorvec_scalar_prod(dum_12, psi_u_star_su3[alpha_1], psi_h_su3[alpha_2]);
-											dum_tot += dum_12;
+
+										double complex dum = 0.0;
+										_spinor_scalar_prod(dum, psi_u, psi_h);
+
+										if (g2 == 0) {
+											dum *= g5_diag[beta];
 										}
+
+										dum_tot += dum;
 									}
 									// if (g_proc_id == 0){
 									// printf("dum_tot = %d %d %d %d %d %e %e \n", t, hi, hj, g1, g2, creal(dum_tot), cimag(dum_tot));
@@ -777,9 +778,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 								MPI_Reduce(&res_hihj_g1g2[hi][hj][g1][g2], &mpi_res_hihj_g1g2[hi][hj][g1][g2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
 								res_hihj_g1g2[hi][hj][g1][g2] = mpi_res_hihj_g1g2[hi][hj][g1][g2];
 								
-								sC_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g1] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
+								sC_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g2] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
 #else
-								C_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g1] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
+								C_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g2] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
 #endif
 							}
 						}
