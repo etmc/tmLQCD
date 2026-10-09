@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
   char *filename = NULL;
   double plaquette_energy;
 
+
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);
 
   DUM_DERI = 8;
