@@ -593,7 +593,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				/* heavy doublet */
 				printf("Inverting the heavy doublet\n");
 				for (size_t F = 0; F < 2; F++) {             // flavor projection index
-					printf("F=%d\n", F);
 					
 					optr2->sr0 = arr_eo_spinor[0][1][beta][F][0][0];
 					optr2->sr1 = arr_eo_spinor[0][1][beta][F][1][0];
@@ -673,8 +672,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			const double g5_diag[4] = {+1.0, +1.0, -1.0, -1.0};  // diagonal of gamma_5 in the chiral basis
 
 			/* now we sum only over local space for every t */
-			const int j_ts = t0-g_proc_coords[0]*T; // checkerboard index of the time at the source
-
 			for (t = 0; t < T; t++) {
 				j = g_ipt[t][0][0][0]; // source and sink separated by "t"
 
@@ -703,7 +700,19 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						_gamma5(phi, phi);
 						resp4 += _spinor_prod_im(psi_u, phi);
 					}
-					
+
+					// the operators are defined in the basis of https://arxiv.org/pdf/1005.2042.pdf
+					// Oc1 = -  bar_chi^d Id chi^c    hi=0   g1=0  
+					// Oc5 = -i bar_chi^d g5 chi^c    hi=0   g1=1  
+					// Os1 = +  bar_chi^d Id chi^s    hi=1   g1=0  
+					// Os5 = +i bar_chi^d g5 chi^s    hi=1   g1=1  
+					// each operator has a prefactor s_h*e_g with s_c=-1, s_s=1 and e_g1=1, e_g5=i
+					// the dagger of the operator do not produce any extra sing but there is a -1 fermionic loop sign
+					// -1 * s_hi * s_hj * e_g1 * e_g2
+					int sign_hihj[2][2] = { {1, -1}, {-1, 1} };  // sign for the heavy doublet
+					// mixed g1 != g2 e_g1*e_g2 = i and Re(i*z) = -Im(z) -> sign -1 with cimag 
+					int sign_g1g2[2][2] = { {1, -1}, {-1, -1} };  // sign for the gamma matrices
+ 					
 					// heavy correlators:
 					// g_{s2,s1} [S^h]_{s1,be} g_{be,be} [s^u*]_{s2,be}
 					// the matrix g can be 1 or gamma_5
@@ -729,21 +738,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
 										dum_tot += dum;
 									}
-									// if (g_proc_id == 0){
-									// printf("dum_tot = %d %d %d %d %d %e %e \n", t, hi, hj, g1, g2, creal(dum_tot), cimag(dum_tot));
-									// }
-									if (hi != hj){
-										dum_tot *= -1;
-									}
+									
+									dum_tot *= sign_hihj[hi][hj] * sign_g1g2[g1][g2];
 									if (g1==g2){
-										res_hihj_g1g2[hi][hj][g1][g2] += creal(dum_tot); // correlators is real
+										res_hihj_g1g2[hi][hj][g1][g2] += creal(dum_tot);
 									}
 									else{
-										if (g2==1){
-											dum_tot *= -1;
-										}
-										res_hihj_g1g2[hi][hj][g1][g2] += cimag(dum_tot); // correlator is imaginary
+										res_hihj_g1g2[hi][hj][g1][g2] += cimag(dum_tot);
 									}
+
 								}
 							}
 						}
@@ -778,9 +781,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 								MPI_Reduce(&res_hihj_g1g2[hi][hj][g1][g2], &mpi_res_hihj_g1g2[hi][hj][g1][g2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
 								res_hihj_g1g2[hi][hj][g1][g2] = mpi_res_hihj_g1g2[hi][hj][g1][g2];
 								
-								sC_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g2] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
+								sC_hihj_g1g2[hi][hj][g1][g2][t] = -1 * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
 #else
-								C_hihj_g1g2[hi][hj][g1][g2][t] = - eta_Gamma[g2] * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
+								C_hihj_g1g2[hi][hj][g1][g2][t] = -1 * res_hihj_g1g2[hi][hj][g1][g2] / vol_fact;
 #endif
 							}
 						}
@@ -866,16 +869,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					for (size_t hj = 0; hj < 2; hj++) {
 						for (size_t g1 = 0; g1 < 2; g1++) {
 							for (size_t g2 = 0; g2 < 2; g2++) {
-								printf("check matrix: %e\n", C_hihj_g1g2[hi][hj][g1][g2][3]);
-								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
+								fprintf(ofs, "%lu  %lu  %lu  %lu  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
 								for (t = 1; t < g_nproc_t * T / 2; t++) {
 									tt = (t0 + t) % (g_nproc_t * T);
-									fprintf(ofs, "%u  %u  %u  %u  %d  %e  ", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt]);
+									fprintf(ofs, "%lu  %lu  %lu  %lu  %u  %e  ", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt]);
 									tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
 									fprintf(ofs, "%e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
 								}
 								tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-								fprintf(ofs, "%u  %u  %u  %u  %d  %e  %e\n", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
+								fprintf(ofs, "%lu  %lu  %lu  %lu  %u  %e  %e\n", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
 							}
 						}
 					}
