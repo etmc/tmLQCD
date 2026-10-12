@@ -315,9 +315,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 	double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
 #endif
 	
-	/* heavy-light correlators variables */
-	// sign change bilinear^\dagger, with Gamma = 1,gamma_5
-	double eta_Gamma[2] = {1.0, -1.0};
 
 	// even-odd spinor fields for the light and heavy doublet correlators
 	// INDICES: source+propagator, doublet, spin dilution index, flavor projection, even-odd,
