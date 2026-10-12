@@ -171,6 +171,9 @@ typedef struct tm_QudaMGSetupState_t {
   double theta_z;
   double theta_t;
   int force_refresh;  // set to 1 when the MG doesn't converge
+  // fine-level coarse_grid_solution_type the setup was generated with
+  // (QUDA fixes this in newMultigridQuda, updateMultigridQuda does not change it)
+  QudaSolutionType coarse_grid_solution_type;
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -306,7 +309,8 @@ static inline void reset_quda_gauge_state(tm_QudaGaugeState_t* const quda_gauge_
 static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t* const quda_mg_setup_state,
                                             const tm_QudaGaugeState_t* const quda_gauge_state,
                                             const tm_QudaCloverState_t* const quda_clover_state,
-                                            const tm_QudaParams_t* const quda_params) {
+                                            const tm_QudaParams_t* const quda_params,
+                                            const QudaSolutionType coarse_grid_solution_type) {
   tm_debug_printf(0, 3, "%s mu: %f, g_mu: %f, deltat: %f, reset: %f, refresh: %f\n", __func__,
                   quda_mg_setup_state->mu, g_mu,
                   fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id),
@@ -317,7 +321,12 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t* const q
   // than the mg_reset_setup_threhold, we need to (re-)do the setup completely
   // similarly, if the boundary conditions for the gauge field change, we need
   // to redo the setup
+  // finally, a setup generated with QUDA_MAT_SOLUTION on the fine level (non-EO outer solve)
+  // cannot be used for single-parity (QUDA_MATPC_SOLUTION) solves and updateMultigridQuda
+  // cannot change this, so we need to redo the setup (the opposite combination is supported)
   if ((quda_mg_setup_state->initialised != 1) ||
+      (quda_mg_setup_state->coarse_grid_solution_type == QUDA_MAT_SOLUTION &&
+       coarse_grid_solution_type == QUDA_MATPC_SOLUTION) ||
       (fabs(quda_mg_setup_state->theta_x - quda_gauge_state->theta_x) > 2 * DBL_EPSILON) ||
       (fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2 * DBL_EPSILON) ||
       (fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2 * DBL_EPSILON) ||
@@ -394,6 +403,7 @@ static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t* const quda_m
   quda_mg_setup_state->mu = -1.0;
   quda_mg_setup_state->c_sw = -1.0;
   quda_mg_setup_state->mu = -1.0;
+  quda_mg_setup_state->coarse_grid_solution_type = QUDA_INVALID_SOLUTION;
 }
 
 static inline void copy_quda_mg_tunable_params_from_input(
