@@ -30,6 +30,9 @@
 #include "gettime.h"
 #include "global.h"
 #include "invert_eo.h"
+#include "io/params.h"
+#include "io/spinor.h"
+#include "io/utils.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "operator.h"
@@ -269,6 +272,26 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
 }
 
 
+// write one even-odd spinor field as a record of a LIME file (collective: all ranks must call it)
+// is_source = 1 --> source format record, 0 --> propagator format record
+// append = 0 --> new file, 1 --> append the record to the existing file
+static void write_eo_spinor_field(char *filename, spinor *even, spinor *odd, const int is_source,
+                                  const int append) {
+	WRITER *writer = NULL;
+	construct_writer(&writer, filename, append);
+	if (is_source) {
+		paramsSourceFormat *sourceFormat = construct_paramsSourceFormat(64, 1, 4, 3);
+		write_source_format(writer, sourceFormat);
+		free(sourceFormat);
+	} else {
+		paramsPropagatorFormat *propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+		write_propagator_format(writer, propagatorFormat);
+		free(propagatorFormat);
+	}
+	write_spinor(writer, &even, &odd, 1, 64);
+	destruct_writer(writer);
+}
+
 void spinor_dirac_array(su3_vector* phi, spinor psi){
 	phi[0] = psi.s0;
 	phi[1] = psi.s1;
@@ -422,14 +445,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 	int max_time_slices = measurement_list[id].all_time_slices ? measurement_list[id].max_source_slice : 1;
 	for (int sample = 0; sample < max_samples; sample++) {
 		for (int ts = 0; ts < max_time_slices; ts++) {
-			// setting output filename
+			tm_stopwatch_push(&g_timers, "single_sample_single_time_slice", "");  // timer for profiling
+			// setting output filename (suffix also used for the source and propagator files)
+			char suffix[32];
 			if (max_samples == 1 && max_time_slices == 1) {
-				snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s%06d", "heavy_mesons.", traj);
+				snprintf(suffix, sizeof(suffix), "%06d", traj);
 			} else if (max_samples == 1 && max_time_slices > 1) {
-				snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s.t%03d.%06d", "heavy_mesons", ts, traj);
+				snprintf(suffix, sizeof(suffix), "t%03d.%06d", ts, traj);
 			} else {
-				snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s.s%03d.%06d", "heavy_mesons", sample, traj);
+				snprintf(suffix, sizeof(suffix), "s%03d.%06d", sample, traj);
 			}
+			snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons.%s", suffix);
 			
 			/* generate random timeslice */
 			t0 = ts;
@@ -487,7 +513,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					}
 				}
 			}
-			
+			tm_stopwatch_push(&g_timers, "sources_generation", "");
 			/* init random sources: one for each Dirac index beta --> spin dilution */
 			const unsigned int seed_i = measurement_list[id].seed;  // has to be same seed
 			for (size_t db = 0; db < 2; db++) {                     // doublet: light or heavy
@@ -504,12 +530,28 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			}
 			zero_spinor_field(phi1, VOLUME/2);
 			zero_spinor_field(phi2, VOLUME/2);
-			
+			tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+			// writing the sources: 4 records, one for each spin dilution index beta = 0..3.
+			// The noise is the same for the light and heavy doublet (before the tau_2 rotation),
+			// so only the light sources are written. Source time slice: t0.
+			if (measurement_list[id].write_heavy_mesons_sources) {
+				tm_stopwatch_push(&g_timers, "writing_sources", "");
+				char src_filename[TM_OMEAS_FILENAME_LENGTH];
+				snprintf(src_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_source.%s", suffix);
+				for (size_t beta = 0; beta < 4; beta++) {
+					write_eo_spinor_field(src_filename, arr_eo_spinor[0][0][beta][0][0][0],
+					                      arr_eo_spinor[0][0][beta][0][1][0], 1, (beta > 0));
+				}
+				tm_stopwatch_pop(&g_timers, 0, 1, "");
+			}
+
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
 				printf("Checkpoint 5\n");
 			}
 			
+			tm_stopwatch_push(&g_timers, "sources_rotation", "");
 			// heavy doublet: for each even-odd block, I multiply by (1 + i*tau_2)/sqrt(2)
 			// the basis for the inversion should be the same as for the light
 			// --> I will multiply later by the inverse, namely at the end of the inversion
@@ -541,12 +583,14 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					}
 				}
 			}
+			tm_stopwatch_pop(&g_timers, 0, 1, "");
 
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
 				printf("Checkpoint 6\n");
 			}
 
+			tm_stopwatch_push(&g_timers, "sources_inversion", "");
 			/*
 				assign the sources and propagator pointes for the operators
 				these need to be know when calling the inverter() method */
@@ -606,12 +650,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					SourceInfo.no_flavours = 0; // reset to previous value
 				}
 			}
-			
+			tm_stopwatch_pop(&g_timers, 0, 1, "");
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
 				printf("Checkpoint 8\n");
 			}
-			
+			tm_stopwatch_push(&g_timers, "propagators_rotations", "");
 			// conclude the change of basis for the heavy doublet
 			for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
 				for (size_t F = 0; F < 2; F++) {             // flavor projection index
@@ -630,7 +674,35 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			// reset to zero the dummy spinors
 			zero_spinor_field(phi1, VOLUME/2);
 			zero_spinor_field(phi2, VOLUME/2);
-			
+    		tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+			// writing the propagators
+			// light: 4 records, beta = 0..3 (up flavor), normalised with 2*kappa (as in op_invert)
+			// heavy: 16 records, loop order beta = 0..3, F = 0..1 (source flavor), f = 0..1 (sink flavor),
+			//        basis of https://arxiv.org/pdf/1005.2042.pdf (index 0 = c, 1 = s), raw inverter
+			//        normalisation (no 2*kappa factor)
+			if (measurement_list[id].write_heavy_mesons_props) {
+				tm_stopwatch_push(&g_timers, "writing_propagators", "");
+				char prop_filename[TM_OMEAS_FILENAME_LENGTH];
+				snprintf(prop_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_prop_light.%s", suffix);
+				for (size_t beta = 0; beta < 4; beta++) {
+					write_eo_spinor_field(prop_filename, arr_eo_spinor[1][0][beta][0][0][0],
+					                      arr_eo_spinor[1][0][beta][0][1][0], 0, (beta > 0));
+				}
+				snprintf(prop_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_prop_heavy.%s", suffix);
+				int append = 0;
+				for (size_t beta = 0; beta < 4; beta++) {
+					for (size_t F = 0; F < 2; F++) {
+						for (size_t i_f = 0; i_f < 2; i_f++) {
+							write_eo_spinor_field(prop_filename, arr_eo_spinor[1][1][beta][F][0][i_f],
+							                      arr_eo_spinor[1][1][beta][F][1][i_f], 0, append);
+							append = 1;
+						}
+					}
+				}
+				tm_stopwatch_pop(&g_timers, 0, 1, "");
+			}
+
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
 				printf("Checkpoint 9\n");
@@ -668,6 +740,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			const int f0 = 0;  // flavor index of the up
 			const double g5_diag[4] = {+1.0, +1.0, -1.0, -1.0};  // diagonal of gamma_5 in the chiral basis
 
+			tm_stopwatch_push(&g_timers, "contractions", "");
 			/* now we sum only over local space for every t */
 			for (t = 0; t < T; t++) {
 				j = g_ipt[t][0][0][0]; // source and sink separated by "t"
@@ -788,6 +861,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				}
 				
 			} // end 1st loop over "t"
+			tm_stopwatch_pop(&g_timers, 0, 1, "");
 
 			
 			if (g_proc_id == 0){
@@ -931,7 +1005,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			if (g_proc_id == 0){
 				printf("Checkpoint 15\n");
 			}
-			
+		tm_stopwatch_pop(&g_timers, 0, 1, "");
 		}  // for(max_time_slices)
 	}    // for(max_samples)
 	
