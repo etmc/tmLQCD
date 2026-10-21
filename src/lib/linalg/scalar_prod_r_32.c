@@ -64,7 +64,7 @@ float scalar_prod_r_32(const spinor32 *const S, const spinor32 *const R, const i
 
 #if defined TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif

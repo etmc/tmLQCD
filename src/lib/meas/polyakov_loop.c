@@ -66,7 +66,7 @@ void polyakov_loop(_Complex double *pl_, const int mu) {
     fprintf(stderr, "Only direction %d and %d are allowed.\n", 2, 3);
     fprintf(stderr, "Actual value is %d! Aborting...\n", mu);
 #ifdef TM_USE_MPI
-    MPI_Abort(MPI_COMM_WORLD, 10);
+    MPI_Abort(app()->mpi.comm, 10);
     MPI_Finalize();
 #endif
     exit(0);
@@ -137,7 +137,7 @@ void polyakov_loop(_Complex double *pl_, const int mu) {
 
   /* Collect the results and return:*/
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&pl, &pls, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&pl, &pls, 2, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   pl = pls;
 #endif
 

@@ -217,7 +217,7 @@ int write_binary_spinor_data(spinor *const s, spinor *const r, LimeWriter *limew
                       "write_binary_spinor_data (spinor_write_binary.c)!\n",
                       status);
 #ifdef TM_USE_MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Abort(app()->mpi.comm, 1);
               MPI_Finalize();
 #endif
               exit(500);
@@ -458,7 +458,7 @@ int write_binary_spinor_data_l(spinor *const s, LimeWriter *limewriter, DML_Chec
                       "write_binary_spinor_data_l (spinor_write_binary.c)!\n",
                       status);
 #ifdef TM_USE_MPI
-              MPI_Abort(MPI_COMM_WORLD, 1);
+              MPI_Abort(app()->mpi.comm, 1);
               MPI_Finalize();
 #endif
               exit(500);

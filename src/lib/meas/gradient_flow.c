@@ -87,7 +87,8 @@ void step_gradient_flow(su3 **x0, su3 **x1, su3 **x2, su3 **z, const unsigned in
         for (int mu = 0; mu < 4; ++mu) {
           su3 ALIGN z_tmp;
           su3 ALIGN w, w1;
-          get_staples(&w1, x, mu, (const su3 **)fields[f]);
+          
+          get_staples(&w1, x, mu, (const su3 **)fields[f], 0);
           // usually we dagger the staples, but the sign convention seems to require this
           _su3_times_su3d(z_tmp, w1, fields[f][x][mu]);
           project_traceless_antiherm(&z_tmp);
@@ -187,7 +188,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
 
     measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[2]);
-    P[2] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
+    P[2] = measure_plaquette((const su3 *const *const)vt.field, 0) / (6.0 * VOLUME * g_nproc);
 
     while (t[1] < tmax) {
       t[0] = t[2];
@@ -198,7 +199,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         t[step] = t[step - 1] + eps;
         step_gradient_flow(vt.field, x1.field, x2.field, z.field, 0, eps);
         measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[step]);
-        P[step] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
+        P[step] = measure_plaquette((const su3 *const *const)vt.field, 0) / (6.0 * VOLUME * g_nproc);
       }
       W = t[1] * t[1] * (2 * fso[1].E + t[1] * ((fso[2].E - fso[0].E) / (2 * eps)));
       tsqE = t[1] * t[1] * fso[1].E;

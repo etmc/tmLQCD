@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
                   even_odd_flag);
     }
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette(g_gauge_field);
+    plaquette_energy = measure_plaquette(g_gauge_field, 0);
 
     if (g_proc_id == 0) {
       printf("The plaquette value is %e\n", plaquette_energy / (6. * VOLUME * g_nproc));
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
                       (su3_tuple *)(g_gauge_field[0])) != 0)
         exit(1);
       g_update_gauge_copy = 1;
-      plaquette_energy = measure_plaquette(g_gauge_field);
+      plaquette_energy = measure_plaquette(g_gauge_field, 0);
 
       if (g_proc_id == 0) {
         printf("# The plaquette value after stouting is %e\n",
