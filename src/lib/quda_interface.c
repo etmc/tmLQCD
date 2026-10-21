@@ -474,9 +474,18 @@ void _initQuda() {
 
   // initialize the QUDA library
 #ifdef TM_USE_MPI
-  // set device number to node rank, assumes one GPU per rank if ptbc
+  const char * mps_env = getenv("QUDA_ENABLE_MPS");
+  const int mps = (mps_env != NULL && atoi(mps_env) == 1);
+  if(mps) {
+    fprintf(stderr, "_initQuda: MPS not supported");
+    exit(-2);
+  }
+
+  // MPS WITH DISGRETION: 
+  // if ranks are bound to the right device, remove the stderr and try the line below
+  // initQuda((app()->ptbc.active && !mps) ? app()->topo.node_rank : -1);
+
   initQuda(app()->ptbc.active ? app()->topo.node_rank : -1);
-  //initQuda(-1);  // sets device numbers automatically
 #else
   initQuda(0);  // scalar build: use device 0
 #endif
