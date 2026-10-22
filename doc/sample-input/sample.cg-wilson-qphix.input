@@ -11,10 +11,6 @@ nrzprocs=2
 nrxprocs=1
 nryprocs=1
 
-# OpenMP threads per MPI task
-# down below, Ncores * Sy * Sz = ompnumthreads
-ompnumthreads = 12
-
 DebugLevel = 3
 InitialStoreCounter = 1000
 Measurements = 1
@@ -42,7 +38,6 @@ BeginExternalInverter QPHIX
   MinCt = 2
   
   # thread geometry
-  # ompnumthreads = Ncores * Sy * Sz
   # hyperthreads should be specified here
   Sy = 1
   Sz = 1

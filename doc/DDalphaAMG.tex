@@ -50,7 +50,6 @@ More options are available and explained in the next section. At the first call 
 For tuning purpose, several parameters of DDalphaAMG can be set inside the section \texttt{DDalphaAMG} and here after the complete list of implemented parameters: 
 \begin{Verbatim}[fontsize=\small]
 BeginDDalphaAMG
-  MGOMPNumThreads = 1
   MGBlockX = 4
   MGBlockY = 4
   MGBlockZ = 4
@@ -69,7 +68,6 @@ EndDDalphaAMG
 \end{Verbatim}
 Not all the parameters have to be use and for all of them a standard value is defined. Here a brief explanation:
 \begin{description}
-	\item[\texttt{MGOMPNumThreads:}] the DDalphaAMG library does not take advantages on exploiting hyper-threading; while most of the applications of tmLQCD do. For this reason the \texttt{OMPNumThreads} for DDalphaAMG has been separated by the standard one. If this parameter is not used, the value of \texttt{OMPNumThreads} is used.
 	\item[\texttt{MGBlock?:}]\footnote{\label{fn:Alexandrou:2016} for a better understanding of these parameters we strongly suggest the reading of the numerical results presented in \cite{Alexandrou:2016}} block size in the directions X,Y,Z,T. The values have to divide the local size of the lattice and by default an optimal value is used.
 	\item[\texttt{MGNumberOfVectors:}]\footnoteref{fn:Alexandrou:2016} number of vectors used in the fine level. This parameter require some tuning.
 	\item[\texttt{MGNumberOfLevels:}] number of levels for the multigrid method. Can take values from 1 (no multigrid) to 4. A value of 3 is suggested.

@@ -5,8 +5,6 @@ NrXProcs = 2
 NrYProcs = 2
 NrZprocs = 1
 
-ompnumthreads=32
-
 BarrierMonomialsConverge = yes
 
 Measurements = 20

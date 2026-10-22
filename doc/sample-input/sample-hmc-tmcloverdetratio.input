@@ -20,7 +20,7 @@ ReversibilityCheckIntervall = 100
 InitialStoreCounter = 0
 DebugLevel = 0
 
-StrictCheckResidual = yes
+StrictResidualCheck = yes
 
 BeginMeasurement CORRELATORS
   Frequency = 2

@@ -76,7 +76,7 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
 
     # hard dependencies
-    depends_on("c-lime")
+    depends_on("c-lime@master")
     depends_on("blas")
     depends_on("lapack")
     depends_on("pkgconfig", type="build")

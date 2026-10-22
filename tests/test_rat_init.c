@@ -48,7 +48,7 @@ TEST(rat_init) {
   rat.crange[0] = 0;
   rat.crange[1] = order - 1;
 
-  ret = init_rational(&rat);
+  ret = init_rational(&rat, 1);
   assertFalseM(ret, "rat_init failed\n");
 
   for (int i = 0; i < order; i++) {

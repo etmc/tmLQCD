@@ -1,7 +1,6 @@
 NrXProcs = 1
 NrYProcs = 1
 NrZProcs = 1
-ompnumthreads = 3
 
 L=24
 T=48

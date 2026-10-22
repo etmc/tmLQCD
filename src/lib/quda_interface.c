@@ -1561,8 +1561,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 
 void _updateQudaMultigridPreconditioner() {
   if (check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
-                                &quda_input) == TM_QUDA_MG_SETUP_RESET) {
+                                &quda_input, quda_mg_param.coarse_grid_solution_type[0]) ==
+      TM_QUDA_MG_SETUP_RESET) {
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup", "");
+
+    if (quda_mg_setup_state.coarse_grid_solution_type == QUDA_MAT_SOLUTION &&
+        quda_mg_param.coarse_grid_solution_type[0] == QUDA_MATPC_SOLUTION) {
+      tm_debug_printf(0, 0,
+                      "# TM_QUDA: MG setup was generated for a non-EO solve but a single-parity "
+                      "solve was requested, setup must be redone\n");
+    }
 
     if (quda_mg_preconditioner != NULL) {
       tm_debug_printf(0, 0, "# TM_QUDA: Destroying MG Preconditioner Setup\n");
@@ -1593,11 +1601,14 @@ void _updateQudaMultigridPreconditioner() {
     inv_param.preconditioner = quda_mg_preconditioner;
 
     set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    // only newMultigridQuda sets the coarse grid solution type, so we record it only here
+    quda_mg_setup_state.coarse_grid_solution_type = quda_mg_param.coarse_grid_solution_type[0];
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
   } else if (check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
-                                       &quda_input) == TM_QUDA_MG_SETUP_REFRESH) {
+                                       &quda_input, quda_mg_param.coarse_grid_solution_type[0]) ==
+             TM_QUDA_MG_SETUP_REFRESH) {
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Refresh", "");
     tm_debug_printf(0, 0, "# TM_QUDA: Refreshing MG Preconditioner Setup for gauge_id: %f\n",
                     quda_gauge_state.gauge_id);
@@ -1629,7 +1640,8 @@ void _updateQudaMultigridPreconditioner() {
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
   } else if (check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
-                                       &quda_input) == TM_QUDA_MG_SETUP_UPDATE) {
+                                       &quda_input, quda_mg_param.coarse_grid_solution_type[0]) ==
+             TM_QUDA_MG_SETUP_UPDATE) {
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Update", "");
 
     tm_debug_printf(0, 0, "# TM_QUDA: Updating MG Preconditioner Setup for gauge_id: %f\n",

@@ -85,6 +85,16 @@ typedef enum QudaPrecision_s {
   QUDA_INVALID_PRECISION = QUDA_INVALID_ENUM
 } QudaPrecision;
 
+typedef enum QudaSolutionType_s {
+  QUDA_MAT_SOLUTION,
+  QUDA_MATDAG_MAT_SOLUTION,
+  QUDA_MATPC_SOLUTION,
+  QUDA_MATPC_DAG_SOLUTION,
+  QUDA_MATPCDAG_MATPC_SOLUTION,
+  QUDA_MATPCDAG_MATPC_SHIFT_SOLUTION,
+  QUDA_INVALID_SOLUTION = QUDA_INVALID_ENUM
+} QudaSolutionType;
+
 typedef struct QudaGaugeParam_s {
   QudaPrecision cuda_prec;
   QudaPrecision cuda_prec_sloppy;

@@ -118,7 +118,6 @@ extern double mg_cmu_factor;
 extern double mg_dtau_update;
 extern double mg_rho_update;
 extern int mg_update_setup_iter;
-extern int mg_omp_num_threads;
 
 extern tm_mpi_thread_level_t g_mpi_thread_level;
 

@@ -5,6 +5,12 @@
 
 include(GNUInstallDirs)
 
+if(DDalphaAMG_ENABLE_HDF5)
+  # the static hdf5-static target's link interface requires ZLIB::ZLIB
+  find_package(ZLIB)
+  find_package(HDF5 REQUIRED COMPONENTS C CONFIG)
+endif()
+
 set(DDalphaAMG_SRC_DIR ${CMAKE_SOURCE_DIR}/DDalphaAMG/deps)
 
 FetchContent_Declare(
@@ -165,7 +171,8 @@ add_dependencies(DDalphaAMG run_sed)
 
 target_link_libraries(
   DDalphaAMG
-  PUBLIC MPI::MPI_C $<$<BOOL:${DDalphaAMG_ENABLE_HDF5}>:hdf5:hdf5>
+  PUBLIC MPI::MPI_C
+         $<$<BOOL:${DDalphaAMG_ENABLE_HDF5}>:$<IF:$<BOOL:${BUILD_SHARED_LIBS}>,hdf5-shared,hdf5-static>>
          $<$<BOOL:${DDalphaAMG_ENABLE_OMP}>:OpenMP::OpenMP_C> tmlqcd::clime)
 
 target_include_directories(
