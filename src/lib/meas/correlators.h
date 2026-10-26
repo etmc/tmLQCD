@@ -27,18 +27,19 @@
 #include "linalg/assign.h"
 #include "operator/tm_operators.h"
 
-
 /* measurement of the correlators involving the light doublet (see tmLQCD documentation)*/
 void light_correlators_measurement(const int traj, const int id, const int ieo);
 
-/* measurement of the 4x4 matrix for the heavy doublet: eq. 20 of https://arxiv.org/pdf/1005.2042.pdf  */
-void heavy_correlators_measurement(const int traj, const int id, const int ieo, const int i1, const int i2);
+/* measurement of the 4x4 matrix for the heavy doublet: eq. 20 of
+ * https://arxiv.org/pdf/1005.2042.pdf  */
+void heavy_correlators_measurement(const int traj, const int id, const int ieo, const int i1,
+                                   const int i2);
 
-/* 
+/*
  Function that is called when the correlator measurement is specified in the input file.
- Internally, it calls the functions for the measure of the light and (optionally) the heavy mesons correlators
+ Internally, it calls the functions for the measure of the light and (optionally) the heavy mesons
+ correlators
  */
 void correlators_measurement(const int traj, const int id, const int ieo);
-
 
 #endif
