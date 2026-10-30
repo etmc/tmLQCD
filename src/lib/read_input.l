@@ -3142,6 +3142,10 @@ static inline double fltlist_next_token(int * const list_end){
   meas->no_samples = 1;
   meas->all_time_slices = 0;
 
+  meas->measure_heavy_mesons = 0;
+  meas->write_heavy_mesons_sources = 0;
+  meas->write_heavy_mesons_props = 0;
+
   meas->gf_eps = _default_gf_eps;
   meas->gf_tmax = _default_gf_tmax;
 
@@ -3178,6 +3182,30 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*UseExternalLibrary{EQL}quda {
       meas->external_library = QUDA_LIB;
       if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*HeavyMesons{EQL}yes {
+      meas->measure_heavy_mesons = 1;
+      if(myverbose) printf("  HeavyMesons set to yes in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*HeavyMesons{EQL}no {
+      meas->measure_heavy_mesons = 0;
+      if(myverbose) printf("  HeavyMesons set to no in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*HeavyMesonsWriteSources{EQL}yes {
+      meas->write_heavy_mesons_sources = 1;
+      if(myverbose) printf("  HeavyMesonsWriteSources set to yes in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*HeavyMesonsWriteSources{EQL}no {
+      meas->write_heavy_mesons_sources = 0;
+      if(myverbose) printf("  HeavyMesonsWriteSources set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*HeavyMesonsWritePropagators{EQL}yes {
+      meas->write_heavy_mesons_props = 1;
+      if(myverbose) printf("  HeavyMesonsWritePropagators set to yes in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*HeavyMesonsWritePropagators{EQL}no {
+      meas->write_heavy_mesons_props = 0;
+      if(myverbose) printf("  HeavyMesonsWritePropagators set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
    }
 }
 
