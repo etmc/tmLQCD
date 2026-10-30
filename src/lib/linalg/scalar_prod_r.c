@@ -91,7 +91,7 @@ double scalar_prod_r(const spinor *const S, const spinor *const R, const int N,
 
 #if defined TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif

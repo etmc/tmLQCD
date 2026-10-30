@@ -65,7 +65,7 @@ float square_norm_32(const spinor32 *const P, const int N, const int parallel) {
 
 #ifdef TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif
@@ -113,7 +113,7 @@ float square_norm_ts_32(const spinor32 *const P, const int N, const int parallel
 
 #ifdef TM_USE_MPI
   if (parallel) {
-    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, app()->mpi.comm);
     return mres;
   }
 #endif
