@@ -1,4 +1,5 @@
 \subsection{Output files}
+\label{sec:output}
 
 \subsubsection*{\ttfamily output.data}
 
@@ -41,6 +42,30 @@ restart of the programme.
 \subsubsection*{\ttfamily onlinemeas.N}
 Contains the online measurement for trajectory {\ttfamily N} if this
 feature is switched on.
+
+\subsubsection*{\ttfamily heavy\_mesons.<suffix>}
+Written by the {\ttfamily CORRELATORS} measurement if {\ttfamily HeavyMesons = yes}
+(see section~\ref{sec:heavymesons}).
+The suffix is {\ttfamily N}, {\ttfamily tTTT.N} or {\ttfamily sSSS.N}
+(trajectory {\ttfamily N}, source time slice, sample), as for {\ttfamily onlinemeas}.
+The file first contains the light correlators of type $1$, $2$, $6$ in the
+{\ttfamily onlinemeas} format. It is followed by 16 blocks with lines
+\begin{verbatim}
+  hi  hj  g1  g2  t  C(t0+t)  C(t0-t)      t = 0 ... T/2
+\end{verbatim}
+where {\ttfamily hi}, {\ttfamily hj} $=0,1$ stand for $c$, $s$
+and {\ttfamily g1}, {\ttfamily g2} $=0,1$ for $\Gamma=1\!\!1$, $\gamma_5$
+(sink, source). At $t=0$ and $t=T/2$ the last column is $0$.
+
+\subsubsection*{\ttfamily heavy\_mesons\_source/prop\_light/prop\_heavy.<suffix>}
+LIME files written if {\ttfamily HeavyMesonsWriteSources} or {\ttfamily HeavyMesonsWritePropagators}
+is set. Record $n$ can be read with {\ttfamily read\_spinor(even, odd, filename, n)}.
+\begin{itemize}
+\item {\ttfamily heavy\_mesons\_source}: 4 records, the spin-diluted noise at $t_0$ for $\beta=0,\dots,3$.
+\item {\ttfamily heavy\_mesons\_prop\_light}: 4 records, the light propagators for $\beta=0,\dots,3$.
+\item {\ttfamily heavy\_mesons\_prop\_heavy}: 16 records in loop order $\beta$, $F$ (source flavour),
+  $f$ (sink flavour), in the basis of Ref.~\cite{baron2011computing}.
+\end{itemize}
 
 %%% Local Variables: 
 %%% mode: latex

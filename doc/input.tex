@@ -763,6 +763,7 @@ used as $\mu_0$. The masses must be ordered such that $\mu_0 < \mu_1 < ... < \mu
 \end{itemize} 
 
 \subsubsection{Online Measurements}
+\label{sec:onlinemeasinput}
 
 A number of measurements can be performed online while the hmc is
 running. 
@@ -780,6 +781,19 @@ where {\ttfamily TYPE} can be currently one of the following:
   this is for zero temperature, so the stochastic source is at fixed
   $t$. In addition it needs an operator defined in the input file,
   otherwise it will do nothing. (see input keywords for {\ttfamily invert} above)
+
+  Heavy-light meson correlators (section~\ref{sec:heavymesons}) are controlled by
+  \begin{itemize}
+  \item {\ttfamily HeavyMesons} \\
+    {\ttfamily yes} or {\ttfamily no} (default). If {\ttfamily yes}, the $K$ and $D$ correlators
+    are computed in addition. This needs two operators in the input file: the first one of type
+    {\ttfamily TMWILSON}, {\ttfamily WILSON} or {\ttfamily CLOVER} (light doublet),
+    the second one of type {\ttfamily DBTMWILSON} or {\ttfamily DBCLOVER} (heavy doublet).
+  \item {\ttfamily HeavyMesonsWriteSources} \\
+    {\ttfamily yes} or {\ttfamily no} (default). Write the stochastic sources to disk.
+  \item {\ttfamily HeavyMesonsWritePropagators} \\
+    {\ttfamily yes} or {\ttfamily no} (default). Write the light and heavy propagators to disk.
+  \end{itemize}
 \item {\ttfamily PIONNORM}:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
