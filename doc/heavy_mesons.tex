@@ -1,0 +1,137 @@
+\subsubsection{Heavy-light meson correlators}
+\label{sec:heavymesons}
+
+\providecommand{\id}{1\!\!1}
+\providecommand{\Tr}{\operatorname{Tr}}
+\providecommand{\vev}[1]{\left\langle #1 \right\rangle}
+\begingroup\sloppy
+
+If {\ttfamily HeavyMesons = yes} is set in the {\ttfamily CORRELATORS} measurement,
+the function {\ttfamily heavy\_correlators\_measurement} in
+{\ttfamily src/lib/meas/correlators.c} computes the $4\times4$ matrix of $K$ and $D$
+meson correlators of Ref.~\cite{baron2011computing} in the twisted basis.
+The input keywords are listed in section~\ref{sec:onlinemeasinput} and the output
+files in section~\ref{sec:output}.
+
+\paragraph{Setup.}
+The light doublet $\chi_\ell=(\chi_u,\chi_d)$ and the heavy doublet $\chi_h=(\chi_c,\chi_s)$ are described by
+\begin{equation}
+  D_\ell = D_W + i\mu\gamma_5\tau_3 , \qquad
+  D_h = D_W + i\mu_\sigma\gamma_5\tau_1 + \mu_\delta\tau_3 .
+  \label{eq:hm:Dh}
+\end{equation}
+In the input file they are operator $0$ (type {\ttfamily TMWILSON}, {\ttfamily WILSON} or
+{\ttfamily CLOVER}) and operator $1$ (type {\ttfamily DBTMWILSON} or {\ttfamily DBCLOVER}).
+
+The light operator is inverted only for the $u$ quark ($+\mu$).
+For the heavy doublet, tmLQCD inverts
+$\tilde D_h = D_W + i\bar\mu\gamma_5\tau_3 - \bar\epsilon\tau_1$.
+This operator is related to eq.~(\ref{eq:hm:Dh}) by a flavour rotation,
+\begin{equation}
+  D_h = U \tilde D_h U^\dagger , \quad U=\frac{1-i\tau_2}{\sqrt2} , \quad
+  \mu_\sigma=\bar\mu ,\ \mu_\delta=\bar\epsilon
+  \quad\Longrightarrow\quad
+  D_h^{-1}\eta = U\,\tilde D_h^{-1}\,(U^\dagger\eta) .
+\end{equation}
+The code therefore multiplies each heavy source by $U^\dagger=(1+i\tau_2)/\sqrt2$, inverts,
+and multiplies the result by $U$ ({\ttfamily mul\_one\_pm\_itau2} with sign $\pm1$).
+All heavy propagators below are in the basis of eq.~(\ref{eq:hm:Dh}).
+
+\paragraph{Operators and correlators.}
+Following eq.~(18) of Ref.~\cite{baron2011computing}, with the light flavour identified with $d$,
+\begin{equation}
+  O^{(h,\Gamma)} = \sigma_h\,\epsilon_\Gamma\;\bar\chi_d\,\Gamma\,\chi_h ,
+  \qquad
+  \sigma_c=-1,\ \sigma_s=+1,\qquad \epsilon_{\id}=1,\ \epsilon_{\gamma_5}=i .
+\end{equation}
+Since $\gamma_0\Gamma^\dagger\gamma_0=\eta_\Gamma\Gamma$ with $\eta_{\id}=1$ and $\eta_{\gamma_5}=-1$,
+we have $(\epsilon_\Gamma\bar\chi_d\Gamma\chi_h)^\dagger=\epsilon_\Gamma\,\bar\chi_h\Gamma\chi_d$.
+The dagger therefore gives no extra phase. The measured correlators are
+\begin{equation}
+  C^{h_ih_j}_{\Gamma_1\Gamma_2}(t) = \frac1V\sum_{\vec x}
+  \vev{O^{(h_i,\Gamma_1)}(\vec x,t_0+t)\,O^{(h_j,\Gamma_2)\dagger}(\vec 0,t_0)} .
+\end{equation}
+This matrix is real and symmetric~\cite{baron2011computing}. $\Gamma_1$ sits at the sink and $\Gamma_2$ at the source.
+
+\paragraph{Wick contraction.}
+The contraction gives a fermion-loop sign $-1$.
+We then use $\gamma_5$-hermiticity of the twisted-mass light quark,
+$S_d(0|x)=\gamma_5 S_u(x|0)^\dagger\gamma_5$, to obtain
+\begin{equation}
+  C^{h_ih_j}_{\Gamma_1\Gamma_2}(t) = -\,\sigma_{h_i}\sigma_{h_j}\,\epsilon_{\Gamma_1}\epsilon_{\Gamma_2}\,
+  \frac1V\sum_{\vec x}
+  \Tr\!\left[\Gamma_1\,S_h(x|0)_{h_ih_j}\,\Gamma_2\gamma_5\,S_u(x|0)^\dagger\gamma_5\right] .
+  \label{eq:hm:wick}
+\end{equation}
+Here $\epsilon_{\Gamma_1}\epsilon_{\Gamma_2}=\epsilon_{\Gamma_1}\epsilon^*_{\Gamma_2}\eta_{\Gamma_2}$,
+and the trace runs over spin and colour.
+
+\paragraph{Stochastic estimate.}
+The code uses the one-end trick on a time slice $t_0$, chosen at random or looping over all slices.
+The source is a $\mathbb Z_2\times\mathbb Z_2$ colour noise $\xi_b(\vec y)$ with $E[\xi_b\,\xi^*_{b'}]=\delta_{bb'}$.
+It is spin diluted: the source with dilution index $\beta$ has Dirac components
+$\eta_{\substack{\alpha\beta\\ b}}(y)=\delta_{\alpha\beta}\,\xi_b(\vec y)\,\delta_{y_0,t_0}$.
+\emph{The same} $\xi$ is used for every $\beta$ and for both doublets
+({\ttfamily eo\_source\_spinor\_field\_spin\_diluted\_oet\_ts}).
+The heavy sources are also flavour diluted, i.e.\ they are non-zero only in the flavour component $F\in\{c,s\}$.
+Below, all indices are subscripts: the first row holds the Dirac (and flavour) indices,
+ordered (sink, source), and the second row holds the colour indices.
+The propagators computed by the code are
+\begin{equation}
+  \psi_{u\,\substack{\alpha\beta\\ c}}(x) = \sum_{\vec y,\,b} S_u(x|y)_{\substack{\alpha\beta\\ cb}}\;\xi_b(\vec y) ,
+  \qquad
+  \psi_{h\,\substack{f\alpha,\,F\beta\\ c}}(x) = \sum_{\vec y,\,b} S_h(x|y)_{\substack{f\alpha,\,F\beta\\ cb}}\;\xi_b(\vec y) ,
+\end{equation}
+with $y=(\vec y,t_0)$. Each value of $\beta$ (and $F$) is one inversion,
+so there are 4 light and 8 doublet inversions per sample.
+Using $E[\xi_b\,\xi^*_{b'}]=\delta_{bb'}$, eq.~(\ref{eq:hm:wick}) becomes
+\begin{equation}
+  \Tr[\dots] \;\to\;
+  \sum_{\beta=0}^{3}\,\sum_{\alpha,\alpha'=0}^{3}\,\sum_{c=0}^{2}
+  (\gamma_5\Gamma_2)_{\beta\beta}\;
+  \psi^*_{u\,\substack{\alpha\beta\\ c}}(x)\;
+  (\gamma_5\Gamma_1)_{\alpha\alpha'}\;
+  \psi_{h\,\substack{h_i\alpha',\,h_j\beta\\ c}}(x) .
+  \label{eq:hm:stoch}
+\end{equation}
+Both propagators carry the \emph{same} source index $\beta$.
+The sink matrix $\gamma_5\Gamma_1$ acts on the sink Dirac index.
+The source matrix $\gamma_5\Gamma_2$ is diagonal in the chiral basis and acts as a weight on $\beta$:
+$\gamma_5=\mathrm{diag}(1,1,-1,-1)$.
+
+\paragraph{Implementation.}
+\begin{center}
+\begin{tabular}{ll}
+  \hline
+  index & meaning \\
+  \hline
+  {\ttfamily hi}, {\ttfamily hj} $=0,1$ & $c$, $s$ \quad (sink, source flavour) \\
+  {\ttfamily g1}, {\ttfamily g2} $=0,1$ & $\Gamma=\id$, $\gamma_5$ \quad (sink, source) \\
+  {\ttfamily beta} & spin dilution index \\
+  \hline
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item {\ttfamily g1==0}: $\gamma_5$ is applied to $\psi_h$, giving $\gamma_5\Gamma_1$.
+        {\ttfamily g2==0}: the term is multiplied by {\ttfamily g5\_diag[beta]}, giving $(\gamma_5\Gamma_2)_{\beta\beta}$.
+        The sums over $\alpha$ and $c$ are done by {\ttfamily \_spinor\_scalar\_prod}.
+  \item {\ttfamily sign\_hihj} $=\sigma_{h_i}\sigma_{h_j}$.
+        For $\Gamma_1=\Gamma_2$, {\ttfamily sign\_g1g2} $=\epsilon_{\Gamma_1}\epsilon_{\Gamma_2}=\pm1$ and the real part is kept.
+        For $\Gamma_1\neq\Gamma_2$, $\epsilon_{\Gamma_1}\epsilon_{\Gamma_2}=i$; since $\mathrm{Re}(iz)=-\mathrm{Im}\,z$,
+        the code uses sign $-1$ and keeps the imaginary part.
+        The discarded part vanishes on average.
+  \item The fermion-loop $-1$ and $1/V$ are applied when the local sums are stored. The sums are reduced over
+        the spatial MPI ranks and gathered in $t$.
+  \item Normalisation: the light propagator is returned by {\ttfamily op\_invert} multiplied by $2\kappa_\ell$.
+        The heavy propagator is in the raw inverter normalisation.
+        Masses are unaffected; the amplitudes carry a constant factor.
+  \item The light correlators $\langle PP\rangle$, $\langle PA\rangle$ and $\langle PV\rangle$ are computed from the same $\psi_u$
+        with the conventions of the standard online measurement.
+\end{itemize}
+\endgroup
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
