@@ -64,8 +64,8 @@ void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native, const 
 
   int red_n_diff = 0;
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Reduce(&n_diff, &red_n_diff, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
+  MPI_Reduce(&n_diff, &red_n_diff, 1, MPI_INT, MPI_MAX, 0, app()->mpi.comm);
 #else
   red_n_diff = n_diff;
 #endif

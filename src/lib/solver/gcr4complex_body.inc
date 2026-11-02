@@ -218,7 +218,7 @@ _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE *const Q, const int N, const int parallel
 #ifdef TM_USE_MPI
   if (parallel) {
     double nrm2 = nrm;
-    MPI_Allreduce(&nrm2, &nrm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&nrm2, &nrm, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   }
 #endif
 
@@ -253,7 +253,7 @@ _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE *const R, _C_TYPE *const S, const int N,
 #ifdef TM_USE_MPI
   if (parallel) {
     _Complex double res2 = res;
-    MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, app()->mpi.comm);
   }
 #endif
 
@@ -289,7 +289,7 @@ _F_TYPE _PSWITCH(lscalar_prod_r)(_C_TYPE *const R, _C_TYPE *const S, const int N
 #ifdef TM_USE_MPI
   if (parallel) {
     double res2 = res;
-    MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   }
 #endif
 

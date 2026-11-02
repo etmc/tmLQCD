@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 #else
   MPI_Init(&argc, &argv);
 #endif
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+  MPI_Comm_rank(app()->mpi.comm, &g_proc_id);
 
 #else
   g_proc_id = 0;
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
     antioptaway = 0.0;
     /* compute approximately how many applications we need to do to get a reliable measurement */
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     t1 = gettime();
     for (j = 0; j < j_max; j++) {
@@ -248,14 +248,14 @@ int main(int argc, char *argv[]) {
     // division by g_nproc because we will average over processes
     j = (int)(ceil(j_max * 31.0 / dt / g_nproc));
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&j, &j_max, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&j, &j_max, 1, MPI_INT, MPI_SUM, app()->mpi.comm);
 #else
     j_max = j;
 #endif
 
     /* perform the actual benchmark */
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     t1 = gettime();
     antioptaway = 0.0;
@@ -268,14 +268,14 @@ int main(int argc, char *argv[]) {
     }
     dt = gettime() - t1;
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 #else
     sdt = dt;
 #endif
 
     qdt = dt * dt;
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 #else
     sqdt = qdt;
 #endif
@@ -321,9 +321,9 @@ int main(int argc, char *argv[]) {
     dt2 = t2 - t1;
     /* compute the bandwidth */
     dt = dts - dt2;
-    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     sdt = sdt / ((double)g_nproc);
-    MPI_Allreduce(&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     dt = dt / ((double)g_nproc);
     dt = 1.0e6f * dt / ((double)(k_max * j_max * (VOLUME)));
     if (g_proc_id == 0) {
@@ -365,7 +365,7 @@ int main(int argc, char *argv[]) {
 
     /* estimate a reasonable number of applications to get a reliable measurement */
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     t1 = gettime();
     for (j = 0; j < j_max; j++) {
@@ -379,14 +379,14 @@ int main(int argc, char *argv[]) {
     // division by g_nproc because we will average over processes using  MPI_SUM
     j = (int)(ceil(j_max * 31.0 / dt / g_nproc));
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&j, &j_max, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&j, &j_max, 1, MPI_INT, MPI_SUM, app()->mpi.comm);
 #else
     j_max = j;
 #endif
 
     /* perform the actual measurement */
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(app()->mpi.comm);
 #endif
     t1 = gettime();
     for (j = 0; j < j_max; j++) {
@@ -398,13 +398,13 @@ int main(int argc, char *argv[]) {
     t2 = gettime();
     dt = t2 - t1;
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 #else
     sdt = dt;
 #endif
     qdt = dt * dt;
 #ifdef TM_USE_MPI
-    MPI_Allreduce(&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
 #else
     sqdt = qdt;
 #endif
@@ -451,7 +451,7 @@ int main(int argc, char *argv[]) {
   free_spinor_field();
   free_moment_field();
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
   return (0);

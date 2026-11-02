@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette((const su3 **const)g_gauge_field);
+    plaquette_energy = measure_plaquette((const su3 **const)g_gauge_field, 0);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6. * VOLUME * g_nproc));
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
   free(input_filename);
 
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
   return (0);

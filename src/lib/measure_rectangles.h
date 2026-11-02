@@ -21,6 +21,9 @@
 
 #include "su3.h"
 
-double measure_rectangles(const su3** const gf);
+/* apply_ptbc == 1 weights each rectangle with the product of the PTBC defect
+ * coefficients of its six links (use for the gauge action), 0 gives the plain
+ * rectangle observable. */
+double measure_rectangles(const su3** const gf, int const apply_ptbc);
 
 #endif

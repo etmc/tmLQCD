@@ -198,7 +198,7 @@ int read_binary_spinor_data(spinor *const s, spinor *const r, LimeReader *limere
                     "spinor_read_binary.c!\n",
                     status);
 #ifdef TM_USE_MPI
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Abort(app()->mpi.comm, 1);
             MPI_Finalize();
 #endif
             return (-2);
@@ -376,7 +376,7 @@ int read_binary_spinor_data_l(spinor *const s, LimeReader *limereader, DML_Check
                     "spinor_read_binary.c!\n",
                     status);
 #ifdef TM_USE_MPI
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Abort(app()->mpi.comm, 1);
             MPI_Finalize();
 #endif
             return (-2);

@@ -22,8 +22,12 @@
 
 #include "su3.h"
 
-void get_staples(su3* const staple, const int x, const int mu, const su3** in_gauge_field);
-void get_timelike_staples(su3* const staple, const int x, const int mu, const su3** in_gauge_field);
+/* apply_ptbc == 1 weights the staple links with the PTBC defect coefficients
+ * (use for the gauge action and its force), == 0 gives the plain staple. */
+void get_staples(su3* const staple, const int x, const int mu, const su3** in_gauge_field,
+                 int const apply_ptbc);
+void get_timelike_staples(su3* const staple, const int x, const int mu,
+                          const su3** in_gauge_field, int const apply_ptbc);
 void get_spacelike_staples(su3* const staple, const int x, const int mu,
-                           const su3** in_gauge_field);
+                           const su3** in_gauge_field, int const apply_ptbc);
 #endif

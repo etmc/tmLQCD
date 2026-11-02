@@ -72,7 +72,7 @@ double diff_and_square_norm(spinor *const Q, spinor *const R, const int N) {
   }
   kc = ks + kc;
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
   return ks;
 #else
   return kc;

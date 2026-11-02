@@ -104,7 +104,7 @@ int read_spinorfield_cm_swap_single(spinor *const s, spinor *const r, char *file
   if (ifs == (FILE *)NULL) {
     fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
 #ifdef TM_USE_MPI
-    MPI_Abort(MPI_COMM_WORLD, 1);
+    MPI_Abort(app()->mpi.comm, 1);
     MPI_Finalize();
 #endif
     exit(500);

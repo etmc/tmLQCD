@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
     update_tm_gauge_exchange(&g_gauge_state_32);
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field, 0);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6. * VOLUME * g_nproc));
@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
        * (su3_tuple*)(g_gauge_field[0])) != 0) */
       /*         exit(1) ; */
       g_update_gauge_copy = 1;
-      plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+      plaquette_energy = measure_plaquette((const su3 **)g_gauge_field, 0);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n",
@@ -448,7 +448,7 @@ int main(int argc, char *argv[]) {
   _endQuda();
 #endif
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
   return (0);

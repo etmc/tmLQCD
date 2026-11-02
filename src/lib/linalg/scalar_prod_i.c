@@ -64,7 +64,7 @@ double scalar_prod_i(spinor *const S, spinor *const R, const int N, const int pa
 
 #if defined TM_USE_MPI
   if (parallel == 1) {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, app()->mpi.comm);
     kc = ks;
   }
 #endif
