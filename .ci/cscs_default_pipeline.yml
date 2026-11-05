@@ -9,7 +9,7 @@ stages:
   - prepare
   - build
   - test
-
+  - cleanup
 
 build-base/uenv/daint-gh200:
   stage: prepare
@@ -27,7 +27,6 @@ build-tmlqcd/uenv/daint-gh200:
     REPO: "./.ci/uenv-recipes/tmlqcd/daint-gh200/repo/"
     VARIANTS: "cuda_arch=90,+cuda,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
-
 
 test/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .test/base]
