@@ -28,7 +28,6 @@ build-tmlqcd/uenv/daint-gh200:
     VARIANTS: "cuda_arch=90,+cuda,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
-
 test/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .test/base]
   needs: [build-tmlqcd/uenv/daint-gh200]
