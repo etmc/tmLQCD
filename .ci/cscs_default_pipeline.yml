@@ -11,7 +11,9 @@ stages:
   - test
   - cleanup
 
-build-base/uenv/daint-gh200:
+# TEMPORARY: uenv jobs hidden (leading '.') to test the container jobs alone.
+# Revert by removing the leading '.' from the three job names and needs below.
+.build-base/uenv/daint-gh200:
   stage: prepare
   extends: .uenv-builder-daint-gh200
   variables:
@@ -19,18 +21,18 @@ build-base/uenv/daint-gh200:
     SLURM_TIMELIMIT: "04:00:00"
 
 
-build-tmlqcd/uenv/daint-gh200:
+.build-tmlqcd/uenv/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .build/base]
-  needs: [build-base/uenv/daint-gh200]
+  needs: [.build-base/uenv/daint-gh200]
   variables:
-    SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
+    SPEC: "tmlqcd@cicd +quda +lemon ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     REPO: "./.ci/uenv-recipes/tmlqcd/daint-gh200/repo/"
     VARIANTS: "cuda_arch=90,+cuda,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
-test/daint-gh200:
+.test/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .test/base]
-  needs: [build-tmlqcd/uenv/daint-gh200]
+  needs: [.build-tmlqcd/uenv/daint-gh200]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
@@ -49,3 +51,84 @@ test/daint-gh200:
           numdiff -r 5e-4 ${f} ${REFPATH}/${f};
         done
       fi
+
+# --- Docker/container variant of the pipeline --------------------------------
+# Builds QUDA + tmLQCD (from this PR's checkout, via `COPY .`) into a container
+# image and runs the same HMC check inside it. The image is tagged with the
+# commit SHA: the builder only rebuilds when the tag does not exist yet
+# (CSCS_REBUILD_POLICY=if-not-exists), so a fixed tag would reuse stale code.
+
+build-tmlqcd/container/daint-gh200:
+  stage: build
+  extends: .container-builder-cscs-gh200
+  needs: []  # don't wait for the prepare stage
+  variables:
+    DOCKERFILE: .ci/docker/Dockerfile.build
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/tmlqcd-ci:$CI_COMMIT_SHA
+    # CSCS builders have many cores; QUDA's own CI uses -j64 there.
+    DOCKER_BUILD_ARGS: '["BUILD_JOBS=64"]'
+
+test/container/daint-gh200:
+  stage: test
+  extends: .container-runner-daint-gh200
+  needs: [build-tmlqcd/container/daint-gh200]
+  image: $CSCS_REGISTRY_PATH/tmlqcd-ci:$CI_COMMIT_SHA
+  variables:
+    # The container job does not run inside the repo checkout; use the copy
+    # of this commit's sources baked into the image (COPY . /tmlqcd).
+    REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
+    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_GDR: 0 # disable GPU-Direct RDMA
+    SLURM_JOB_NUM_NODES: 2
+    SLURM_NTASKS: 8
+    SLURM_TIMELIMIT: "01:00:00"
+    SLURM_PARTITION: normal
+    USE_MPI: "YES"
+    # MPICH in the image is ch4:ofi (libfabric+xpmem); SLURM_MPI_TYPE=pmi2 is
+    # set by .container-runner-daint-gh200. Enable GPU-aware (HMEM) transfers,
+    # as in QUDA's CSCS pipeline (lattice/quda ci/pipeline.yml).
+    MPIR_CVAR_CH4_OFI_ENABLE_HMEM: 1
+    # capstor is not visible inside the container by default; bind-mount the
+    # shared CI work area at the same path (docs.cscs.ch/services/cicd,
+    # container-runner -> CSCS_ADDITIONAL_MOUNTS).
+    CSCS_ADDITIONAL_MOUNTS: '["/capstor/store/cscs/pasc/c36/ci-stack:/capstor/store/cscs/pasc/c36/ci-stack"]'
+  script:
+    # hmc_tm writes output.data/onlinemeas.* and (via lemon parallel IO)
+    # gauge configs to the working dir, which must be shared by both nodes.
+    # Use a per-pipeline dir on capstor, like the uenv jobs do. Every rank
+    # runs this script; `mkdir -p` is safe to call concurrently.
+    - export RUN_DIR="/capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}/container-test"
+    - mkdir -p "${RUN_DIR}"
+    - cd "${RUN_DIR}"
+    - echo "Running in $(pwd)"
+    - hmc_tm -f /tmlqcd/doc/sample-input/sample-hmc-quda-cscs.input
+    - |
+      if test "${SLURM_PROCID}" -eq "0"; then
+        echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
+        numdiff -r 1e-5 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
+        for i in $(seq 0 2 18); do
+          f=onlinemeas.$(printf %06d $i);
+          numdiff -r 5e-4 ${f} ${REFPATH}/${f};
+        done
+      fi
+
+# Remove this pipeline's shared work dir on capstor (uenv build trees and the
+# container test's run dir) once all test jobs are done. Runs even if a test
+# failed, so failed pipelines don't leave data behind; drop `when: always` to
+# keep the dir around for debugging failed runs.
+cleanup/daint-gh200:
+  stage: cleanup
+  extends: .baremetal-runner-daint-gh200
+  when: always
+  variables:
+    GIT_STRATEGY: none # no checkout needed
+    SLURM_JOB_NUM_NODES: 1
+    SLURM_NTASKS: 1
+    SLURM_TIMELIMIT: "00:10:00"
+  script:
+    - |
+      if [ -z "${CI_PIPELINE_ID}" ]; then
+        echo "CI_PIPELINE_ID is empty, refusing to clean up"; exit 1
+      fi
+    - rm -rf "/capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}"
+    - echo "Removed /capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}"
