@@ -23,7 +23,7 @@ build-tmlqcd/uenv/daint-gh200:
   extends: [.uenv-runner-daint-gh200, .build/base]
   needs: [build-base/uenv/daint-gh200]
   variables:
-    SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
+    SPEC: "tmlqcd@cicd +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     REPO: "./.ci/uenv-recipes/tmlqcd/daint-gh200/repo/"
     VARIANTS: "cuda_arch=90,+cuda,+mpi"
     SLURM_TIMELIMIT: "01:00:00"

@@ -8,6 +8,19 @@ set -xeuo pipefail
 export BUILD_DIR="${BUILD_DIR:-/capstor/store/cscs/pasc/c36/ci-stack/$CI_PIPELINE_ID}"
 mkdir -p "$BUILD_DIR"
 
+cat_logs() {
+    rc=$?
+    set +e +x
+    if [ $rc -ne 0 ]; then
+        for f in $(find /dev/shm/spack-stage -type f -name 'spack-build-out.txt' 2>/dev/null); do
+            echo "=== $f ==="
+            tail -n 200 "$f"      # last 200 lines; use cat for the whole thing
+        done
+    fi
+    exit $rc
+}
+trap cat_logs EXIT
+
 export SPACK_SYSTEM_CONFIG_PATH="/user-environment/config"
 export SPACK_PYTHON="$(which python3.6)" # must be <=3.12, system python is 3.6
 
