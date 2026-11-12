@@ -2,51 +2,81 @@
 
 set -xeuo pipefail
 
+# Shared, per-pipeline work dir on a filesystem visible to all jobs.
+# Replaces builddir.tar: later jobs recompute the same path from CI_PIPELINE_ID.
+# CI_PIPELINE_ID is instance-wide unique (CI_PIPELINE_IID is per project only).
+export BUILD_DIR="${BUILD_DIR:-/capstor/store/cscs/pasc/c36/ci-stack/$CI_PIPELINE_ID}"
+mkdir -p "$BUILD_DIR"
+
+cat_logs() {
+    rc=$?
+    set +e +x
+    if [ $rc -ne 0 ]; then
+        for f in $(find /dev/shm/spack-stage -type f -name 'spack-build-out.txt' 2>/dev/null); do
+            echo "=== $f ==="
+            tail -n 200 "$f"      # last 200 lines; use cat for the whole thing
+        done
+    fi
+    exit $rc
+}
+trap cat_logs EXIT
+
 export SPACK_SYSTEM_CONFIG_PATH="/user-environment/config"
 export SPACK_PYTHON="$(which python3.6)" # must be <=3.12, system python is 3.6
-export CICD_SRC_DIR="$PWD"
-export QUDA_SRC_DIR="$PWD/deps/src/quda"
+
+# dev-spec sources live on shared storage so their spack-build-* dirs persist
+export CICD_SRC_DIR="$BUILD_DIR/tmlqcd"
+export QUDA_SRC_DIR="$BUILD_DIR/quda"
+export SPACK_ENV_DIR="$BUILD_DIR/spack-env"
 
 # QUDA git, branch and commit
 export QUDA_GIT_REPO="${QUDA_GIT_REPO:=https://github.com/lattice/quda.git}"
 export QUDA_GIT_BRANCH="${QUDA_GIT_BRANCH:=develop}"
 export QUDA_GIT_COMMIT="${QUDA_GIT_COMMIT:=$(git ls-remote ${QUDA_GIT_REPO} refs/heads/${QUDA_GIT_BRANCH} | awk '{print $1}')}"
 
+# tmlqcd: copy the checkout to shared storage (retries reuse the same dir)
+rm -rf "$CICD_SRC_DIR"
+mkdir -p "$CICD_SRC_DIR"
+cp -r "$PWD/." "$CICD_SRC_DIR/"   # or: rsync -a --exclude=.git "$PWD/" "$CICD_SRC_DIR/"
+
 # obtain QUDA
+rm -rf "$QUDA_SRC_DIR"
 git clone -b "${QUDA_GIT_BRANCH}" "${QUDA_GIT_REPO}" "${QUDA_SRC_DIR}"
 git -C "${QUDA_SRC_DIR}" checkout "${QUDA_GIT_COMMIT}"
 
-# make sure we keep the stage direcorty
-spack config --scope=spack add config:build_stage:/dev/shm/spack-stage
-# we might need to install dependencies too, e.g. nlcglib in case of API changes
-spack config --scope=spack add config:install_tree:root:/dev/shm/spack-stage
+rm -rf "$SPACK_ENV_DIR"
+spack env create -d "$SPACK_ENV_DIR"
 
-spack env create -d ./spack-env
+# Config goes into the environment (not --scope=spack, which would only live in
+# the per-job spack clone), so later jobs using this env see the same paths.
+# Stage is throwaway; the install tree must persist.
+spack -e "$SPACK_ENV_DIR" config add "config:build_stage:/dev/shm/spack-stage"
+spack -e "$SPACK_ENV_DIR" config add "config:install_tree:root:$BUILD_DIR/install"
 
 # add local repository with current tmlqcd recipe
-spack -e ./spack-env repo add "${REPO}"
+spack -e "$SPACK_ENV_DIR" repo add "${REPO}"
 
-spack -e ./spack-env config add "packages:all:variants:[${VARIANTS}]"
+spack -e "$SPACK_ENV_DIR" config add "packages:all:variants:[${VARIANTS}]"
 
-spack -e ./spack-env add "${SPEC}"
+spack -e "$SPACK_ENV_DIR" add "${SPEC}"
 
 # for tmlqcd use local src instead of fetch git
-spack -e ./spack-env develop -p "${CICD_SRC_DIR}" tmlqcd@cicd
+spack -e "$SPACK_ENV_DIR" develop -p "${CICD_SRC_DIR}" tmlqcd@cicd
 
-# for quda use local src instead of fetch git, to be able to tests against
-# differnt repo, branch, commit and also to support that quda branch develop is
+# for quda use local src instead of fetch git, to be able to test against
+# different repo, branch, commit and also to support that quda branch develop is
 # a moving target
-spack -e ./spack-env develop -p "${QUDA_SRC_DIR}" quda@cicd
+spack -e "$SPACK_ENV_DIR" develop -p "${QUDA_SRC_DIR}" quda@cicd
 
 # display spack.yaml
-cat ./spack-env/spack.yaml
+cat "$SPACK_ENV_DIR/spack.yaml"
 
-spack -e ./spack-env concretize
-spack -e ./spack-env install
+spack -e "$SPACK_ENV_DIR" concretize
+spack -e "$SPACK_ENV_DIR" install --keep-prefix
 
-# the tar pipe below expects a relative path
-builddir_tmlqcd=$(spack -e ./spack-env location -b tmlqcd)
-builddir_quda=$(spack -e ./spack-env location -b quda)
-
-# create a symlink to spack build directory (keep in artifacts)
-tar -cf builddir.tar $builddir_tmlqcd $builddir_quda
+# No tar step: the build dirs stay on shared storage at
+#   $(spack -e "$SPACK_ENV_DIR" location -b tmlqcd)
+#   $(spack -e "$SPACK_ENV_DIR" location -b quda)
+# Downstream jobs use $BUILD_DIR directly.
+spack -e "$SPACK_ENV_DIR" location -b tmlqcd
+spack -e "$SPACK_ENV_DIR" location -b quda
