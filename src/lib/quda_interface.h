@@ -162,10 +162,11 @@ int invert_eo_quda_twoflavour_mshift(spinor** const out_up, spinor** const out_d
 
 void compute_gauge_derivative_quda(monomial* const mnl, hamiltonian_field_t* const hf);
 void compute_cloverdet_derivative_quda(monomial* const mnl, hamiltonian_field_t* const hf,
-                                       spinor* const X_o, spinor* const phi, int detratio);
+                                       spinor* const X_o, spinor* const phi, const int detratio);
+void compute_cloverrat_derivative_quda(monomial* const mnl, hamiltonian_field_t* const hf,
+                                       spinor** const Q);
 void compute_ndcloverrat_derivative_quda(monomial* const mnl, hamiltonian_field_t* const hf,
-                                         spinor** const Qup, spinor** const Qdn,
-                                         solver_params_t* solver_params, int detratio);
+                                         spinor** const Qup, spinor** const Qdn);
 
 void compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile);
 
