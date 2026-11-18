@@ -33,7 +33,7 @@ following list gives all options (OFF by default unless specified):
   increase the memory requirement of the code.
 - `TM_USE_HALFSPINOR`: Use a Dirac Op. with halfspinor exchange (**ON**
   by default). See sub-section ref{sec:dirac} for details. 
-- `TM_USE_QUDA`: Enable QUDA support.
+- `TM_USE_QUDA`: Enable QUDA support. (Requires QUDA commit or 93085f later)
 - `TM_USE_SHMEM`: Use shmem API.
 - `TM_ENABLE_WARNINGS`: Enable all warnings (**ON** by default).
 - `TM_ENABLE_TESTS`: Enable tests.
