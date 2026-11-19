@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
     update_tm_gauge_exchange(&g_gauge_state_32);
 #endif
 
-    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field, 0);
     if (g_proc_id == 0) {
       printf("# Computed plaquette value: %14.12f.\n", plaquette_energy / (6. * VOLUME * g_nproc));
     }
@@ -357,7 +357,7 @@ int main(int argc, char *argv[]) {
   _endQuda();
 #endif
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(app()->mpi.comm);
   MPI_Finalize();
 #endif
 

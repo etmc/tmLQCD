@@ -49,7 +49,7 @@ void catch_ill_inst(int s) {
   fprintf(stderr, "Aborting...\n");
   fflush(stdout);
 #ifdef TM_USE_MPI
-  MPI_Abort(MPI_COMM_WORLD, 1);
+  MPI_Abort(app()->mpi.comm, 1);
   MPI_Finalize();
 #endif
   exit(0);

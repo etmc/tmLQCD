@@ -21,8 +21,11 @@
 
 #include "su3.h"
 
-void get_rectangle_staples(su3 *const v, const int x, const int mu);
+/* apply_ptbc == 1 weights the rectangle-staple links with the PTBC defect
+ * coefficients (use for the gauge action and its force), == 0 gives the plain
+ * rectangle staple. */
+void get_rectangle_staples(su3 *const v, const int x, const int mu, int const apply_ptbc);
 void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
-                                   const su3 *const *const gf);
+                                   const su3 *const *const gf, int const apply_ptbc);
 
 #endif
