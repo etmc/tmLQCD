@@ -609,14 +609,20 @@ void init_ptbc_tree() {
   }
 
   if(g_proc_id == 0) printf("PTBC graph initialised: %d periodic instance(s), %d tentacle(s). \n", n_periodic, n_tentacles);
-  
 
+  init_ptbc_rng();
+  return;
+}
+
+/**
+ * @brief      Initialise the leader communicator, the base rank offsets and the PTBC rng.
+ */
+void init_ptbc_rng() {
   // set leader communicator for the first time
-  set_leader_comm();  
+  set_leader_comm();
   int size;
   MPI_Comm_size(app()->mpi.world_comm, &size);
-  for (int i=0; i<ptbc_ctx->n_instances; i++) base_rank[i] = i * size / ptbc_ctx->n_instances;
-
+  for (int i=0; i<app()->ptbc.n_instances; i++) base_rank[i] = i * size / app()->ptbc.n_instances;
 
   // initialise PTBC rng state if global rank 0
   fill_random_numbers();

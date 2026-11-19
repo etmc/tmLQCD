@@ -97,6 +97,7 @@ int const get_node_n_children(int const node_id);
 
 // init ptbc
 void init_ptbc_tree();
+void init_ptbc_rng();
 void print_ptbc_topo();
 
 

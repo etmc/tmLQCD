@@ -398,14 +398,18 @@ int main(int argc, char *argv[]) {
                        trajectory_counter >= Ntherm, trajectory_counter);
     tm_stopwatch_pop(&g_timers, 0, 1, app()->ptbc.active ? ptbc_timer_tag(ptbc_inst_before_update) : "");
     Rate += accept;
-    
-    MPI_Barrier(app()->mpi.world_comm);
+
     if (app()->ptbc.active) {
-      int const ptbc_inst_at_swap = app()->ptbc.instance_id;
+      tm_stopwatch_push(&g_timers, "ptbc_presync","");
+      MPI_Barrier(app()->mpi.world_comm);
+      tm_stopwatch_pop(&g_timers, 0, 1, "ptbc_presync");
+
+
       tm_stopwatch_push(&g_timers, "ptbc_swap", "");
+      int const ptbc_inst_at_swap = app()->ptbc.instance_id;
 
       if (app()->ptbc.do_swap) {
-        // rank 0 decides how to swap
+        // rank 0 rng decides how to swap
         double rand_num;
         if (app()->mpi.world_rank == 0) {
           int tmp[105];

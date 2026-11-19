@@ -23,6 +23,7 @@ endforeach()
 # header file missing test_eigenvalues: observables.h missing
 if(TM_ENABLE_TESTS)
   list(APPEND tmlqcd_test_prog "hopping_test")
+  list(APPEND tmlqcd_test_prog "ptbc_rng_test")
   if(TM_USE_QPHIX)
     list(APPEND tmlqcd_test_prog "qphix_test_Dslash")
   endif()
