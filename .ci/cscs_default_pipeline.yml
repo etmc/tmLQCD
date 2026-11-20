@@ -65,8 +65,11 @@ build-tmlqcd/container/daint-gh200:
   variables:
     DOCKERFILE: .ci/docker/Dockerfile.build
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/tmlqcd-ci:$CI_COMMIT_SHA
-    # CSCS builders have many cores; QUDA's own CI uses -j64 there.
-    DOCKER_BUILD_ARGS: '["BUILD_JOBS=64"]'
+    # The builder's default is to build entirely in memory, which counts the
+    # image layers and QUDA's build tree against the 64Gi limit (OOMKilled).
+    # Build on disk instead, and cap parallel nvcc jobs (~2-3 GB each).
+    CSCS_BUILD_IN_MEMORY: "FALSE"
+    DOCKER_BUILD_ARGS: '["BUILD_JOBS=24"]'
 
 test/container/daint-gh200:
   stage: test

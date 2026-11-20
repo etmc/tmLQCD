@@ -12,7 +12,10 @@ stages:
   - cleanup
 
 
-build-base/uenv/beverin-mi300:
+# TEMPORARY: uenv jobs disabled (leading '.') because the uenv build fails;
+# the container jobs below replace them for now. Revert by removing the
+# leading '.' from the three job names and their needs.
+.build-base/uenv/beverin-mi300:
   stage: prepare
   extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
@@ -20,9 +23,9 @@ build-base/uenv/beverin-mi300:
     SLURM_TIMELIMIT: "08:00:00"
 
 
-build-tmlqcd/uenv/beverin-mi300:
+.build-tmlqcd/uenv/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .build/base, .beverin-mi300-secrets]
-  needs: [build-base/uenv/beverin-mi300]
+  needs: [.build-base/uenv/beverin-mi300]
   variables:
     SPEC: "tmlqcd@cicd +quda +lemon ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
@@ -30,9 +33,9 @@ build-tmlqcd/uenv/beverin-mi300:
     SLURM_TIMELIMIT: "01:00:00"
 
 
-test/beverin-mi300:
+.test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/base, .beverin-mi300-secrets]
-  needs: [build-tmlqcd/uenv/beverin-mi300]
+  needs: [.build-tmlqcd/uenv/beverin-mi300]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 1 # enable tuning
@@ -65,7 +68,14 @@ build-tmlqcd/container/beverin-mi300:
   variables:
     DOCKERFILE: .ci/docker/Dockerfile.beverin
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/tmlqcd-ci-beverin:$CI_COMMIT_SHA
-    DOCKER_BUILD_ARGS: '["BUILD_JOBS=64"]'
+    # The zen2 builder defaults to 32Gi and builds entirely in memory, which
+    # counts the (large) ROCm base image and QUDA's build tree against the
+    # limit (OOMKilled). Build on disk, raise the limit to the GH200 builder's
+    # 64Gi and cap parallel hipcc jobs (several GB each).
+    CSCS_BUILD_IN_MEMORY: "FALSE"
+    KUBERNETES_MEMORY_REQUEST: 64Gi
+    KUBERNETES_MEMORY_LIMIT: 64Gi
+    DOCKER_BUILD_ARGS: '["BUILD_JOBS=16"]'
 
 test/container/beverin-mi300:
   stage: test
