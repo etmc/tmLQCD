@@ -35,7 +35,7 @@ test/beverin-mi300:
   needs: [build-tmlqcd/uenv/beverin-mi300]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
-    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_TUNING: 1 # enable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
