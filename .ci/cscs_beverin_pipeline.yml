@@ -78,6 +78,7 @@ test/container/beverin-mi300:
     REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
+    QUDA_ENABLE_GDR: 1
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "01:00:00"
