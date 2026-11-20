@@ -9,9 +9,13 @@ stages:
   - prepare
   - build
   - test
+  - cleanup
 
 
-build-base/uenv/beverin-mi300:
+# TEMPORARY: uenv jobs disabled (leading '.') because the uenv build fails;
+# the container jobs below replace them for now. Revert by removing the
+# leading '.' from the three job names and their needs.
+.build-base/uenv/beverin-mi300:
   stage: prepare
   extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
@@ -19,22 +23,22 @@ build-base/uenv/beverin-mi300:
     SLURM_TIMELIMIT: "08:00:00"
 
 
-build-tmlqcd/uenv/beverin-mi300:
+.build-tmlqcd/uenv/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .build/base, .beverin-mi300-secrets]
-  needs: [build-base/uenv/beverin-mi300]
+  needs: [.build-base/uenv/beverin-mi300]
   variables:
-    SPEC: "tmlqcd@cicd +lemon +quda ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
+    SPEC: "tmlqcd@cicd +quda +lemon ^quda@cicd +qdp +multigrid +twisted_clover +twisted_mass"
     REPO: "./.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/"
     VARIANTS: "amdgpu_target=gfx942,amdgpu_target_sram_ecc=gfx942,+rocm,+mpi"
     SLURM_TIMELIMIT: "01:00:00"
 
 
-test/beverin-mi300:
+.test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/base, .beverin-mi300-secrets]
-  needs: [build-tmlqcd/uenv/beverin-mi300]
+  needs: [.build-tmlqcd/uenv/beverin-mi300]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
-    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_TUNING: 1 # enable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
@@ -50,3 +54,86 @@ test/beverin-mi300:
           numdiff -r 5e-4 ${f} ${REFPATH}/${f};
         done
       fi
+
+# --- Docker/container variant of the pipeline --------------------------------
+# Builds QUDA + tmLQCD for ROCm/gfx942 (from this PR's checkout, via `COPY .`)
+# into a container image and runs the same HMC check inside it. Same layout as
+# the daint container jobs in cscs_default_pipeline.yml. MI300A is x86_64, so
+# the image is built on the x86 (zen2) builder.
+
+build-tmlqcd/container/beverin-mi300:
+  stage: build
+  extends: .container-builder-cscs-zen2
+  needs: []  # don't wait for the prepare stage
+  variables:
+    DOCKERFILE: .ci/docker/Dockerfile.beverin
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/tmlqcd-ci-beverin:$CI_COMMIT_SHA
+    # The zen2 builder defaults to 32Gi and builds entirely in memory, which
+    # counts the (large) ROCm base image and QUDA's build tree against the
+    # limit (OOMKilled). Build on disk, raise the limit to the GH200 builder's
+    # 64Gi and cap parallel hipcc jobs (several GB each).
+    CSCS_BUILD_IN_MEMORY: "FALSE"
+    KUBERNETES_MEMORY_REQUEST: 64Gi
+    KUBERNETES_MEMORY_LIMIT: 64Gi
+    DOCKER_BUILD_ARGS: '["BUILD_JOBS=16"]'
+
+test/container/beverin-mi300:
+  stage: test
+  extends: [.container-runner-beverin-mi300, .beverin-mi300-secrets]
+  needs: [build-tmlqcd/container/beverin-mi300]
+  image: $CSCS_REGISTRY_PATH/tmlqcd-ci-beverin:$CI_COMMIT_SHA
+  variables:
+    # The container job does not run inside the repo checkout; use the copy
+    # of this commit's sources baked into the image (COPY . /tmlqcd).
+    REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
+    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_P2P: 0 # disable P2P
+    QUDA_ENABLE_GDR: 1
+    SLURM_JOB_NUM_NODES: 2
+    SLURM_NTASKS: 8
+    SLURM_TIMELIMIT: "01:00:00"
+    USE_MPI: "YES"
+    # Enable GPU-aware (HMEM) transfers in the image's ch4:ofi MPICH.
+    MPIR_CVAR_CH4_OFI_ENABLE_HMEM: 1
+    # capstor is not visible inside the container by default; bind-mount the
+    # shared CI work area at the same path.
+    CSCS_ADDITIONAL_MOUNTS: '["/capstor/store/cscs/pasc/c36/ci-stack:/capstor/store/cscs/pasc/c36/ci-stack"]'
+  script:
+    # hmc_tm writes its output (and lemon gauge configs) to the working dir,
+    # which must be shared by both nodes. Every rank runs this script;
+    # `mkdir -p` is safe to call concurrently.
+    - export RUN_DIR="/capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}/container-test-beverin"
+    - mkdir -p "${RUN_DIR}"
+    - cd "${RUN_DIR}"
+    - echo "Running in $(pwd)"
+    - hmc_tm -f /tmlqcd/doc/sample-input/sample-hmc-quda-cscs-beverin.input
+    - |
+      if test "${SLURM_PROCID}" -eq "0"; then
+        echo "Check the results on SLURM_PROCID=${SLURM_PROCID} ..."
+        numdiff -r 1e-5 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
+        for i in $(seq 0 2 18); do
+          f=onlinemeas.$(printf %06d $i);
+          numdiff -r 5e-4 ${f} ${REFPATH}/${f};
+        done
+      fi
+
+# Remove this pipeline's shared work dir on capstor (uenv build trees and the
+# container test's run dir) once all test jobs are done. Only runs if every
+# earlier job succeeded: after a failure the dir is kept for debugging and has
+# to be removed by hand (rm -rf /capstor/store/cscs/pasc/c36/ci-stack/<id>).
+cleanup/beverin-mi300:
+  stage: cleanup
+  extends: [.baremetal-runner-beverin-mi300, .beverin-mi300-secrets]
+  when: on_success
+  variables:
+    GIT_STRATEGY: none # no checkout needed
+    SLURM_JOB_NUM_NODES: 1
+    SLURM_NTASKS: 1
+    SLURM_TIMELIMIT: "00:10:00"
+  script:
+    - |
+      if [ -z "${CI_PIPELINE_ID}" ]; then
+        echo "CI_PIPELINE_ID is empty, refusing to clean up"; exit 1
+      fi
+    - rm -rf "/capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}"
+    - echo "Removed /capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}"

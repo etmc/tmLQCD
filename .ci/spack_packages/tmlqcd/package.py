@@ -22,7 +22,7 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("mtaillefumier", "chaoos")
     version("master", branch="master")
 
-    variant("lemon", default=False, description="Enable the lemon backend")
+    variant("lemon", default=True, description="Enable the lemon backend")
     variant("mpi", default=True, description="Enable mpi support")
     variant("DDalphaAMG", default=False, description="Enable DAlphaAMG support")
     variant("openmp", default=True, description="Enable OpenMP")
@@ -39,7 +39,9 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable non-blocking mpi calls for spinor and gauge fields",
         when="+mpi",
     )
-    variant("fixedvolume", default=True, description="Enable fixed volume at compile time")
+    variant(
+        "fixedvolume", default=True, description="Enable fixed volume at compile time"
+    )
     variant(
         "alignment",
         default="auto",
@@ -47,13 +49,17 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
         description="Automatically or expliclty align arrays",
     )
     variant("gauge_copy", default=True, description="Enable gauge field copy")
-    variant("half_spinor", default=True, description="Use a Dirac operator with half-spinor")
+    variant(
+        "half_spinor", default=True, description="Use a Dirac operator with half-spinor"
+    )
     variant("shared", default=False, description="Enable shared library")
     variant("shmem", default=False, description="Use shmem API")
     variant("quda", default=True, description="Enable the QUDA library", when="+cuda")
     variant("quda", default=True, description="Enable the QUDA library", when="+rocm")
     variant(
-        "QPhiX", default=False, description="Enable the QPhiX library for Intel Xeon and Xeon Phis"
+        "QPhiX",
+        default=False,
+        description="Enable the QPhiX library for Intel Xeon and Xeon Phis",
     )
     variant(
         "mpi_dimensions",
@@ -83,7 +89,7 @@ class Tmlqcd(CMakePackage, CudaPackage, ROCmPackage):
 
     # dependencies
     depends_on("mpi", when="+mpi")
-    depends_on("lemonio", when="+lemon")
+    #    depends_on("lemonio", when="+lemon")
 
     depends_on("llvm-openmp", when="+rocm+openmp")
 
@@ -103,7 +109,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("TM_USE_LEMON", "lemon"),
             self.define_from_variant("TM_USE_MPI", "mpi"),
             self.define_from_variant("TM_USE_QUDA", "quda"),
             self.define_from_variant("TM_USE_CUDA", "cuda"),
@@ -113,6 +118,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("TM_USE_SHMEM", "shmem"),
             self.define_from_variant("TM_USE_GAUGE_COPY", "gauge_copy"),
             self.define_from_variant("TM_USE_HALFSPINOR", "half_spinor"),
+            self.define_from_variant("TM_USE_LEMON", "lemon"),
         ]
 
         # Use hipcc is case of a ROCm build
@@ -128,7 +134,11 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 args.append(self.define("OpenMP_CXX_FLAGS", "-fopenmp"))
                 args.append(self.define("OpenMP_C_LIB_NAMES", "omp"))
                 args.append(self.define("OpenMP_CXX_LIB_NAMES", "omp"))
-                args.append(self.define("OpenMP_omp_LIBRARY", "{0}/libomp.so".format(omp.prefix.lib)))
+                args.append(
+                    self.define(
+                        "OpenMP_omp_LIBRARY", "{0}/libomp.so".format(omp.prefix.lib)
+                    )
+                )
                 args.append(self.define("OpenMP_CXX_INCLUDE_DIR", omp.prefix.include))
 
         return args
