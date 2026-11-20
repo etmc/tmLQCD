@@ -1,0 +1,171 @@
+FROM docker.io/rocm/dev-ubuntu-24.04:6.3.3-complete
+
+# Container image for the beverin (MI300A, gfx942) CI pipeline. Mirrors
+# .ci/docker/Dockerfile.build (daint GH200), with CUDA replaced by ROCm/HIP.
+# ROCm 6.3.3 matches the beverin uenv recipe
+# (.ci/uenv-recipes/tmlqcd/beverin-mi300/compilers.yaml).
+
+# Cap parallel compile jobs (HIP device compilation is memory-heavy).
+ARG BUILD_JOBS=16
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+ARG ROCM_PATH=/opt/rocm
+ENV ROCM_PATH=${ROCM_PATH}
+
+RUN echo "Running CSCS CI on $(nproc) processors, building with -j ${BUILD_JOBS}"
+
+RUN apt-get update -qq && apt-get install -qq -y --no-install-recommends \
+    build-essential \
+    cmake \
+    wget \
+    ninja-build \
+    git \
+    ca-certificates \
+    automake \
+    autoconf \
+    libtool \
+    libopenblas-dev \
+    flex \
+    numdiff \
+    libfftw3-dev \
+    pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+# Beverin nodes expose the Slingshot interconnect to containers via the
+# container engine's CXI hook, which swaps in the host's libfabric/xpmem at
+# run time. As for daint, that requires an MPICH built against libfabric +
+# xpmem (ch4:ofi), see https://docs.cscs.ch/software/communication/mpich/.
+
+# xpmem: shared-memory intra-node transport, used by libfabric/MPICH.
+RUN git clone --depth 1 https://github.com/hpc/xpmem && \
+    cd xpmem/lib && \
+    gcc -I../include -shared -o libxpmem.so.1 libxpmem.c && \
+    ln -s libxpmem.so.1 libxpmem.so && \
+    mv libxpmem.so* /usr/lib && \
+    cp ../include/xpmem.h /usr/include/ && \
+    ldconfig && \
+    cd ../.. && rm -rf xpmem
+
+# libfabric with ROCm support, needed for GPU-aware (HMEM) transfers over CXI.
+# Unlike CUDA, no driver stub is needed: the ROCm runtime libraries ship in
+# the image and only the kernel driver is provided by the host at run time.
+ARG LIBFABRIC_VERSION=1.22.0
+RUN wget -q https://github.com/ofiwg/libfabric/archive/refs/tags/v${LIBFABRIC_VERSION}.tar.gz && \
+    tar xf v${LIBFABRIC_VERSION}.tar.gz && \
+    cd libfabric-${LIBFABRIC_VERSION} && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr --with-rocr=${ROCM_PATH} && \
+    make -j${BUILD_JOBS} && \
+    make install && \
+    ldconfig && \
+    cd .. && rm -rf v${LIBFABRIC_VERSION}.tar.gz libfabric-${LIBFABRIC_VERSION}
+
+# MPICH built against the libfabric/xpmem stack above (ch4:ofi), with HIP
+# support so GPU buffers can be passed directly to MPI calls.
+ARG MPICH_VERSION=4.3.1
+ARG MPICH_PATH=/usr/local/mpich
+RUN wget -q https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz && \
+    tar -xzf mpich-${MPICH_VERSION}.tar.gz && \
+    cd mpich-${MPICH_VERSION} && \
+    ./configure \
+    --disable-fortran \
+    --with-device=ch4:ofi \
+    --with-libfabric=/usr \
+    --with-xpmem=/usr \
+    --with-hip=${ROCM_PATH} \
+    --prefix=${MPICH_PATH} && \
+    make install -j${BUILD_JOBS} && \
+    cd .. && rm -rf mpich-${MPICH_VERSION}.tar.gz mpich-${MPICH_VERSION}
+
+RUN echo "${MPICH_PATH}/lib" >> /etc/ld.so.conf.d/cscs.conf && ldconfig
+
+# QUDA source: pinned to a known-good commit by default (develop as of
+# 2026-11-10, merge of lattice/quda#1658). Override with
+# --build-arg QUDA_GIT_COMMIT=<sha>, or pass an empty QUDA_GIT_COMMIT to build
+# the tip of QUDA_GIT_BRANCH.
+ARG QUDA_GIT_REPO=https://github.com/lattice/quda.git
+ARG QUDA_GIT_BRANCH=develop
+ARG QUDA_GIT_COMMIT=af7e15080e247795ef076b6d9284478755a9a683
+
+RUN git clone --branch "${QUDA_GIT_BRANCH}" "${QUDA_GIT_REPO}" /quda && \
+    if [ -n "${QUDA_GIT_COMMIT}" ]; then git -C /quda checkout "${QUDA_GIT_COMMIT}"; fi && \
+    echo "Building QUDA at $(git -C /quda rev-parse HEAD)"
+
+# QUDA options mirror the beverin uenv/spack build
+# (.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/packages/quda/package.py) and
+# the daint Dockerfile: only the Dirac operators tmLQCD uses, multigrid
+# instantiated for 6, 24 and 32 null vectors (the sample HMC input uses
+# MGNumberOfVectors = 24, 32), hipcc as compiler and gfx942 as target.
+RUN cmake -S /quda \
+    -DCMAKE_C_COMPILER=${ROCM_PATH}/bin/hipcc \
+    -DCMAKE_CXX_COMPILER=${ROCM_PATH}/bin/hipcc \
+    -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations" \
+    -DCMAKE_PREFIX_PATH=${ROCM_PATH} \
+    -DMPI_HOME=${MPICH_PATH} \
+    -DCMAKE_BUILD_TYPE=STRICT \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DQUDA_TARGET_TYPE=HIP \
+    -DQUDA_GPU_ARCH=gfx942 \
+    -DAMDGPU_TARGETS=gfx942 \
+    -DQUDA_PRECISION=14 \
+    -DQUDA_RECONSTRUCT=7 \
+    -DQUDA_BUILD_ALL_TESTS=OFF \
+    -DQUDA_MULTIGRID=ON \
+    -DQUDA_MULTIGRID_NVEC_LIST="6,24,32" \
+    -DQUDA_MULTIGRID_MRHS_LIST=16 \
+    -DQUDA_MPI=ON \
+    -DQUDA_INTERFACE_QDP=ON \
+    -DQUDA_INTERFACE_MILC=OFF \
+    -DQUDA_DIRAC_DEFAULT_OFF=ON \
+    -DQUDA_DIRAC_WILSON=ON \
+    -DQUDA_DIRAC_CLOVER=ON \
+    -DQUDA_DIRAC_TWISTED_MASS=ON \
+    -DQUDA_DIRAC_TWISTED_CLOVER=ON \
+    -GNinja \
+    -B /quda/build
+
+RUN cmake --build /quda/build -j ${BUILD_JOBS}
+
+RUN cmake --install /quda/build && ldconfig
+
+# c-lime: required by tmLQCD (find_package(CLime REQUIRED)).
+RUN git clone --depth 1 https://github.com/usqcd-software/c-lime.git /c-lime && \
+    cd /c-lime && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr/local && \
+    make -j${BUILD_JOBS} && \
+    make install && \
+    cd / && rm -rf /c-lime
+
+# tmLQCD from this commit's checkout (the build context).
+ARG CICD_SRC_DIR="/tmlqcd"
+COPY . ${CICD_SRC_DIR}
+
+# hipcc + ROCm's OpenMP runtime, as in the spack recipe
+# (.ci/uenv-recipes/tmlqcd/beverin-mi300/repo/packages/tmlqcd/package.py).
+RUN cmake -S ${CICD_SRC_DIR} \
+          -DCMAKE_C_COMPILER=${ROCM_PATH}/bin/hipcc \
+          -DCMAKE_CXX_COMPILER=${ROCM_PATH}/bin/hipcc \
+          -DCMAKE_HIP_ARCHITECTURES=gfx942 \
+          -DCMAKE_PREFIX_PATH=${ROCM_PATH} \
+          -DCMAKE_INSTALL_PREFIX=/usr/local \
+          -DMPI_HOME=${MPICH_PATH} \
+          -DOpenMP_C_FLAGS=-fopenmp \
+          -DOpenMP_CXX_FLAGS=-fopenmp \
+          -DOpenMP_C_LIB_NAMES=omp \
+          -DOpenMP_CXX_LIB_NAMES=omp \
+          -DOpenMP_omp_LIBRARY=${ROCM_PATH}/llvm/lib/libomp.so \
+          -DTM_USE_LEMON=ON \
+          -DTM_USE_MPI=ON \
+          -DTM_USE_QUDA=ON \
+          -DTM_USE_HIP=ON \
+          -DTM_USE_GAUGE_COPY=ON \
+          -DTM_USE_HALFSPINOR=ON \
+          -DTM_USE_OMP=ON \
+          -DTM_USE_FFTW=ON \
+          -B ${CICD_SRC_DIR}/build
+RUN cmake --build ${CICD_SRC_DIR}/build -j ${BUILD_JOBS}
+
+# Make the tmLQCD binaries (hmc_tm, invert, ...) available to CI test jobs.
+ENV PATH="${CICD_SRC_DIR}/build/src/bin:${PATH}"

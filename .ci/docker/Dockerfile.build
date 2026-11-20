@@ -88,11 +88,13 @@ RUN echo "${MPICH_PATH}/lib" >> /etc/ld.so.conf.d/cscs.conf && ldconfig
 # step need -lcuda to resolve. It is removed at the very end of this file, after tmLQCD is built,
 # once nothing further needs to link against CUDA.
 
-# QUDA source. By default the tip of QUDA_GIT_BRANCH is used; set
-# QUDA_GIT_COMMIT (e.g. --build-arg QUDA_GIT_COMMIT=<sha>) to pin a commit.
+# QUDA source: pinned to a known-good commit by default (develop as of
+# 2026-11-10, merge of lattice/quda#1658). Override with
+# --build-arg QUDA_GIT_COMMIT=<sha>, or pass an empty QUDA_GIT_COMMIT to build
+# the tip of QUDA_GIT_BRANCH.
 ARG QUDA_GIT_REPO=https://github.com/lattice/quda.git
 ARG QUDA_GIT_BRANCH=develop
-ARG QUDA_GIT_COMMIT=
+ARG QUDA_GIT_COMMIT=af7e15080e247795ef076b6d9284478755a9a683
 
 #clone QUDA
 RUN git clone --branch "${QUDA_GIT_BRANCH}" "${QUDA_GIT_REPO}" /quda && \
