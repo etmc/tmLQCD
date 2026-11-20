@@ -35,7 +35,7 @@ stages:
   needs: [.build-tmlqcd/uenv/daint-gh200]
   variables:
     REFPATH: "doc/sample-output/hmc-quda-cscs"
-    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_TUNING: 1 # disable tuning
     QUDA_ENABLE_GDR: 0 # enable GPU-Direct RDMA
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
