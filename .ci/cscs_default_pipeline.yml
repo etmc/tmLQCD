@@ -113,13 +113,13 @@ test/container/daint-gh200:
       fi
 
 # Remove this pipeline's shared work dir on capstor (uenv build trees and the
-# container test's run dir) once all test jobs are done. Runs even if a test
-# failed, so failed pipelines don't leave data behind; drop `when: always` to
-# keep the dir around for debugging failed runs.
+# container test's run dir) once all test jobs are done. Only runs if every
+# earlier job succeeded: after a failure the dir is kept for debugging and has
+# to be removed by hand (rm -rf /capstor/store/cscs/pasc/c36/ci-stack/<id>).
 cleanup/daint-gh200:
   stage: cleanup
   extends: .baremetal-runner-daint-gh200
-  when: always
+  when: on_success
   variables:
     GIT_STRATEGY: none # no checkout needed
     SLURM_JOB_NUM_NODES: 1
