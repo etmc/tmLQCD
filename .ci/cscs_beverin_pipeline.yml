@@ -15,7 +15,7 @@ stages:
 # TEMPORARY: uenv jobs disabled (leading '.') because the uenv build fails;
 # the container jobs below replace them for now. Revert by removing the
 # leading '.' from the three job names and their needs.
-.build-base/uenv/beverin-mi300:
+build-base/uenv/beverin-mi300:
   stage: prepare
   extends: [.uenv-builder-beverin-mi300, .beverin-mi300-secrets]
   variables:
@@ -23,7 +23,7 @@ stages:
     SLURM_TIMELIMIT: "08:00:00"
 
 
-.build-tmlqcd/uenv/beverin-mi300:
+build-tmlqcd/uenv/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .build/base, .beverin-mi300-secrets]
   needs: [.build-base/uenv/beverin-mi300]
   variables:
@@ -33,7 +33,7 @@ stages:
     SLURM_TIMELIMIT: "01:00:00"
 
 
-.test/beverin-mi300:
+test/beverin-mi300:
   extends: [.uenv-runner-beverin-mi300, .test/base, .beverin-mi300-secrets]
   needs: [.build-tmlqcd/uenv/beverin-mi300]
   variables:
@@ -61,7 +61,7 @@ stages:
 # the daint container jobs in cscs_default_pipeline.yml. MI300A is x86_64, so
 # the image is built on the x86 (zen2) builder.
 
-build-tmlqcd/container/beverin-mi300:
+.build-tmlqcd/container/beverin-mi300:
   stage: build
   extends: .container-builder-cscs-zen2
   needs: []  # don't wait for the prepare stage
@@ -77,7 +77,7 @@ build-tmlqcd/container/beverin-mi300:
     KUBERNETES_MEMORY_LIMIT: 64Gi
     DOCKER_BUILD_ARGS: '["BUILD_JOBS=16"]'
 
-test/container/beverin-mi300:
+.test/container/beverin-mi300:
   stage: test
   extends: [.container-runner-beverin-mi300, .beverin-mi300-secrets]
   needs: [build-tmlqcd/container/beverin-mi300]
@@ -88,7 +88,7 @@ test/container/beverin-mi300:
     REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
-    QUDA_ENABLE_GDR: 1
+    QUDA_ENABLE_GDR: 0
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "01:00:00"
@@ -121,7 +121,7 @@ test/container/beverin-mi300:
 # container test's run dir) once all test jobs are done. Only runs if every
 # earlier job succeeded: after a failure the dir is kept for debugging and has
 # to be removed by hand (rm -rf /capstor/store/cscs/pasc/c36/ci-stack/<id>).
-cleanup/beverin-mi300:
+.cleanup/beverin-mi300:
   stage: cleanup
   extends: [.baremetal-runner-beverin-mi300, .beverin-mi300-secrets]
   when: on_success
