@@ -86,7 +86,7 @@ test/container/beverin-mi300:
     # The container job does not run inside the repo checkout; use the copy
     # of this commit's sources baked into the image (COPY . /tmlqcd).
     REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
-    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_TUNING: 1 # tunecache goes to QUDA_RESOURCE_PATH (RUN_DIR)
     QUDA_ENABLE_P2P: 0 # disable P2P
     QUDA_ENABLE_GDR: 0
     SLURM_JOB_NUM_NODES: 2
@@ -98,8 +98,13 @@ test/container/beverin-mi300:
     # so Slurm used the system default and every rank started as a singleton
     # (MPI_Dims_create(nnodes=1, ...) failed in hmc_tm).
     SLURM_MPI_TYPE: pmi2
-    # Enable GPU-aware (HMEM) transfers in the image's ch4:ofi MPICH.
-    MPIR_CVAR_CH4_OFI_ENABLE_HMEM: 1
+    # GPU-aware MPI is switched off: with QUDA_ENABLE_GDR=0 QUDA only
+    # hands host buffers to MPI and does not need it. With it enabled, hmc_tm
+    # failed with "Solver appears to have diverged" on MI300A (identical input
+    # passes on daint), so rule out MPICH/libfabric treating QUDA's pinned host
+    # buffers as device memory.
+    MPIR_CVAR_ENABLE_GPU: 0
+    MPIR_CVAR_CH4_OFI_ENABLE_HMEM: 0
     # capstor is not visible inside the container by default; bind-mount the
     # shared CI work area at the same path.
     CSCS_ADDITIONAL_MOUNTS: '["/capstor/store/cscs/pasc/c36/ci-stack:/capstor/store/cscs/pasc/c36/ci-stack"]'
@@ -110,6 +115,7 @@ test/container/beverin-mi300:
     - export RUN_DIR="/capstor/store/cscs/pasc/c36/ci-stack/${CI_PIPELINE_ID}/container-test-beverin"
     - mkdir -p "${RUN_DIR}"
     - cd "${RUN_DIR}"
+    - export QUDA_RESOURCE_PATH="${RUN_DIR}"
     - echo "Running in $(pwd)"
     - hmc_tm -f /tmlqcd/doc/sample-input/sample-hmc-quda-cscs-beverin.input
     - |
