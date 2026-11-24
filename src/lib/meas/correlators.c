@@ -392,6 +392,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // selecting the operators i1 and i2 from the list of operators initialized before
   operator* optr1 = & operator_list[i1];  // light doublet
   operator* optr2 = & operator_list[i2];  // heavy c,s doublet
+  // as in light_correlators_measurement: with AddDownPropagator = yes, op_invert would
+  // additionally invert at -mu and return that propagator instead of the +mu one
+  optr1->DownProp = 0;
 
   bool b1 = (optr1->type != TMWILSON && optr1->type != WILSON && optr1->type != CLOVER);
   bool b2 = (optr2->type != DBTMWILSON && optr2->type != DBCLOVER);
