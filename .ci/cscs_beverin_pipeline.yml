@@ -88,11 +88,16 @@ test/container/beverin-mi300:
     REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_P2P: 0 # disable P2P
-    QUDA_ENABLE_GDR: 1
+    QUDA_ENABLE_GDR: 0
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "01:00:00"
     USE_MPI: "YES"
+    # The image's MPICH wires up its ranks via PMI-2. Unlike
+    # .container-runner-daint-gh200, the beverin template does not set this,
+    # so Slurm used the system default and every rank started as a singleton
+    # (MPI_Dims_create(nnodes=1, ...) failed in hmc_tm).
+    SLURM_MPI_TYPE: pmi2
     # Enable GPU-aware (HMEM) transfers in the image's ch4:ofi MPICH.
     MPIR_CVAR_CH4_OFI_ENABLE_HMEM: 1
     # capstor is not visible inside the container by default; bind-mount the
