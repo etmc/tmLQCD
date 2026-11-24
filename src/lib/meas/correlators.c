@@ -349,8 +349,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (size_t F = 0; F < 2; F++) {             // flavor dilution index
           for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
             for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
+              // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
+              // exchanges the boundary into the field itself without halfspinor
+              // -> they need the halo, i.e. VOLUMEPLUSRAND/2
               arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] =
-                  (spinor *)calloc(VOLUME / 2, sizeof(spinor));
+                  (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
               zero_spinor_field(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f], VOLUME / 2);
 
               if (i_eo == 0) {  // (trick) doing it only once -> no eo index
