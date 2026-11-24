@@ -286,13 +286,6 @@ static void write_eo_spinor_field(char *filename, spinor *even, spinor *odd, con
   destruct_writer(writer);
 }
 
-void spinor_dirac_array(su3_vector *phi, spinor psi) {
-  phi[0] = psi.s0;
-  phi[1] = psi.s1;
-  phi[2] = psi.s2;
-  phi[3] = psi.s3;
-}
-
 /******************************************************
  *
  * This routine computes the correlator matrix <G1,G2> (<source sink>),
@@ -312,9 +305,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   tm_stopwatch_push(&g_timers, __func__, "");  // timer for profiling
 
   spinor phi;  // dummy spinor
-  // dummy spinors for the heavy doublet inversion
-  spinor *phi1 = calloc(VOLUME / 2, sizeof(spinor));
-  spinor *phi2 = calloc(VOLUME / 2, sizeof(spinor));
+  // dummy spinors for the heavy doublet inversion (allocated after the checks below)
+  spinor *phi1 = NULL, *phi2 = NULL;
   int i, j, t, tt, t0;  // dummy indices
   float tmp;            // dummy variable
 
@@ -342,31 +334,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // index, position (+ Dirac, color) (psi[i_sp][d][beta][F][f][x])[alpha][c]
   spinor *arr_spinor[2][2][4][2][2];
 
-  // allocating memory
-  for (size_t i_sp = 0; i_sp < 2; i_sp++) {          // source or propagator
-    for (size_t db = 0; db < 2; db++) {              // doublet: light or heavy
-      for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
-        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
-          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
-            for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
-              // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
-              // exchanges the boundary into the field itself without halfspinor
-              // -> they need the halo, i.e. VOLUMEPLUSRAND/2
-              arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] =
-                  (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
-              zero_spinor_field(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f], VOLUME / 2);
-
-              if (i_eo == 0) {  // (trick) doing it only once -> no eo index
-                arr_spinor[i_sp][db][beta][F][i_f] = (spinor *)calloc(VOLUME, sizeof(spinor));
-                zero_spinor_field(arr_spinor[i_sp][db][beta][F][i_f], VOLUME);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   double res_hihj_g1g2[2][2][2][2];
   double mpi_res_hihj_g1g2[2][2][2][2];
 
@@ -378,12 +345,14 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // MPI_Barrier(MPI_COMM_WORLD);
   init_operators();  // initialize operators (if not already done)
 
-  if (no_operators < 1) {
+  if (i1 >= no_operators || i2 >= no_operators) {
     if (g_proc_id == 0) {
       // we don't want the simulation to stop, we can do the measurements offline afterwards
       fprintf(stderr,
-              "Warning! no operators defined in input file, cannot perform online correlator "
-              "mesurements!\n");
+              "Warning! heavy-meson online measurement needs operators %d (light) and %d (heavy "
+              "doublet), but only %d operator(s) defined in input file, cannot perform heavy-meson "
+              "online measurement!\n",
+              i1, i2, no_operators);
     }
     tm_stopwatch_pop(&g_timers, 0, 0, "");  // timer for profiling
     return;
@@ -412,6 +381,33 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
     }
     tm_stopwatch_pop(&g_timers, 0, 0, "");  // timer for profiling
     return;
+  }
+
+  // allocating memory (only after the checks above, so that their early returns do not leak)
+  phi1 = calloc(VOLUME / 2, sizeof(spinor));
+  phi2 = calloc(VOLUME / 2, sizeof(spinor));
+  for (size_t i_sp = 0; i_sp < 2; i_sp++) {          // source or propagator
+    for (size_t db = 0; db < 2; db++) {              // doublet: light or heavy
+      for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
+        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
+          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
+            for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
+              // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
+              // exchanges the boundary into the field itself without halfspinor
+              // -> they need the halo, i.e. VOLUMEPLUSRAND/2
+              arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] =
+                  (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
+              zero_spinor_field(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f], VOLUME / 2);
+
+              if (i_eo == 0) {  // (trick) doing it only once -> no eo index
+                arr_spinor[i_sp][db][beta][F][i_f] = (spinor *)calloc(VOLUME, sizeof(spinor));
+                zero_spinor_field(arr_spinor[i_sp][db][beta][F][i_f], VOLUME);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   if (ranlxs_init == 0) {
@@ -607,9 +603,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           optr2->prop2 = arr_eo_spinor[1][1][beta][F][0][1];
           optr2->prop3 = arr_eo_spinor[1][1][beta][F][1][1];
 
-          SourceInfo.no_flavours = 1;  // only for the heavy
-          optr2->inverter(i2, 0, 0);   // inversion for both flavor components
-          SourceInfo.no_flavours = 0;  // reset to previous value
+          const int no_flavours = SourceInfo.no_flavours;
+          SourceInfo.no_flavours = 1;            // only for the heavy
+          optr2->inverter(i2, 0, 0);             // inversion for both flavor components
+          SourceInfo.no_flavours = no_flavours;  // reset to previous value
         }
       }
       tm_stopwatch_pop(&g_timers, 0, 1, "");
@@ -865,17 +862,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           for (size_t hj = 0; hj < 2; hj++) {
             for (size_t g1 = 0; g1 < 2; g1++) {
               for (size_t g2 = 0; g2 < 2; g2++) {
-                fprintf(ofs, "%lu  %lu  %lu  %lu  0  %e  %e\n", hi, hj, g1, g2,
+                fprintf(ofs, "%zu  %zu  %zu  %zu  0  %e  %e\n", hi, hj, g1, g2,
                         C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
                 for (t = 1; t < g_nproc_t * T / 2; t++) {
                   tt = (t0 + t) % (g_nproc_t * T);
-                  fprintf(ofs, "%lu  %lu  %lu  %lu  %u  %e  ", hi, hj, g1, g2, t,
+                  fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %e  ", hi, hj, g1, g2, t,
                           C_hihj_g1g2[hi][hj][g1][g2][tt]);
                   tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
                   fprintf(ofs, "%e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
                 }
                 tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-                fprintf(ofs, "%lu  %lu  %lu  %lu  %u  %e  %e\n", hi, hj, g1, g2, t,
+                fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %e  %e\n", hi, hj, g1, g2, t,
                         C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
               }
             }
