@@ -157,6 +157,10 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
       optr->sr1 = g_spinor_field[1];
       optr->prop0 = g_spinor_field[2];
       optr->prop1 = g_spinor_field[3];
+      // the propagator fields are the initial guess of the inversion (e.g. CG): start from zero,
+      // not from whatever the HMC or a previous measurement left in these work fields
+      zero_spinor_field(g_spinor_field[2], VOLUME / 2);
+      zero_spinor_field(g_spinor_field[3], VOLUME / 2);
 
       // op_id = 0, index_start = 0, write_prop = 0
       optr->inverter(0, 0, 0);
@@ -526,7 +530,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                            phi1, +1.0, VOLUME / 2);
           mul_one_pm_itau2(src_eo[1][1][i_eo][0], src_eo[1][1][i_eo][1], phi2,
                            src_eo[0][0][i_eo][0], +1.0, VOLUME / 2);
-          // the propagator fields are the initial guess of the heavy inversion: start from zero
+          // the propagator fields are the initial guess of the inversions (e.g. CG): start from
+          // zero, not from the solution of the previous sample / time slice
+          zero_spinor_field(prop_eo[0][beta][0][i_eo][0], VOLUME / 2);
           for (size_t F = 0; F < 2; F++) {
             for (size_t i_f = 0; i_f < 2; i_f++) {
               zero_spinor_field(prop_eo[1][beta][F][i_eo][i_f], VOLUME / 2);
