@@ -215,35 +215,35 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
       if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
         int tt, t;
         ofs = fopen(filename, "w");
-        fprintf(ofs, "1  1  0  %e  %e\n", Cpp[t0], 0.);
+        fprintf(ofs, "1  1  0  %.16e  %.16e\n", Cpp[t0], 0.);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "1  1  %d  %e  ", t, Cpp[tt]);
+          fprintf(ofs, "1  1  %d  %.16e  ", t, Cpp[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cpp[tt]);
+          fprintf(ofs, "%.16e\n", Cpp[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "1  1  %d  %e  %e\n", t, Cpp[tt], 0.);
+        fprintf(ofs, "1  1  %d  %.16e  %.16e\n", t, Cpp[tt], 0.);
 
-        fprintf(ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.);
+        fprintf(ofs, "2  1  0  %.16e  %.16e\n", Cpa[t0], 0.);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "2  1  %d  %e  ", t, Cpa[tt]);
+          fprintf(ofs, "2  1  %d  %.16e  ", t, Cpa[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cpa[tt]);
+          fprintf(ofs, "%.16e\n", Cpa[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.);
+        fprintf(ofs, "2  1  %d  %.16e  %.16e\n", t, Cpa[tt], 0.);
 
-        fprintf(ofs, "6  1  0  %e  %e\n", Cp4[t0], 0.);
+        fprintf(ofs, "6  1  0  %.16e  %.16e\n", Cp4[t0], 0.);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "6  1  %d  %e  ", t, Cp4[tt]);
+          fprintf(ofs, "6  1  %d  %.16e  ", t, Cp4[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cp4[tt]);
+          fprintf(ofs, "%.16e\n", Cp4[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
+        fprintf(ofs, "6  1  %d  %.16e  %.16e\n", t, Cp4[tt], 0.);
         fclose(ofs);
       }
 #ifdef TM_USE_MPI
@@ -827,52 +827,52 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
         ofs = fopen(filename, "w");
 
-        fprintf(ofs, "1  1  0  %e  %e\n", Cpp[t0], 0.0);
+        fprintf(ofs, "1  1  0  %.16e  %.16e\n", Cpp[t0], 0.0);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "1  1  %d  %e  ", t, Cpp[tt]);
+          fprintf(ofs, "1  1  %d  %.16e  ", t, Cpp[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cpp[tt]);
+          fprintf(ofs, "%.16e\n", Cpp[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "1  1  %d  %e  %e\n", t, Cpp[tt], 0.0);
+        fprintf(ofs, "1  1  %d  %.16e  %.16e\n", t, Cpp[tt], 0.0);
 
-        fprintf(ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.0);
+        fprintf(ofs, "2  1  0  %.16e  %.16e\n", Cpa[t0], 0.0);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "2  1  %d  %e  ", t, Cpa[tt]);
+          fprintf(ofs, "2  1  %d  %.16e  ", t, Cpa[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cpa[tt]);
+          fprintf(ofs, "%.16e\n", Cpa[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.0);
+        fprintf(ofs, "2  1  %d  %.16e  %.16e\n", t, Cpa[tt], 0.0);
 
-        fprintf(ofs, "6  1  0  %e  %e\n", Cp4[t0], 0.0);
+        fprintf(ofs, "6  1  0  %.16e  %.16e\n", Cp4[t0], 0.0);
         for (t = 1; t < g_nproc_t * T / 2; t++) {
           tt = (t0 + t) % (g_nproc_t * T);
-          fprintf(ofs, "6  1  %d  %e  ", t, Cp4[tt]);
+          fprintf(ofs, "6  1  %d  %.16e  ", t, Cp4[tt]);
           tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-          fprintf(ofs, "%e\n", Cp4[tt]);
+          fprintf(ofs, "%.16e\n", Cp4[tt]);
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-        fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.0);
+        fprintf(ofs, "6  1  %d  %.16e  %.16e\n", t, Cp4[tt], 0.0);
 
         // heavy mesons correlators
         for (size_t hi = 0; hi < 2; hi++) {
           for (size_t hj = 0; hj < 2; hj++) {
             for (size_t g1 = 0; g1 < 2; g1++) {
               for (size_t g2 = 0; g2 < 2; g2++) {
-                fprintf(ofs, "%zu  %zu  %zu  %zu  0  %e  %e\n", hi, hj, g1, g2,
+                fprintf(ofs, "%zu  %zu  %zu  %zu  0  %.16e  %.16e\n", hi, hj, g1, g2,
                         C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
                 for (t = 1; t < g_nproc_t * T / 2; t++) {
                   tt = (t0 + t) % (g_nproc_t * T);
-                  fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %e  ", hi, hj, g1, g2, t,
+                  fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %.16e  ", hi, hj, g1, g2, t,
                           C_hihj_g1g2[hi][hj][g1][g2][tt]);
                   tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-                  fprintf(ofs, "%e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
+                  fprintf(ofs, "%.16e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
                 }
                 tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-                fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %e  %e\n", hi, hj, g1, g2, t,
+                fprintf(ofs, "%zu  %zu  %zu  %zu  %d  %.16e  %.16e\n", hi, hj, g1, g2, t,
                         C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
               }
             }
