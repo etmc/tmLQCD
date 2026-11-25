@@ -691,13 +691,13 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
           // light correlators
           for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
-            spinor psi_u = arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
+            const spinor *psi_u = &arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
 
-            res += _spinor_prod_re(psi_u, psi_u);
-            _gamma0(phi, psi_u);
-            respa += _spinor_prod_re(psi_u, phi);
+            res += _spinor_prod_re(*psi_u, *psi_u);
+            _gamma0(phi, *psi_u);
+            respa += _spinor_prod_re(*psi_u, phi);
             _gamma5(phi, phi);
-            resp4 += _spinor_prod_im(psi_u, phi);
+            resp4 += _spinor_prod_im(*psi_u, phi);
           }
 
           // the operators are defined in the basis of https://arxiv.org/pdf/1005.2042.pdf
@@ -717,19 +717,23 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           // the matrix g can be 1 or gamma_5
           for (size_t hi = 0; hi < 2; hi++) {
             for (size_t hj = 0; hj < 2; hj++) {
+              // the scalar products <psi_u, g psi_h> per source spin beta depend only on g1
+              // (g1 = 0: gamma_5 psi_h, g1 = 1: psi_h), g2 only multiplies by g5_diag[beta]
+              double complex prod[2][4];
+              for (size_t beta = 0; beta < 4; beta++) {  // source spin (dilution) index
+                const spinor *psi_h = &arr_eo_spinor[1][1][beta][hj][eo][hi][ix];
+                const spinor *psi_u = &arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
+                spinor g5_psi_h;
+                _gamma5(g5_psi_h, *psi_h);
+                _spinor_scalar_prod(prod[0][beta], *psi_u, g5_psi_h);
+                _spinor_scalar_prod(prod[1][beta], *psi_u, *psi_h);
+              }
+
               for (size_t g1 = 0; g1 < 2; g1++) {
                 for (size_t g2 = 0; g2 < 2; g2++) {
                   double complex dum_tot = 0.0;
-                  for (int beta = 0; beta < 4; beta++) {  // source spin (dilution) index
-                    spinor psi_h = arr_eo_spinor[1][1][beta][hj][eo][hi][ix];
-                    spinor psi_u = arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
-
-                    if (g1 == 0) {
-                      _gamma5(psi_h, psi_h);
-                    }
-
-                    double complex dum = 0.0;
-                    _spinor_scalar_prod(dum, psi_u, psi_h);
+                  for (size_t beta = 0; beta < 4; beta++) {  // source spin (dilution) index
+                    double complex dum = prod[g1][beta];
 
                     if (g2 == 0) {
                       dum *= g5_diag[beta];
