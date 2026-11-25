@@ -328,6 +328,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // (+ Dirac, color) psi = (psi[(s,p)][db][beta][F][eo][f][x])[alpha][c]
   // last 2 indices come from spinor struct
   // Note: propagator in the sense that it is D^{-1}*source after the inversion
+  // Unused combinations are not allocated (NULL), see below.
   spinor *arr_eo_spinor[2][2][4][2][2][2];
 
   // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor
@@ -384,6 +385,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   }
 
   // allocating memory (only after the checks above, so that their early returns do not leak)
+  // Only the fields that are used are allocated (calloc: zero-initialised), the others are NULL:
+  // - light doublet: only the up flavor is inverted -> F = 0, f = 0
+  // - lexicographic fields: only the propagators (needed for the contractions)
   phi1 = calloc(VOLUME / 2, sizeof(spinor));
   phi2 = calloc(VOLUME / 2, sizeof(spinor));
   for (size_t i_sp = 0; i_sp < 2; i_sp++) {          // source or propagator
@@ -392,16 +396,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (size_t F = 0; F < 2; F++) {             // flavor dilution index
           for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
             for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
+              const bool used = (db == 1 || (F == 0 && i_f == 0));
               // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
               // exchanges the boundary into the field itself without halfspinor
               // -> they need the halo, i.e. VOLUMEPLUSRAND/2
               arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] =
-                  (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
-              zero_spinor_field(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f], VOLUME / 2);
+                  used ? (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor)) : NULL;
 
               if (i_eo == 0) {  // (trick) doing it only once -> no eo index
-                arr_spinor[i_sp][db][beta][F][i_f] = (spinor *)calloc(VOLUME, sizeof(spinor));
-                zero_spinor_field(arr_spinor[i_sp][db][beta][F][i_f], VOLUME);
+                arr_spinor[i_sp][db][beta][F][i_f] =
+                    (used && i_sp == 1) ? (spinor *)calloc(VOLUME, sizeof(spinor)) : NULL;
               }
             }
           }
@@ -492,16 +496,20 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
       }
       tm_stopwatch_push(&g_timers, "sources_generation", "");
-      /* init random sources: one for each Dirac index beta --> spin dilution */
+      /* init random sources: one for each Dirac index beta --> spin dilution.
+         Light and heavy doublet need the same noise. The source depends only on
+         (t0, beta, sample, traj, seed), so it is generated once per beta and copied to the heavy
+         doublet: flavor dilution F = 0 -> (eta, 0), F = 1 -> (0, eta); the zero components are
+         not read from these fields but taken from phi1, phi2 in the rotation below */
       const unsigned int seed_i = measurement_list[id].seed;  // has to be same seed
-      for (size_t db = 0; db < 2; db++) {                     // doublet: light or heavy
-        for (size_t beta = 0; beta < 4; beta++) {             // spin dilution index
-          for (size_t F = 0; F < 2; F++) {                    // flavor dilution index
-            for (size_t i_f = 0; i_f < 2; i_f++) {            // flavor index of the doublet
-              eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][db][beta][F][0][i_f],
-                                                         arr_eo_spinor[0][db][beta][F][1][i_f], t0,
-                                                         beta, sample, traj, seed_i);
-            }
+      for (size_t beta = 0; beta < 4; beta++) {               // spin dilution index
+        eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][0][beta][0][0][0],
+                                                   arr_eo_spinor[0][0][beta][0][1][0], t0, beta,
+                                                   sample, traj, seed_i);
+        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
+          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
+            assign(arr_eo_spinor[0][1][beta][F][i_eo][F], arr_eo_spinor[0][0][beta][0][i_eo][0],
+                   VOLUME / 2);
           }
         }
       }
@@ -665,6 +673,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           for (size_t beta = 0; beta < 4; beta++) {   // spin dilution index
             for (size_t F = 0; F < 2; F++) {          // flavor projection index
               for (size_t i_f = 0; i_f < 2; i_f++) {  //  flavor index
+                if (arr_spinor[i_sp][db][beta][F][i_f] == NULL) {
+                  continue;  // not allocated: not needed for the contractions
+                }
                 convert_eo_to_lexic(arr_spinor[i_sp][db][beta][F][i_f],
                                     arr_eo_spinor[i_sp][db][beta][F][0][i_f],
                                     arr_eo_spinor[i_sp][db][beta][F][1][i_f]);
