@@ -323,13 +323,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 #endif
 
   // even-odd spinor fields for the light and heavy doublet correlators
-  // INDICES: source+propagator, doublet, spin dilution index, flavor projection, even-odd,
-  // flavor, position
-  // (+ Dirac, color) psi = (psi[(s,p)][db][beta][F][eo][f][x])[alpha][c]
-  // last 2 indices come from spinor struct
-  // Note: propagator in the sense that it is D^{-1}*source after the inversion
+  // INDICES: doublet, (spin dilution index,) flavor projection, even-odd, flavor, position
+  // (+ Dirac, color from the spinor struct), e.g. (prop_eo[db][beta][F][eo][f][x])[alpha][c]
+  // - sources: one set, rebuilt for every spin dilution index beta (only needed for the
+  //   inversions of that beta)
+  // - propagators (D^{-1}*source): all beta are needed for the contractions.
+  //   Possible improvement: the correlators are sums over beta, so contracting after the
+  //   inversions of each beta would only need the propagators of one beta (5 instead of 20
+  //   fields per rank), at the price of a different summation order (rounding).
   // Unused combinations are not allocated (NULL), see below.
-  spinor *arr_eo_spinor[2][2][4][2][2][2];
+  spinor *src_eo[2][2][2][2];
+  spinor *prop_eo[2][4][2][2][2];
 
   double res_hihj_g1g2[2][2][2][2];
   double mpi_res_hihj_g1g2[2][2][2][2];
@@ -385,19 +389,19 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // light doublet: only the up flavor is inverted -> F = 0, f = 0
   phi1 = calloc(VOLUME / 2, sizeof(spinor));
   phi2 = calloc(VOLUME / 2, sizeof(spinor));
-  for (size_t i_sp = 0; i_sp < 2; i_sp++) {          // source or propagator
-    for (size_t db = 0; db < 2; db++) {              // doublet: light or heavy
-      for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
-        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
-          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
-            for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
-              const bool used = (db == 1 || (F == 0 && i_f == 0));
-              // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
-              // exchanges the boundary into the field itself without halfspinor
-              // -> they need the halo, i.e. VOLUMEPLUSRAND/2
-              arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] =
-                  used ? (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor)) : NULL;
-            }
+  for (size_t db = 0; db < 2; db++) {            // doublet: light or heavy
+    for (size_t F = 0; F < 2; F++) {             // flavor dilution index
+      for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
+        for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
+          const bool used = (db == 1 || (F == 0 && i_f == 0));
+          // these fields are passed to the inverters (sr*, prop*), whose Hopping_Matrix
+          // exchanges the boundary into the field itself without halfspinor
+          // -> they need the halo, i.e. VOLUMEPLUSRAND/2
+          src_eo[db][F][i_eo][i_f] =
+              used ? (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor)) : NULL;
+          for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
+            prop_eo[db][beta][F][i_eo][i_f] =
+                used ? (spinor *)calloc(VOLUMEPLUSRAND / 2, sizeof(spinor)) : NULL;
           }
         }
       }
@@ -485,104 +489,82 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           }
         }
       }
-      tm_stopwatch_push(&g_timers, "sources_generation", "");
-      /* init random sources: one for each Dirac index beta --> spin dilution.
+      /* Sources and inversions, one spin dilution index beta at a time: the sources are only
+         needed for the inversions of their beta, so one set of source fields is reused.
          Light and heavy doublet need the same noise. The source depends only on
-         (t0, beta, sample, traj, seed), so it is generated once per beta and copied to the heavy
-         doublet: flavor dilution F = 0 -> (eta, 0), F = 1 -> (0, eta); the zero components are
-         not read from these fields but taken from phi1, phi2 in the rotation below */
+         (t0, beta, sample, traj, seed): it is generated for the light doublet and the heavy
+         doublet sources are built from it with the flavor dilution F = 0 -> (eta, 0),
+         F = 1 -> (0, eta), where the zero components are taken from phi1, phi2. */
       const unsigned int seed_i = measurement_list[id].seed;  // has to be same seed
-      for (size_t beta = 0; beta < 4; beta++) {               // spin dilution index
-        eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][0][beta][0][0][0],
-                                                   arr_eo_spinor[0][0][beta][0][1][0], t0, beta,
-                                                   sample, traj, seed_i);
-        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
-          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
-            assign(arr_eo_spinor[0][1][beta][F][i_eo][F], arr_eo_spinor[0][0][beta][0][i_eo][0],
-                   VOLUME / 2);
-          }
-        }
-      }
+      char src_filename[TM_OMEAS_FILENAME_LENGTH];
+      snprintf(src_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_source.%s", suffix);
       zero_spinor_field(phi1, VOLUME / 2);
       zero_spinor_field(phi2, VOLUME / 2);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
-
-      // writing the sources: 4 records, one for each spin dilution index beta = 0..3.
-      // The noise is the same for the light and heavy doublet (before the tau_2 rotation),
-      // so only the light sources are written. Source time slice: t0.
-      if (measurement_list[id].write_heavy_mesons_sources) {
-        tm_stopwatch_push(&g_timers, "writing_sources", "");
-        char src_filename[TM_OMEAS_FILENAME_LENGTH];
-        snprintf(src_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_source.%s", suffix);
-        for (size_t beta = 0; beta < 4; beta++) {
-          write_eo_spinor_field(src_filename, arr_eo_spinor[0][0][beta][0][0][0],
-                                arr_eo_spinor[0][0][beta][0][1][0], (beta > 0));
-        }
+      for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
+        tm_stopwatch_push(&g_timers, "sources_generation", "");
+        eo_source_spinor_field_spin_diluted_oet_ts(src_eo[0][0][0][0], src_eo[0][0][1][0], t0,
+                                                   beta, sample, traj, seed_i);
         tm_stopwatch_pop(&g_timers, 0, 1, "");
-      }
 
-      tm_stopwatch_push(&g_timers, "sources_rotation", "");
-      // heavy doublet: for each even-odd block, I multiply by (1 + i*tau_2)/sqrt(2)
-      // the basis for the inversion should be the same as for the light
-      // --> I will multiply later by the inverse, namely at the end of the inversion
-      for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
-        for (size_t F = 0; F < 2; F++) {             // flavor projection index
-          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd
-            // (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s)
-            // stored temporarely in the propagator spinors (used as dummy)
-            if (F == 0) {
-              mul_one_pm_itau2(arr_eo_spinor[1][1][beta][F][i_eo][0],
-                               arr_eo_spinor[1][1][beta][F][i_eo][1],
-                               arr_eo_spinor[0][1][beta][F][i_eo][0], phi1, +1.0, VOLUME / 2);
-            }
-            if (F == 1) {
-              mul_one_pm_itau2(arr_eo_spinor[1][1][beta][F][i_eo][0],
-                               arr_eo_spinor[1][1][beta][F][i_eo][1], phi2,
-                               arr_eo_spinor[0][1][beta][F][i_eo][1], +1.0, VOLUME / 2);
-            }
+        // writing the sources: 4 records, one for each spin dilution index beta = 0..3.
+        // The noise is the same for the light and heavy doublet (before the tau_2 rotation),
+        // so only the light sources are written. Source time slice: t0.
+        if (measurement_list[id].write_heavy_mesons_sources) {
+          tm_stopwatch_push(&g_timers, "writing_sources", "");
+          write_eo_spinor_field(src_filename, src_eo[0][0][0][0], src_eo[0][0][1][0], (beta > 0));
+          tm_stopwatch_pop(&g_timers, 0, 1, "");
+        }
 
+        tm_stopwatch_push(&g_timers, "sources_rotation", "");
+        // heavy doublet: for each even-odd block, I multiply by (1 + i*tau_2)/sqrt(2)
+        // the basis for the inversion should be the same as for the light
+        // --> I will multiply later by the inverse, namely at the end of the inversion
+        for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd
+          // (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s), with (c,s) = (eta, 0) for F = 0 and
+          // (0, eta) for F = 1
+          mul_one_pm_itau2(src_eo[1][0][i_eo][0], src_eo[1][0][i_eo][1], src_eo[0][0][i_eo][0],
+                           phi1, +1.0, VOLUME / 2);
+          mul_one_pm_itau2(src_eo[1][1][i_eo][0], src_eo[1][1][i_eo][1], phi2,
+                           src_eo[0][0][i_eo][0], +1.0, VOLUME / 2);
+          // the propagator fields are the initial guess of the heavy inversion: start from zero
+          for (size_t F = 0; F < 2; F++) {
             for (size_t i_f = 0; i_f < 2; i_f++) {
-              // assigning the result to the first components (the sources).
-              // The propagators will be overwritten with the inversion
-              assign(arr_eo_spinor[0][1][beta][F][i_eo][i_f],
-                     arr_eo_spinor[1][1][beta][F][i_eo][i_f], VOLUME / 2);
-              zero_spinor_field(arr_eo_spinor[1][1][beta][F][i_eo][i_f], VOLUME / 2);
+              zero_spinor_field(prop_eo[1][beta][F][i_eo][i_f], VOLUME / 2);
             }
           }
         }
-      }
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
 
-      tm_stopwatch_push(&g_timers, "sources_inversion", "");
-      /*
-              assign the sources and propagator pointes for the operators
-              these need to be know when calling the inverter() method */
-      for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
+        tm_stopwatch_push(&g_timers, "sources_inversion", "");
+        /*
+                assign the sources and propagator pointes for the operators
+                these need to be know when calling the inverter() method */
         /* light doublet */
 
         // up
 
         // sources
-        optr1->sr0 = arr_eo_spinor[0][0][beta][0][0][0];
-        optr1->sr1 = arr_eo_spinor[0][0][beta][0][1][0];
+        optr1->sr0 = src_eo[0][0][0][0];
+        optr1->sr1 = src_eo[0][0][1][0];
 
         // propagators
-        optr1->prop0 = arr_eo_spinor[1][0][beta][0][0][0];
-        optr1->prop1 = arr_eo_spinor[1][0][beta][0][1][0];
+        optr1->prop0 = prop_eo[0][beta][0][0][0];
+        optr1->prop1 = prop_eo[0][beta][0][1][0];
 
         optr1->inverter(i1, 0, 0);  // inversion for the up flavor
 
         // PLEASE KEEP THESE LINES COMMENTED, MAY BE USEFUL IN THE FUTURE
         // // inversion of the light doublet only inverts the up block (the operator is
         // // diagonal in flavor) down components in flavor will be empty
+        // // (the light f = 1 fields are not allocated, see the allocation above)
         // optr1->DownProp = 1;
 
         // // sources
-        // optr1->sr0 = arr_eo_spinor[0][0][beta][0][1];
-        // optr1->sr1 = arr_eo_spinor[0][0][beta][1][1];
+        // optr1->sr0 = src_eo[0][0][0][1];
+        // optr1->sr1 = src_eo[0][0][1][1];
         // // propagator
-        // optr1->prop0 = arr_eo_spinor[1][0][beta][0][1];
-        // optr1->prop1 = arr_eo_spinor[1][0][beta][1][1];
+        // optr1->prop0 = prop_eo[0][beta][0][0][1];
+        // optr1->prop1 = prop_eo[0][beta][0][1][1];
 
         // optr1->inverter(i1, 0, 0);  // inversion for the down
 
@@ -591,23 +573,23 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         /* heavy doublet */
         for (size_t F = 0; F < 2; F++) {  // flavor projection index
 
-          optr2->sr0 = arr_eo_spinor[0][1][beta][F][0][0];
-          optr2->sr1 = arr_eo_spinor[0][1][beta][F][1][0];
-          optr2->sr2 = arr_eo_spinor[0][1][beta][F][0][1];
-          optr2->sr3 = arr_eo_spinor[0][1][beta][F][1][1];
+          optr2->sr0 = src_eo[1][F][0][0];
+          optr2->sr1 = src_eo[1][F][1][0];
+          optr2->sr2 = src_eo[1][F][0][1];
+          optr2->sr3 = src_eo[1][F][1][1];
 
-          optr2->prop0 = arr_eo_spinor[1][1][beta][F][0][0];
-          optr2->prop1 = arr_eo_spinor[1][1][beta][F][1][0];
-          optr2->prop2 = arr_eo_spinor[1][1][beta][F][0][1];
-          optr2->prop3 = arr_eo_spinor[1][1][beta][F][1][1];
+          optr2->prop0 = prop_eo[1][beta][F][0][0];
+          optr2->prop1 = prop_eo[1][beta][F][1][0];
+          optr2->prop2 = prop_eo[1][beta][F][0][1];
+          optr2->prop3 = prop_eo[1][beta][F][1][1];
 
           const int no_flavours = SourceInfo.no_flavours;
           SourceInfo.no_flavours = 1;            // only for the heavy
           optr2->inverter(i2, 0, 0);             // inversion for both flavor components
           SourceInfo.no_flavours = no_flavours;  // reset to previous value
         }
-      }
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+      }  // beta
 
       tm_stopwatch_push(&g_timers, "propagators_rotations", "");
       // conclude the change of basis for the heavy doublet
@@ -616,11 +598,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd
             // (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s)
             // stored temporarely in phi1, phi2
-            mul_one_pm_itau2(phi1, phi2, arr_eo_spinor[1][1][beta][F][i_eo][0],
-                             arr_eo_spinor[1][1][beta][F][i_eo][1], -1.0, VOLUME / 2);
+            mul_one_pm_itau2(phi1, phi2, prop_eo[1][beta][F][i_eo][0],
+                             prop_eo[1][beta][F][i_eo][1], -1.0, VOLUME / 2);
 
-            assign(arr_eo_spinor[1][1][beta][F][i_eo][0], phi1, VOLUME / 2);
-            assign(arr_eo_spinor[1][1][beta][F][i_eo][1], phi2, VOLUME / 2);
+            assign(prop_eo[1][beta][F][i_eo][0], phi1, VOLUME / 2);
+            assign(prop_eo[1][beta][F][i_eo][1], phi2, VOLUME / 2);
           }
         }
       }
@@ -640,16 +622,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         char prop_filename[TM_OMEAS_FILENAME_LENGTH];
         snprintf(prop_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_prop_light.%s", suffix);
         for (size_t beta = 0; beta < 4; beta++) {
-          write_eo_spinor_field(prop_filename, arr_eo_spinor[1][0][beta][0][0][0],
-                                arr_eo_spinor[1][0][beta][0][1][0], (beta > 0));
+          write_eo_spinor_field(prop_filename, prop_eo[0][beta][0][0][0],
+                                prop_eo[0][beta][0][1][0], (beta > 0));
         }
         snprintf(prop_filename, TM_OMEAS_FILENAME_LENGTH, "heavy_mesons_prop_heavy.%s", suffix);
         int append = 0;
         for (size_t beta = 0; beta < 4; beta++) {
           for (size_t F = 0; F < 2; F++) {
             for (size_t i_f = 0; i_f < 2; i_f++) {
-              write_eo_spinor_field(prop_filename, arr_eo_spinor[1][1][beta][F][0][i_f],
-                                    arr_eo_spinor[1][1][beta][F][1][i_f], append);
+              write_eo_spinor_field(prop_filename, prop_eo[1][beta][F][0][i_f],
+                                    prop_eo[1][beta][F][1][i_f], append);
               append = 1;
             }
           }
@@ -691,7 +673,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
           // light correlators
           for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
-            const spinor *psi_u = &arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
+            const spinor *psi_u = &prop_eo[0][beta][f0][eo][f0][ix];
 
             res += _spinor_prod_re(*psi_u, *psi_u);
             _gamma0(phi, *psi_u);
@@ -721,8 +703,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
               // (g1 = 0: gamma_5 psi_h, g1 = 1: psi_h), g2 only multiplies by g5_diag[beta]
               double complex prod[2][4];
               for (size_t beta = 0; beta < 4; beta++) {  // source spin (dilution) index
-                const spinor *psi_h = &arr_eo_spinor[1][1][beta][hj][eo][hi][ix];
-                const spinor *psi_u = &arr_eo_spinor[1][0][beta][f0][eo][f0][ix];
+                const spinor *psi_h = &prop_eo[1][beta][hj][eo][hi][ix];
+                const spinor *psi_u = &prop_eo[0][beta][f0][eo][f0][ix];
                 spinor g5_psi_h;
                 _gamma5(g5_psi_h, *psi_h);
                 _spinor_scalar_prod(prod[0][beta], *psi_u, g5_psi_h);
@@ -912,14 +894,13 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   }  // for(max_samples)
 
   // freeing up memory
-  for (size_t i_sp = 0; i_sp < 2; i_sp++) {          // source or propagator
-    for (size_t db = 0; db < 2; db++) {              // doublet: light or heavy
-      for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
-        for (size_t F = 0; F < 2; F++) {             // flavor dilution index
-          for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
-            for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
-              free(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f]);
-            }
+  for (size_t db = 0; db < 2; db++) {            // doublet: light or heavy
+    for (size_t F = 0; F < 2; F++) {             // flavor dilution index
+      for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd index
+        for (size_t i_f = 0; i_f < 2; i_f++) {   // flavor index of the doublet
+          free(src_eo[db][F][i_eo][i_f]);
+          for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
+            free(prop_eo[db][beta][F][i_eo][i_f]);
           }
         }
       }
