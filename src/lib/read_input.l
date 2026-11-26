@@ -3146,6 +3146,9 @@ static inline double fltlist_next_token(int * const list_end){
   meas->write_heavy_mesons_sources = 0;
   meas->write_heavy_mesons_props = 0;
 
+  meas->measure_os_mesons = 0;
+  meas->no_os_strange_operators = 0;
+
   meas->gf_eps = _default_gf_eps;
   meas->gf_tmax = _default_gf_tmax;
 
@@ -3210,6 +3213,51 @@ static inline double fltlist_next_token(int * const list_end){
       meas->write_heavy_mesons_props = 0;
       if(myverbose) printf("  HeavyMesonsWritePropagators set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
    }
+  {SPC}*OSMesons{EQL}yes {
+      meas->measure_os_mesons = 1;
+      if(myverbose) printf("  OSMesons set to yes in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesons{EQL}no {
+      meas->measure_os_mesons = 0;
+      if(myverbose) printf("  OSMesons set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesonsStrangeOperators{EQL}{STRLIST} {
+    // comma-separated list of operator indices; whether the operators exist and are suitable is
+    // checked in the measurement (operators may be defined after the measurement)
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    char * input_copy = (char*)NULL;
+    int list_end = 0;
+    meas->no_os_strange_operators = 0;
+    strlist_tokenize(yytext, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      char * end = (char*)NULL;
+      const long index = strtol(token, &end, 10);
+      if( *end != '\0' || index < 0 || index >= max_no_operators ){
+        snprintf(error_message, ERR_MSG_LEN, "%s: '%s' in line %d is not a valid operator index!\n",
+                 paramname, token, line_of_file);
+        yy_fatal_error(error_message);
+      }
+      if( meas->no_os_strange_operators >= max_no_os_strange_operators ){
+        snprintf(error_message, ERR_MSG_LEN, "%s: more than %d operators in line %d, increase "
+                 "max_no_os_strange_operators in meas/measurements.h!\n",
+                 paramname, max_no_os_strange_operators, line_of_file);
+        yy_fatal_error(error_message);
+      }
+      meas->os_strange_operators[meas->no_os_strange_operators] = (int)index;
+      meas->no_os_strange_operators++;
+      if(myverbose) printf("  OS strange quark operator %ld added in line %d, measurement id=%d\n", index, line_of_file, meas->id);
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+    if( meas->no_os_strange_operators == 0 ){
+      snprintf(error_message, ERR_MSG_LEN, "%s: no operator index given in line %d!\n",
+               paramname, line_of_file);
+      yy_fatal_error(error_message);
+    }
+  }
 }
 
 <ONLINEMEAS,PIONNORMMEAS>{

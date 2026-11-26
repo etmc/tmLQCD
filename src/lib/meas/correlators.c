@@ -29,6 +29,7 @@
 #include <omp.h>
 #endif
 #include "correlators.h"
+#include "fatal_error.h"
 #include "geometry_eo.h"
 #include "gettime.h"
 #include "global.h"
@@ -47,6 +48,92 @@
 #include "su3spinor.h"
 
 #define TM_OMEAS_FILENAME_LENGTH 100
+
+// whether the correlator measurement id uses operator i: 0 is the light quark, 1 the heavy
+// doublet (HeavyMesons = yes), the operators in OSMesonsStrangeOperators the OS strange quarks
+// (OSMesons = yes)
+static bool correlators_uses_operator(const int id, const int i) {
+  const measurement *const meas = &measurement_list[id];
+  if (i == 0 || (i == 1 && meas->measure_heavy_mesons)) {
+    return true;
+  }
+  for (int k = 0; meas->measure_os_mesons && k < meas->no_os_strange_operators; k++) {
+    if (meas->os_strange_operators[k] == i) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// checks the input of the Osterwalder-Seiler (OS) strange quarks of the correlator measurement id
+// (OSMesons = yes): fatal error if OSMesonsStrangeOperators is not given, if the light quark
+// operator 0 is not of type TMWILSON, WILSON or CLOVER, or if an entry is 0, not defined, not of
+// type TMWILSON or CLOVER, listed more than once or has 2KappaMu = 0 (the default if 2KappaMu is
+// missing). With print_warnings, warnings if mu has the opposite sign of the light quark (s and s'
+// interchanged) or if kappa or c_sw differ from the light quark.
+void os_mesons_check_input(const int id, const bool print_warnings) {
+  const measurement *const meas = &measurement_list[id];
+  char error[500];
+  if (meas->no_os_strange_operators == 0) {
+    snprintf(error, sizeof(error),
+             "OSMesons = yes, but no OSMesonsStrangeOperators given in measurement %d", id);
+    fatal_error(error, __func__);
+  }
+  const operator*const optr_l = &operator_list[0];
+  if (no_operators < 1 ||
+      (optr_l->type != TMWILSON && optr_l->type != WILSON && optr_l->type != CLOVER)) {
+    snprintf(error, sizeof(error),
+             "OSMesons = yes needs the light quark operator 0 of type TMWILSON, WILSON or CLOVER "
+             "(measurement %d)",
+             id);
+    fatal_error(error, __func__);
+  }
+  // c_sw of the clover term (none for TMWILSON and WILSON)
+  const double csw_l = (optr_l->type == CLOVER) ? optr_l->c_sw : 0.0;
+  for (int k = 0; k < meas->no_os_strange_operators; k++) {
+    const int i = meas->os_strange_operators[k];
+    const char *problem = NULL;
+    if (i == 0) {
+      problem = "is the light quark operator";
+    } else if (i >= no_operators) {
+      problem = "is not defined in the input file";
+    } else if (operator_list[i].type != TMWILSON && operator_list[i].type != CLOVER) {
+      problem = "is not of type TMWILSON or CLOVER";
+    } else if (operator_list[i].mu == 0.0) {
+      problem = "has 2KappaMu = 0 (2KappaMu missing?)";
+    } else {
+      for (int l = 0; l < k; l++) {
+        if (meas->os_strange_operators[l] == i) {
+          problem = "is listed more than once";
+        }
+      }
+    }
+    if (problem != NULL) {
+      snprintf(error, sizeof(error),
+               "OS strange quark operator %d (OSMesonsStrangeOperators of measurement %d) %s", i,
+               id, problem);
+      fatal_error(error, __func__);
+    }
+
+    const operator*const optr_s = &operator_list[i];
+    const double csw_s = (optr_s->type == CLOVER) ? optr_s->c_sw : 0.0;
+    if (print_warnings && g_proc_id == 0) {
+      if (optr_s->mu * optr_l->mu < 0.0) {
+        fprintf(stderr,
+                "Warning! OS strange quark operator %d: 2KappaMu has the opposite sign of the "
+                "light quark operator 0 (s and s' interchanged)!\n",
+                i);
+      }
+      if (optr_s->kappa != optr_l->kappa || csw_s != csw_l) {
+        fprintf(stderr,
+                "Warning! OS strange quark operator %d: kappa = %.16e, c_sw = %.16e differ from "
+                "the light quark operator 0: kappa = %.16e, c_sw = %.16e (c_sw = 0: no clover "
+                "term)!\n",
+                i, optr_s->kappa, csw_s, optr_l->kappa, csw_l);
+      }
+    }
+  }
+}
 
 /******************************************************
  *
@@ -87,8 +174,20 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
     tm_stopwatch_pop(&g_timers, 0, 0, "");
     return;
   }
-  if (no_operators > 1 && g_proc_id == 0) {
-    fprintf(stderr, "Warning! number of operators defined larger than 1, using only the first!\n");
+  if (g_proc_id == 0) {
+    bool first = true;
+    for (int i = 1; i < no_operators; i++) {
+      if (!correlators_uses_operator(id, i)) {
+        fprintf(stderr, first ? "Warning! operator(s) %d" : ", %d", i);
+        first = false;
+      }
+    }
+    if (!first) {
+      fprintf(stderr,
+              " not used by the correlator online measurement (it uses operator 0 for the light "
+              "quark, 1 for the heavy doublet with HeavyMesons = yes and OSMesonsStrangeOperators "
+              "with OSMesons = yes)!\n");
+    }
   }
   optr = &operator_list[0];
   // we don't want to do inversion twice for this purpose here
@@ -815,6 +914,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
+  // OS strange quark input: checked at the start (init_measurements), again here without warnings
+  // since the input may have been changed in the meantime (hmc.reread)
+  if (measurement_list[id].measure_os_mesons) {
+    os_mesons_check_input(id, false);
+  }
   // ??? maybe add a double check? does i1 --> light and i2 --> heavy?
   if (measurement_list[id].measure_heavy_mesons == 1) {
     const int i1 = 0, i2 = 1;

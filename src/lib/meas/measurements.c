@@ -59,6 +59,10 @@ int init_measurements() {
     if (measurement_list[i].type == ONLINE) {
       measurement_list[i].measurefunc = &correlators_measurement;
       measurement_list[i].max_source_slice = g_nproc_t * T;
+      // fatal error for invalid OS strange quark input before any measurement is done
+      if (measurement_list[i].measure_os_mesons) {
+        os_mesons_check_input(i, true);
+      }
     }
 
     if (measurement_list[i].type == PIONNORM) {

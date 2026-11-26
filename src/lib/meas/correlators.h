@@ -35,6 +35,10 @@ void light_correlators_measurement(const int traj, const int id, const int ieo);
 void heavy_correlators_measurement(const int traj, const int id, const int ieo, const int i1,
                                    const int i2);
 
+/* checks the input of the OS strange quarks of the correlator measurement id (OSMesons = yes):
+ * fatal error for invalid input, with print_warnings also warnings (see correlators.c) */
+void os_mesons_check_input(const int id, const bool print_warnings);
+
 /*
  Function that is called when the correlator measurement is specified in the input file.
  Internally, it calls the functions for the measure of the light and (optionally) the heavy mesons

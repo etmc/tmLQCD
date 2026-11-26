@@ -23,6 +23,8 @@
 #define _MEASUREMENTS_H
 
 #define max_no_measurements 20
+// maximal number of OS strange quark operators of one correlator measurement
+#define max_no_os_strange_operators 16
 
 /* Give the measurement types an unambiguous ID*/
 enum MEAS_TYPE { ONLINE, PIONNORM, POLYAKOV, ORIENTED_PLAQUETTES, GRADIENT_FLOW };
@@ -70,6 +72,12 @@ typedef struct {
   int write_heavy_mesons_sources;  // 1 or 0: write the stochastic sources of the heavy mesons
                                    // measurement
   int write_heavy_mesons_props;    // 1 or 0: write the propagators of the heavy mesons measurement
+
+  // Osterwalder-Seiler (OS) strange valence quarks in the correlator measurement (K+-, K0,
+  // connected eta_s, s-sbar'), one OS strange quark per operator in os_strange_operators
+  int measure_os_mesons;        // 1 or 0: OS mesons measured or not
+  int no_os_strange_operators;  // number of entries of os_strange_operators
+  int os_strange_operators[max_no_os_strange_operators];  // operator indices (input order)
 
 } measurement;
 
