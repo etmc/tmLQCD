@@ -86,7 +86,7 @@ test/container/beverin-mi300:
     # The container job does not run inside the repo checkout; use the copy
     # of this commit's sources baked into the image (COPY . /tmlqcd).
     REFPATH: "/tmlqcd/doc/sample-output/hmc-quda-cscs"
-    QUDA_ENABLE_TUNING: 1 # tunecache goes to QUDA_RESOURCE_PATH (RUN_DIR)
+    QUDA_ENABLE_TUNING: 0 # tunecache goes to QUDA_RESOURCE_PATH (RUN_DIR)
     QUDA_ENABLE_P2P: 0 # disable P2P
     QUDA_ENABLE_GDR: 0
     SLURM_JOB_NUM_NODES: 2
