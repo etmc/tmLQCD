@@ -30,6 +30,7 @@
 #endif
 #include "correlators.h"
 #include "fatal_error.h"
+#include "gamma.h"
 #include "geometry_eo.h"
 #include "gettime.h"
 #include "global.h"
@@ -38,6 +39,7 @@
 #include "io/spinor.h"
 #include "io/utils.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "little_D.h"
 #include "measurements.h"
 #include "operator.h"
 #include "operator/tm_operators_nd.h"
@@ -66,11 +68,14 @@ static bool correlators_uses_operator(const int id, const int i) {
 }
 
 // checks the input of the Osterwalder-Seiler (OS) strange quarks of the correlator measurement id
-// (OSMesons = yes), the light quark operator 0 is checked before: fatal error if
-// OSMesonsStrangeOperators is not given, or if an entry is 0, not defined, not of type TMWILSON or
-// CLOVER, listed more than once or has 2KappaMu = 0 (the default if 2KappaMu is missing). With
-// print_warnings, warnings if mu has the opposite sign of the light quark (s and s' interchanged)
-// or if kappa or c_sw differ from the light quark.
+// (OSMesons = yes), the type of the light quark operator 0 is checked before: fatal error if
+// OSMesonsStrangeOperators is not given, if the light quark has 2KappaMu = 0, or if an entry is 0,
+// not defined, not of type TMWILSON or CLOVER, has 2KappaMu = 0 (the default if 2KappaMu is
+// missing) or 2KappaMu of the opposite sign of the light quark, or is listed more than once.
+// At maximal twist, types 1 and 2 of the output (K+-, K0) are pseudoscalar correlators only if s
+// is twisted like the light quark (u) and s' like d; otherwise (opposite sign, or an untwisted
+// light quark) they are not (opposite sign: scalar correlators). With print_warnings, warnings if
+// kappa or c_sw differ from the light quark.
 static void os_mesons_check_input(const int id, const bool print_warnings) {
   const measurement *const meas = &measurement_list[id];
   char error[500];
@@ -80,6 +85,13 @@ static void os_mesons_check_input(const int id, const bool print_warnings) {
     fatal_error(error, __func__);
   }
   const operator*const optr_l = &operator_list[0];
+  if (optr_l->mu == 0.0) {
+    snprintf(error, sizeof(error),
+             "OSMesons = yes needs a twisted light quark: the light quark operator 0 has "
+             "2KappaMu = 0 (measurement %d)",
+             id);
+    fatal_error(error, __func__);
+  }
   // c_sw of the clover term (none for TMWILSON and WILSON)
   const double csw_l = (optr_l->type == CLOVER) ? optr_l->c_sw : 0.0;
   for (int k = 0; k < meas->no_os_strange_operators; k++) {
@@ -93,6 +105,10 @@ static void os_mesons_check_input(const int id, const bool print_warnings) {
       problem = "is not of type TMWILSON or CLOVER";
     } else if (operator_list[i].mu == 0.0) {
       problem = "has 2KappaMu = 0 (2KappaMu missing?)";
+    } else if (operator_list[i].mu * optr_l->mu < 0.0) {
+      problem =
+          "has 2KappaMu of the opposite sign of the light quark operator 0 (the sign of s must be "
+          "the one of the light quark, s' gets the opposite sign)";
     } else {
       for (int l = 0; l < k; l++) {
         if (meas->os_strange_operators[l] == i) {
@@ -109,20 +125,13 @@ static void os_mesons_check_input(const int id, const bool print_warnings) {
 
     const operator*const optr_s = &operator_list[i];
     const double csw_s = (optr_s->type == CLOVER) ? optr_s->c_sw : 0.0;
-    if (print_warnings && g_proc_id == 0) {
-      if (optr_s->mu * optr_l->mu < 0.0) {
-        fprintf(stderr,
-                "Warning! OS strange quark operator %d: 2KappaMu has the opposite sign of the "
-                "light quark operator 0 (s and s' interchanged)!\n",
-                i);
-      }
-      if (optr_s->kappa != optr_l->kappa || csw_s != csw_l) {
-        fprintf(stderr,
-                "Warning! OS strange quark operator %d: kappa = %.16e, c_sw = %.16e differ from "
-                "the light quark operator 0: kappa = %.16e, c_sw = %.16e (c_sw = 0: no clover "
-                "term)!\n",
-                i, optr_s->kappa, csw_s, optr_l->kappa, csw_l);
-      }
+    if (print_warnings && g_proc_id == 0 &&
+        (optr_s->kappa != optr_l->kappa || csw_s != csw_l)) {
+      fprintf(stderr,
+              "Warning! OS strange quark operator %d: kappa = %.16e, c_sw = %.16e differ from "
+              "the light quark operator 0: kappa = %.16e, c_sw = %.16e (c_sw = 0: no clover "
+              "term)!\n",
+              i, optr_s->kappa, csw_s, optr_l->kappa, csw_l);
     }
   }
 }
@@ -170,6 +179,9 @@ void correlators_check_input(const int id, const bool print_warnings) {
     }
   }
 }
+
+static void os_mesons_measurement(const int id, const char *const suffix, const int t0,
+                                  spinor *const xi[2], spinor *const psi_u[2]);
 
 /******************************************************
  *
@@ -219,13 +231,16 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
       measurement_list[id].all_time_slices ? measurement_list[id].max_source_slice : 1;
   for (int sample = 0; sample < max_samples; sample++) {
     for (int ts = 0; ts < max_time_slices; ts++) {
+      // output filename (the suffix is also used for the OS-meson files)
+      char suffix[32];
       if (max_samples == 1 && max_time_slices == 1) {
-        snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s%06d", "onlinemeas.", traj);
+        snprintf(suffix, sizeof(suffix), "%06d", traj);
       } else if (max_samples == 1 && max_time_slices > 1) {
-        snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s.t%03d.%06d", "onlinemeas", ts, traj);
+        snprintf(suffix, sizeof(suffix), "t%03d.%06d", ts, traj);
       } else {
-        snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "%s.s%03d.%06d", "onlinemeas", sample, traj);
+        snprintf(suffix, sizeof(suffix), "s%03d.%06d", sample, traj);
       }
+      snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "onlinemeas.%s", suffix);
       /* generate random timeslice */
       int t0 = ts;
       if (!measurement_list[id].all_time_slices) {
@@ -370,6 +385,14 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
       free(Cpa);
       free(Cp4);
 #endif
+
+      // OS mesons: same source and light propagator (the inversion above does not change the
+      // source, the contraction above does not change the propagator)
+      if (measurement_list[id].measure_os_mesons) {
+        spinor *const xi[2] = {g_spinor_field[0], g_spinor_field[1]};
+        spinor *const psi_u[2] = {g_spinor_field[2], g_spinor_field[3]};
+        os_mesons_measurement(id, suffix, t0, xi, psi_u);
+      }
     }  // for(max_time_slices)
   }  // for(max_samples)
   // etime = gettime();
@@ -884,6 +907,255 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   return;
+}
+
+// OS-meson correlators per time slice, k = 0..3 (output types 1..4): K+-, K0, connected eta_s,
+// s-sbar', see os_mesons_measurement
+#define OS_N_CORR 4
+
+// contractions of the OS-meson measurement for one strange quark: adds the sums over the local
+// spatial sites of every local time slice t to corr_thr[thread][t][k], i.e. per-thread partial
+// sums (signs and normalisations are applied after the sums over the threads and ranks).
+// Even-odd fields (index 0: even, 1: odd), see os_mesons_measurement:
+// psi_u = D_u^{-1} xi, psi_s = D_s^{-1} xi, phi_s = D_s'^{-1} gamma_5 xi
+static void os_mesons_contractions(double *const corr_thr, spinor *const psi_u[2],
+                                   spinor *const psi_s[2], spinor *const phi_s[2]) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+#endif
+  {
+#ifdef TM_USE_OMP
+    double *const acc = corr_thr + (size_t)omp_get_thread_num() * T * OS_N_CORR;
+#else
+    double *const acc = corr_thr;
+#endif
+    for (int t = 0; t < T; t++) {
+      const int j = g_ipt[t][0][0][0];  // source and sink separated by "t"
+      double sum[OS_N_CORR] = {0.0};
+      // static schedule: the same partition of the sites for a given number of threads
+#ifdef TM_USE_OMP
+#pragma omp for schedule(static) nowait
+#endif
+      for (int i = j; i < j + LX * LY * LZ; i++) {
+        // parity and index of the lexicographic site i (as in convert_eo_to_lexic)
+        const size_t eo = (g_lexic2eo[i] < (VOLUME + RAND) / 2) ? 0 : 1;
+        const int ix = g_lexic2eosub[i];
+        const spinor *const u = &psi_u[eo][ix];
+        const spinor *const s = &psi_s[eo][ix];
+        spinor g5_phi;
+        _gamma5(g5_phi, phi_s[eo][ix]);
+        // real parts of the scalar products; eta_s uses Re(phi^+ g5 psi_s) = Re(psi_s^+ g5 phi)
+        sum[0] += _spinor_prod_re(*u, *s);      // K+-
+        sum[1] += _spinor_prod_re(*u, g5_phi);  // K0
+        sum[2] += _spinor_prod_re(*s, g5_phi);  // eta_s (connected)
+        sum[3] += _spinor_prod_re(*s, *s);      // s-sbar'
+      }
+      for (size_t k = 0; k < OS_N_CORR; k++) {
+        acc[t * OS_N_CORR + k] += sum[k];
+      }
+    }
+  }  // omp parallel
+}
+
+/******************************************************
+ *
+ * Osterwalder-Seiler (OS) meson correlators, see the OS paper:
+ * K. Ottnad et al., Nucl. Phys. B 896 (2015) 470, eqs. (4), (5), (7)
+ *
+ * One OS strange valence quark per operator in OSMesonsStrangeOperators (twisted mass
+ * D_q = D_W + m_0 + i mu_q gamma_5): s with +mu_s and s' with -mu_s, where 2*kappa*mu_s is the
+ * 2KappaMu of the operator (same sign as the light quark, see os_mesons_check_input). The source
+ * xi (time slice t0, undiluted) and the light propagator psi_u = D_u^{-1} xi (light operator 0,
+ * +mu_l) of the light measurement are reused (one-end trick, the d quark (-mu_l) enters via
+ * gamma_5 hermiticity: D_d^{-1} = g5 (D_u^{-1})^+ g5).
+ * Per strange operator two inversions:
+ *   psi_s = D_s^{-1} xi,  phi_s = D_s'^{-1} gamma_5 xi
+ * (normalised with 2*kappa as in op_invert). At maximal twist the pseudoscalar densities of the
+ * physical basis are pseudoscalar densities in the twisted basis for (s, d) and (s, s'), and
+ * scalar densities for (s', d) and (s, s), which gives the correlators (V_s: spatial volume, Re:
+ * the imaginary parts are lattice artefacts and are dropped, see the OS paper)
+ *   type 1 K+-   (sbar  i g5 d):  + Re sum_x psi_u^+ psi_s          / (V_s 2 kappa_l kappa_s)
+ *   type 2 K0    (s'bar i g5 d):  - Re sum_x psi_u^+ g5 phi_s       / (V_s 2 kappa_l kappa_s)
+ *   type 3 eta_s (sbar  i g5 s, connected only):
+ *                                 - Re sum_x psi_s^+ g5 phi_s       / (V_s 2 kappa_s kappa_s)
+ *   type 4 s-sbar' (sbar i g5 s'): + sum_x psi_s^+ psi_s            / (V_s 2 kappa_s kappa_s)
+ * Type 1 has the normalisation of the light Cpp (onlinemeas type 1): with s = a copy of the
+ * light operator, types 1 and 4 equal Cpp and types 2 and 3 are the connected neutral pion.
+ * Output: os_mesons.opXX.<suffix> (XX: operator index) in the format of onlinemeas.<suffix>.
+ *
+ ******************************************************/
+static void os_mesons_measurement(const int id, const char *const suffix, const int t0,
+                                  spinor *const xi[2], spinor *const psi_u[2]) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+  const measurement *const meas = &measurement_list[id];
+  const double kappa_l = operator_list[0].kappa;
+  char filename[TM_OMEAS_FILENAME_LENGTH];
+
+  // source gamma_5 xi of s' and the strange propagators: passed to the inverters, whose
+  // Hopping_Matrix exchanges the boundary into the field itself without halfspinor
+  // -> they need the halo, i.e. VOLUMEPLUSRAND/2 (calloc: zero-initialised)
+  spinor *g5_xi[2], *psi_s[2], *phi_s[2];
+  for (int i_eo = 0; i_eo < 2; i_eo++) {
+    g5_xi[i_eo] = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
+    psi_s[i_eo] = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
+    phi_s[i_eo] = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
+    gamma5(g5_xi[i_eo], xi[i_eo], VOLUME / 2);
+  }
+#ifdef TM_USE_OMP
+  const int nthreads = omp_get_max_threads();
+#else
+  const int nthreads = 1;
+#endif
+  double *corr_thr = calloc((size_t)nthreads * T * OS_N_CORR, sizeof(double));
+  double *corr = calloc((size_t)g_nproc_t * T * OS_N_CORR, sizeof(double));
+#ifdef TM_USE_MPI
+  double *corr_loc = calloc(T * OS_N_CORR, sizeof(double));  // sum over the threads
+  double *corr_red = calloc(T * OS_N_CORR, sizeof(double));  // ... and over the ranks of t
+#else
+  double *corr_loc = corr;  // without MPI the sum over the threads is the result
+#endif
+
+  // source (time slice t0) and light propagator: one record each
+  if (meas->write_os_mesons_sources) {
+    tm_stopwatch_push(&g_timers, "writing_sources", "");
+    snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "os_mesons_source.%s", suffix);
+    write_eo_spinor_field(filename, xi[0], xi[1], 0);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+  }
+  if (meas->write_os_mesons_props) {
+    tm_stopwatch_push(&g_timers, "writing_propagators", "");
+    snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "os_mesons_prop_light.%s", suffix);
+    write_eo_spinor_field(filename, psi_u[0], psi_u[1], 0);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+  }
+
+  for (int k = 0; k < meas->no_os_strange_operators; k++) {
+    const int i_op = meas->os_strange_operators[k];
+    operator* const optr = & operator_list[i_op];
+    const double mu_s = optr->mu;
+    if (g_debug_level > 1 && g_proc_id == 0) {
+      printf("# OS strange quark operator %d: kappa = %.12f, mu = %.12f (s), %.12f (s')\n", i_op,
+             optr->kappa, mu_s / 2. / optr->kappa, -mu_s / 2. / optr->kappa);
+    }
+    // the settings of the operator are restored after the inversions
+    const int down_prop = optr->DownProp;
+    spinor *const sr0 = optr->sr0, *const sr1 = optr->sr1;
+    spinor *const prop0 = optr->prop0, *const prop1 = optr->prop1;
+    // with AddDownPropagator = yes, op_invert would additionally invert at -mu and return that
+    // propagator instead of the +mu one
+    optr->DownProp = 0;
+
+    tm_stopwatch_push(&g_timers, "inversions", "");
+    // the propagator fields are the initial guess of the inversions (e.g. CG): start from zero
+    for (int i_eo = 0; i_eo < 2; i_eo++) {
+      zero_spinor_field(psi_s[i_eo], VOLUME / 2);
+      zero_spinor_field(phi_s[i_eo], VOLUME / 2);
+    }
+    // s (+mu_s) on xi
+    optr->sr0 = xi[0];
+    optr->sr1 = xi[1];
+    optr->prop0 = psi_s[0];
+    optr->prop1 = psi_s[1];
+    optr->inverter(i_op, 0, 0);
+    // s' (-mu_s) on gamma_5 xi (as for AddDownPropagator = yes in op_invert, the deflation
+    // subspace has to be updated when mu changes)
+    optr->mu = -mu_s;
+    dfl_subspace_updated = 1;
+    optr->sr0 = g5_xi[0];
+    optr->sr1 = g5_xi[1];
+    optr->prop0 = phi_s[0];
+    optr->prop1 = phi_s[1];
+    optr->inverter(i_op, 0, 0);
+    optr->mu = mu_s;
+    dfl_subspace_updated = 1;
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+    optr->DownProp = down_prop;
+    optr->sr0 = sr0;
+    optr->sr1 = sr1;
+    optr->prop0 = prop0;
+    optr->prop1 = prop1;
+
+    // strange propagators: 2 records, psi_s (s on xi) and phi_s (s' on gamma_5 xi)
+    if (meas->write_os_mesons_props) {
+      tm_stopwatch_push(&g_timers, "writing_propagators", "");
+      snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "os_mesons_prop_strange.op%02d.%s", i_op,
+               suffix);
+      write_eo_spinor_field(filename, psi_s[0], psi_s[1], 0);
+      write_eo_spinor_field(filename, phi_s[0], phi_s[1], 1);
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
+    }
+
+    tm_stopwatch_push(&g_timers, "contractions", "");
+    for (size_t l = 0; l < (size_t)nthreads * T * OS_N_CORR; l++) {
+      corr_thr[l] = 0.0;
+    }
+    os_mesons_contractions(corr_thr, psi_u, psi_s, phi_s);
+    // sum over the threads (in thread order)
+    for (size_t l = 0; l < (size_t)T * OS_N_CORR; l++) {
+      double sum = 0.0;
+      for (int thr = 0; thr < nthreads; thr++) {
+        sum += corr_thr[(size_t)thr * T * OS_N_CORR + l];
+      }
+      corr_loc[l] = sum;
+    }
+#ifdef TM_USE_MPI
+    // sum over the ranks of each local time slice and gather of all time slices on the rank
+    // that writes the output
+    MPI_Reduce(corr_loc, corr_red, T * OS_N_CORR, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+    if (g_mpi_time_rank == 0) {
+      MPI_Gather(corr_red, T * OS_N_CORR, MPI_DOUBLE, corr, T * OS_N_CORR, MPI_DOUBLE, 0,
+                 g_mpi_SV_slices);
+    }
+#endif
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+    /* normalise and write everything into a file */
+    if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
+      const int T_glob = g_nproc_t * T;
+      const double vol_fact = (g_nproc_x * LX) * (g_nproc_y * LY) * (g_nproc_z * LZ);
+      const double kappa_s = optr->kappa;
+      // sign and the kappa of the two quarks of each correlator (see above)
+      const double sign[OS_N_CORR] = {+1.0, -1.0, -1.0, +1.0};
+      const double kappa_q[OS_N_CORR] = {kappa_l, kappa_l, kappa_s, kappa_s};
+      for (int t = 0; t < T_glob; t++) {
+        for (size_t l = 0; l < OS_N_CORR; l++) {
+          double *const c = &corr[(size_t)t * OS_N_CORR + l];
+          *c = sign[l] * *c / vol_fact / 2.0 / kappa_q[l] / kappa_s;
+        }
+      }
+
+      snprintf(filename, TM_OMEAS_FILENAME_LENGTH, "os_mesons.op%02d.%s", i_op, suffix);
+      FILE *ofs = fopen(filename, "w");
+      for (size_t l = 0; l < OS_N_CORR; l++) {
+        const int type = (int)l + 1;
+        int t, tt;
+        fprintf(ofs, "%d  1  0  %.16e  %.16e\n", type, corr[t0 * OS_N_CORR + l], 0.0);
+        for (t = 1; t < T_glob / 2; t++) {
+          tt = (t0 + t) % T_glob;
+          fprintf(ofs, "%d  1  %d  %.16e  ", type, t, corr[tt * OS_N_CORR + l]);
+          tt = (t0 + T_glob - t) % T_glob;
+          fprintf(ofs, "%.16e\n", corr[tt * OS_N_CORR + l]);
+        }
+        tt = (t0 + T_glob / 2) % T_glob;
+        fprintf(ofs, "%d  1  %d  %.16e  %.16e\n", type, t, corr[tt * OS_N_CORR + l], 0.0);
+      }
+      fclose(ofs);
+    }
+  }  // strange operators
+
+  for (int i_eo = 0; i_eo < 2; i_eo++) {
+    free(g5_xi[i_eo]);
+    free(psi_s[i_eo]);
+    free(phi_s[i_eo]);
+  }
+  free(corr_thr);
+  free(corr);
+#ifdef TM_USE_MPI
+  free(corr_loc);
+  free(corr_red);
+#endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {

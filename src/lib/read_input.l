@@ -3148,6 +3148,8 @@ static inline double fltlist_next_token(int * const list_end){
 
   meas->measure_os_mesons = 0;
   meas->no_os_strange_operators = 0;
+  meas->write_os_mesons_sources = 0;
+  meas->write_os_mesons_props = 0;
 
   meas->gf_eps = _default_gf_eps;
   meas->gf_tmax = _default_gf_tmax;
@@ -3220,6 +3222,22 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*OSMesons{EQL}no {
       meas->measure_os_mesons = 0;
       if(myverbose) printf("  OSMesons set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesonsWriteSources{EQL}yes {
+      meas->write_os_mesons_sources = 1;
+      if(myverbose) printf("  OSMesonsWriteSources set to yes in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesonsWriteSources{EQL}no {
+      meas->write_os_mesons_sources = 0;
+      if(myverbose) printf("  OSMesonsWriteSources set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesonsWritePropagators{EQL}yes {
+      meas->write_os_mesons_props = 1;
+      if(myverbose) printf("  OSMesonsWritePropagators set to yes in line %d, measurement id=%d\n", line_of_file, meas->id);
+   }
+  {SPC}*OSMesonsWritePropagators{EQL}no {
+      meas->write_os_mesons_props = 0;
+      if(myverbose) printf("  OSMesonsWritePropagators set to no in line %d, measurement id=%d\n", line_of_file, meas->id);
    }
   {SPC}*OSMesonsStrangeOperators{EQL}{STRLIST} {
     // comma-separated list of operator indices; whether the operators exist and are suitable is

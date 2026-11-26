@@ -78,6 +78,8 @@ typedef struct {
   int measure_os_mesons;        // 1 or 0: OS mesons measured or not
   int no_os_strange_operators;  // number of entries of os_strange_operators
   int os_strange_operators[max_no_os_strange_operators];  // operator indices (input order)
+  int write_os_mesons_sources;  // 1 or 0: write the stochastic source of the OS-meson measurement
+  int write_os_mesons_props;    // 1 or 0: write the propagators of the OS-meson measurement
 
 } measurement;
 
