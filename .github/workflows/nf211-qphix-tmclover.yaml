@@ -7,7 +7,7 @@ env:
 
 jobs:
   qphix-nf211-hmc-tmclover:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
 
     steps:
       # handling of environment variable: https://stackoverflow.com/a/57969570
@@ -26,7 +26,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi40 libopenmpi-dev numdiff libblas-dev liblapack-dev
+        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
 
       - name: mpicc_version
         if: ${{ always() }}
@@ -131,7 +131,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: qphix/build
-          key: ${{ runner.os }}-ubuntu-26.04-haswell-qphix
+          key: ${{ runner.os }}-haswell-qphix
 
       - name: build_qphix
         working-directory: ${{github.workspace}}/qphix/build
