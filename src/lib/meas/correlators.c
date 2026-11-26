@@ -66,12 +66,12 @@ static bool correlators_uses_operator(const int id, const int i) {
 }
 
 // checks the input of the Osterwalder-Seiler (OS) strange quarks of the correlator measurement id
-// (OSMesons = yes): fatal error if OSMesonsStrangeOperators is not given, if the light quark
-// operator 0 is not of type TMWILSON, WILSON or CLOVER, or if an entry is 0, not defined, not of
-// type TMWILSON or CLOVER, listed more than once or has 2KappaMu = 0 (the default if 2KappaMu is
-// missing). With print_warnings, warnings if mu has the opposite sign of the light quark (s and s'
-// interchanged) or if kappa or c_sw differ from the light quark.
-void os_mesons_check_input(const int id, const bool print_warnings) {
+// (OSMesons = yes), the light quark operator 0 is checked before: fatal error if
+// OSMesonsStrangeOperators is not given, or if an entry is 0, not defined, not of type TMWILSON or
+// CLOVER, listed more than once or has 2KappaMu = 0 (the default if 2KappaMu is missing). With
+// print_warnings, warnings if mu has the opposite sign of the light quark (s and s' interchanged)
+// or if kappa or c_sw differ from the light quark.
+static void os_mesons_check_input(const int id, const bool print_warnings) {
   const measurement *const meas = &measurement_list[id];
   char error[500];
   if (meas->no_os_strange_operators == 0) {
@@ -80,14 +80,6 @@ void os_mesons_check_input(const int id, const bool print_warnings) {
     fatal_error(error, __func__);
   }
   const operator*const optr_l = &operator_list[0];
-  if (no_operators < 1 ||
-      (optr_l->type != TMWILSON && optr_l->type != WILSON && optr_l->type != CLOVER)) {
-    snprintf(error, sizeof(error),
-             "OSMesons = yes needs the light quark operator 0 of type TMWILSON, WILSON or CLOVER "
-             "(measurement %d)",
-             id);
-    fatal_error(error, __func__);
-  }
   // c_sw of the clover term (none for TMWILSON and WILSON)
   const double csw_l = (optr_l->type == CLOVER) ? optr_l->c_sw : 0.0;
   for (int k = 0; k < meas->no_os_strange_operators; k++) {
@@ -135,6 +127,50 @@ void os_mesons_check_input(const int id, const bool print_warnings) {
   }
 }
 
+// checks the input of the correlator measurement id: fatal error if the light quark operator 0 is
+// not defined or not of type TMWILSON, WILSON or CLOVER, if HeavyMesons = yes and the heavy
+// doublet operator 1 is not defined or not of type DBTMWILSON or DBCLOVER, or for invalid OS
+// strange quark input (OSMesons = yes, see os_mesons_check_input). With print_warnings, also the
+// warnings of os_mesons_check_input and a warning for operators that are not used.
+void correlators_check_input(const int id, const bool print_warnings) {
+  const measurement *const meas = &measurement_list[id];
+  char error[500];
+  if (no_operators < 1 || (operator_list[0].type != TMWILSON && operator_list[0].type != WILSON &&
+                           operator_list[0].type != CLOVER)) {
+    snprintf(error, sizeof(error),
+             "the correlator measurement %d needs the light quark operator 0 of type TMWILSON, "
+             "WILSON or CLOVER%s",
+             id, no_operators < 1 ? ", but no operator is defined in the input file" : "");
+    fatal_error(error, __func__);
+  }
+  if (meas->measure_heavy_mesons && (no_operators < 2 || (operator_list[1].type != DBTMWILSON &&
+                                                          operator_list[1].type != DBCLOVER))) {
+    snprintf(error, sizeof(error),
+             "HeavyMesons = yes needs the heavy doublet operator 1 of type DBTMWILSON or "
+             "DBCLOVER%s (measurement %d)",
+             no_operators < 2 ? ", but it is not defined in the input file" : "", id);
+    fatal_error(error, __func__);
+  }
+  if (meas->measure_os_mesons) {
+    os_mesons_check_input(id, print_warnings);
+  }
+  if (print_warnings && g_proc_id == 0) {
+    bool first = true;
+    for (int i = 1; i < no_operators; i++) {
+      if (!correlators_uses_operator(id, i)) {
+        fprintf(stderr, first ? "Warning! operator(s) %d" : ", %d", i);
+        first = false;
+      }
+    }
+    if (!first) {
+      fprintf(stderr,
+              " not used by the correlator online measurement (it uses operator 0 for the light "
+              "quark, 1 for the heavy doublet with HeavyMesons = yes and OSMesonsStrangeOperators "
+              "with OSMesons = yes)!\n");
+    }
+  }
+}
+
 /******************************************************
  *
  * This routine computes the correlators
@@ -165,43 +201,10 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
   spinor phi;
 
   init_operators();
-  if (no_operators < 1) {
-    if (g_proc_id == 0) {
-      fprintf(stderr,
-              "Warning! no operators defined in input file, cannot perform online correlator "
-              "mesurements!\n");
-    }
-    tm_stopwatch_pop(&g_timers, 0, 0, "");
-    return;
-  }
-  if (g_proc_id == 0) {
-    bool first = true;
-    for (int i = 1; i < no_operators; i++) {
-      if (!correlators_uses_operator(id, i)) {
-        fprintf(stderr, first ? "Warning! operator(s) %d" : ", %d", i);
-        first = false;
-      }
-    }
-    if (!first) {
-      fprintf(stderr,
-              " not used by the correlator online measurement (it uses operator 0 for the light "
-              "quark, 1 for the heavy doublet with HeavyMesons = yes and OSMesonsStrangeOperators "
-              "with OSMesons = yes)!\n");
-    }
-  }
+  // light quark operator 0 (type checked by correlators_check_input)
   optr = &operator_list[0];
   // we don't want to do inversion twice for this purpose here
   optr->DownProp = 0;
-  if (optr->type != TMWILSON && optr->type != WILSON && optr->type != CLOVER) {
-    if (g_proc_id == 0) {
-      fprintf(stderr,
-              "Warning! correlator online measurement currently only implemented for TMWILSON, "
-              "WILSON and CLOVER\n");
-      fprintf(stderr, "Cannot perform correlator online measurement!\n");
-    }
-    tm_stopwatch_pop(&g_timers, 0, 0, "");
-    return;
-  }
 
   if (ranlxs_init == 0) {
     rlxs_init(1, 123456);
@@ -490,7 +493,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                                    const int i2) {
   tm_stopwatch_push(&g_timers, __func__, "");  // timer for profiling
 
-  // dummy spinors for the heavy doublet inversion (allocated after the checks below)
+  // dummy spinors for the heavy doublet inversion (allocated below)
   spinor *phi1 = NULL, *phi2 = NULL;
   int t, tt, t0;  // dummy indices
   float tmp;      // dummy variable
@@ -513,45 +516,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // MPI_Barrier(MPI_COMM_WORLD);
   init_operators();  // initialize operators (if not already done)
 
-  if (i1 >= no_operators || i2 >= no_operators) {
-    if (g_proc_id == 0) {
-      // we don't want the simulation to stop, we can do the measurements offline afterwards
-      fprintf(stderr,
-              "Warning! heavy-meson online measurement needs operators %d (light) and %d (heavy "
-              "doublet), but only %d operator(s) defined in input file, cannot perform heavy-meson "
-              "online measurement!\n",
-              i1, i2, no_operators);
-    }
-    tm_stopwatch_pop(&g_timers, 0, 0, "");  // timer for profiling
-    return;
-  }
-
   // selecting the operators i1 and i2 from the list of operators initialized before
+  // (their types are checked by correlators_check_input)
   operator* optr1 = & operator_list[i1];  // light doublet
   operator* optr2 = & operator_list[i2];  // heavy c,s doublet
   // as in light_correlators_measurement: with AddDownPropagator = yes, op_invert would
   // additionally invert at -mu and return that propagator instead of the +mu one
   optr1->DownProp = 0;
 
-  bool b1 = (optr1->type != TMWILSON && optr1->type != WILSON && optr1->type != CLOVER);
-  bool b2 = (optr2->type != DBTMWILSON && optr2->type != DBCLOVER);
-  if (b1 || b2) {
-    if (g_proc_id == 0) {
-      if (b1) {
-        fprintf(stderr,
-                "Warning! optr1 should be one of the following: TMWILSON, WILSON and CLOVER\n");
-        fprintf(stderr, "Cannot perform correlator online measurement!\n");
-      }
-      if (b2) {
-        fprintf(stderr, "Warning! optr2 should be one of the following: DBTMWILSON, DBCLOVER\n");
-      }
-      fprintf(stderr, "Cannot perform correlator online measurement!\n");
-    }
-    tm_stopwatch_pop(&g_timers, 0, 0, "");  // timer for profiling
-    return;
-  }
-
-  // allocating memory (only after the checks above, so that their early returns do not leak)
+  // allocating memory
   // Only the fields that are used are allocated (calloc: zero-initialised), the others are NULL:
   // light doublet: only the up flavor is inverted -> F = 0, f = 0
   phi1 = calloc(VOLUME / 2, sizeof(spinor));
@@ -914,14 +887,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
-  // OS strange quark input: checked at the start (init_measurements), again here without warnings
-  // since the input may have been changed in the meantime (hmc.reread)
-  if (measurement_list[id].measure_os_mesons) {
-    os_mesons_check_input(id, false);
-  }
-  // ??? maybe add a double check? does i1 --> light and i2 --> heavy?
+  // input checked at the start (init_measurements), again here without warnings since it may have
+  // been changed in the meantime (hmc.reread)
+  correlators_check_input(id, false);
   if (measurement_list[id].measure_heavy_mesons == 1) {
-    const int i1 = 0, i2 = 1;
+    const int i1 = 0, i2 = 1;  // light quark and heavy doublet operators
     heavy_correlators_measurement(traj, id, ieo, i1, i2);
   }
 
