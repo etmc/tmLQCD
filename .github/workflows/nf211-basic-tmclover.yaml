@@ -7,7 +7,7 @@ env:
 
 jobs:
   basic-nf211-hmc-tmclover:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       # handling of environment variable: https://stackoverflow.com/a/57969570
@@ -26,7 +26,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
+        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi40 libopenmpi-dev numdiff libblas-dev liblapack-dev
 
       - name: mpicc_version
         if: ${{ always() }}
