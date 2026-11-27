@@ -587,10 +587,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   double *corr_loc = corr;  // without MPI the sum over the threads is the result
 #endif
 
-  if (ranlxs_init == 0) {
-    rlxs_init(1, 123456);  // initializing random number generator RANLUX
-  }
-
   // there are three modes of operation
   // 1) one single time-slice source (default)
   // 2) no_samples time-slice sources on random time-slices
@@ -1162,9 +1158,24 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   // input checked at the start (init_measurements), again here without warnings since it may have
   // been changed in the meantime (hmc.reread)
   correlators_check_input(id, false);
+  if (ranlxs_init == 0) {
+    rlxs_init(1, 123456);  // initializing random number generator RANLUX
+  }
   if (measurement_list[id].measure_heavy_mesons == 1) {
+    // The heavy and the light measurement draw their source time slices from the same ranlxs
+    // stream. Its state is restored after the heavy measurement, so that the light (and OS)
+    // measurement and all later draws (e.g. PIONNORM, later trajectories) do not depend on
+    // HeavyMesons. Heavy and light use the same t0 per sample, but different noise (seed in
+    // eo_source_spinor_field_spin_diluted_oet_ts).
+    int *const rlxs_state = malloc(rlxs_size() * sizeof(int));
+    if (rlxs_state == NULL) {
+      fatal_error("Memory allocation for the ranlxs state failed", "correlators_measurement");
+    }
+    rlxs_get(rlxs_state);
     const int i1 = 0, i2 = 1;  // light quark and heavy doublet operators
     heavy_correlators_measurement(traj, id, ieo, i1, i2);
+    rlxs_reset(rlxs_state);
+    free(rlxs_state);
   }
 
   light_correlators_measurement(traj, id, ieo);

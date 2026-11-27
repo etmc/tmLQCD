@@ -541,7 +541,12 @@ void eo_source_spinor_field_spin_diluted_oet_ts(spinor* const even_cb_spinor,
     reset = 1;
   }
 
-  seed = (int)abs(oet_seed + sample + src_ts * 10 * 97 + nstore);
+  /* Seed as in source_generation_pion_only (seed + sample + 970 t + 5300 nstore), but with the time
+     slice shifted by the global time extent, t = src_ts + T_global. For the same seed and nstore
+     (one configuration), it differs from the seeds of all source_generation_pion_only sources (the
+     light CORRELATORS measurement) and of all other sources of this kind (other sample or time
+     slice) unless the samples differ by more than 969, so all these sources have different noise. */
+  seed = (int)abs(oet_seed + sample + (src_ts + g_nproc_t * T) * 10 * 97 + nstore * 100 * 53);
 
   rlxd_init(2, seed);
 
