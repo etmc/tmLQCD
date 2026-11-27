@@ -86,6 +86,8 @@ int main(int argc, char *argv[]) {
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+  // 32-bit fields of the mixed-precision solvers (as in invert)
+  NO_OF_SPINORFIELDS_32 = 6;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -124,8 +126,10 @@ int main(int argc, char *argv[]) {
 
 #ifdef TM_USE_GAUGE_COPY
   err = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  err += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   err = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  err += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   if (err != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -148,8 +152,10 @@ int main(int argc, char *argv[]) {
   }
   if (even_odd_flag) {
     err = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    err += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
   } else {
     err = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    err += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
   }
   if (err != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -209,11 +215,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if (g_sloppy_precision_flag == 1) {
-    if (init_dirac_halfspinor32() != 0) {
-      fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
-      exit(-1);
-    }
+  // for mixed-precision solvers, the 32-bit halfspinor field must always be there (as in invert)
+  if (init_dirac_halfspinor32() != 0) {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
   }
 #if (defined TM_PERSISTENT)
   if (even_odd_flag) init_xchange_halffield();
@@ -251,6 +256,9 @@ int main(int argc, char *argv[]) {
     xchange_gauge(g_gauge_field);
     update_tm_gauge_exchange(&g_gauge_state);
 #endif
+    // 32-bit gauge field of the mixed-precision solvers, after the exchange (as in invert)
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+    update_tm_gauge_exchange(&g_gauge_state_32);
 
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_plaquette((const su3 **const)g_gauge_field);
@@ -285,8 +293,10 @@ int main(int argc, char *argv[]) {
 
   free_blocks();
   free_dfl_subspace();
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();
 
   free_chi_spinor_field();
 
