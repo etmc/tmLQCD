@@ -1,0 +1,164 @@
+\subsubsection{Osterwalder-Seiler meson correlators}
+\label{sec:osmesons}
+
+\providecommand{\id}{1\!\!1}
+\providecommand{\Tr}{\operatorname{Tr}}
+\providecommand{\vev}[1]{\left\langle #1 \right\rangle}
+\begingroup\sloppy
+
+With {\ttfamily OSMesons = yes} in the {\ttfamily CORRELATORS} measurement, the function
+{\ttfamily os\_mesons\_measurement} (in {\ttfamily src/lib/meas/correlators.c}) computes the correlators of the charged and the neutral kaon, of the connected $\eta_s$ and of the
+$s\bar s'$ meson with Osterwalder-Seiler (OS) valence strange quarks~\cite{Frezzotti:2004wz},
+as defined in Ref.~\cite{Ottnad:2015hva}. It does so for every operator listed in
+{\ttfamily OSMesonsStrangeOperators}, e.g.\ for several values of the strange quark mass
+as needed for the kaon or $\eta_s$ matching of Ref.~\cite{Ottnad:2015hva}.
+The source and the light propagator of the light correlators described above are reused.
+The input keywords are listed in section~\ref{sec:onlinemeasinput} and the output
+files in section~\ref{sec:output}.
+
+\paragraph{Setup.}
+The light doublet $\chi_\ell=(\chi_u,\chi_d)$ is described by operator $0$,
+\begin{equation}
+  D_\ell = D_W + m_0 + i\mu_\ell\gamma_5\tau_3 ,
+\end{equation}
+where $D_W$ is the Wilson (or Wilson-clover) Dirac operator; $u$ has the twisted mass $+\mu_\ell$
+and $d$ has $-\mu_\ell$.
+Each operator in {\ttfamily OSMesonsStrangeOperators} (type {\ttfamily TMWILSON} or {\ttfamily CLOVER},
+{\ttfamily 2KappaMu} $=2\kappa\mu_s$) defines two OS strange quarks with twisted masses
+of equal modulus and opposite sign,
+\begin{equation}
+  D_s = D_W + m_0 + i\mu_s\gamma_5 , \qquad
+  D_{s'} = D_W + m_0 - i\mu_s\gamma_5 .
+  \label{eq:os:Ds}
+\end{equation}
+The strange quarks should have the $\kappa$ and $c_{sw}$ of the light quark; otherwise a warning is printed.
+The program stops if $\mu_\ell=0$ or if $\mu_s$ and $\mu_\ell$ have opposite signs (see below).
+
+\paragraph{Operators.}
+In the physical basis, the measured mesons are~\cite{Ottnad:2015hva}
+\begin{equation}
+  O_{K} = \bar\psi_s\,i\gamma_5\,\psi_d , \quad
+  O_{K^0} = \bar\psi_{s'}\,i\gamma_5\,\psi_d , \quad
+  O_{\eta_s} = \bar\psi_s\,i\gamma_5\,\psi_{s''} , \quad
+  O_{s\bar s'} = \bar\psi_s\,i\gamma_5\,\psi_{s'} .
+\end{equation}
+Here $s''$ is a further OS strange quark with $\mu_{s''}=\mu_s$, so the $\eta_s$ correlator is the
+connected part of the $\bar\psi_s i\gamma_5\psi_s$ correlator, without disconnected diagrams.
+$K$ and $K^0$ contain the same light quark $d$; their masses differ by
+$\mathcal{O}(a^2)$ lattice artefacts~\cite{Ottnad:2015hva}.
+The $s\bar s'$ meson is the analogue of the charged pion.
+
+\paragraph{Twisted basis.}
+At maximal twist, the physical and the twisted basis of a quark $q$ with twisted mass $\mu_q$ are related by
+$\psi_q = e^{i\pi\gamma_5 r_q/4}\chi_q$, $\bar\psi_q = \bar\chi_q\, e^{i\pi\gamma_5 r_q/4}$
+with $r_q=\mathrm{sign}(\mu_q)$. Hence
+\begin{equation}
+  \bar\psi_1\, i\gamma_5\, \psi_2 =
+  \begin{cases}
+    \bar\chi_1\, i\gamma_5\, \chi_2 & \text{for } r_1=-r_2 , \\
+    -r_1\, \bar\chi_1 \chi_2 & \text{for } r_1=r_2 .
+  \end{cases}
+\end{equation}
+With $r\equiv r_u=r_s=r_{s''}=-r_d=-r_{s'}$, this gives
+\begin{equation}
+  O_{K} = \bar\chi_s\,i\gamma_5\,\chi_d , \quad
+  O_{K^0} = r\,\bar\chi_{s'}\chi_d , \quad
+  O_{\eta_s} = -r\,\bar\chi_s\chi_{s''} , \quad
+  O_{s\bar s'} = \bar\chi_s\,i\gamma_5\,\chi_{s'} ,
+\end{equation}
+i.e.\ $K$ and $s\bar s'$ are pseudoscalar and $K^0$ and $\eta_s$ are scalar densities in the twisted basis.
+The code computes these twisted-basis correlators. If $\mu_s$ had the sign opposite to $\mu_\ell$,
+the same contractions for $K$ and $K^0$ would be correlators of the scalar densities
+$\bar\psi_s\psi_d$ and $\bar\psi_{s'}\psi_d$ of the physical basis, not kaon correlators.
+This is why a {\ttfamily 2KappaMu} of a strange operator with the sign opposite to the light quark
+is a fatal error, as is an untwisted light quark.
+The identification also requires maximal twist, i.e.\ $m_0$ at its critical value for the light and the strange quarks.
+
+\paragraph{Wick contractions.}
+With $(\bar\chi_1\Gamma\chi_2)^\dagger=\bar\chi_2\Gamma\chi_1$ for $\Gamma\in\{\id, i\gamma_5\}$,
+the fermion-loop sign $-1$ and the $\gamma_5$-hermiticity of the OS propagators $S_q=D_q^{-1}$,
+\begin{equation}
+  S_q(y|x) = \gamma_5\, S_{\tilde q}(x|y)^\dagger\, \gamma_5 , \qquad
+  \tilde q:\ \text{twisted mass } -\mu_q \quad (\tilde u=d,\ \tilde s=\tilde s''=s') ,
+\end{equation}
+the correlators with $y=(\vec y,t_0)$ and $x=(\vec x,t_0+t)$ become
+\begin{equation}
+  \begin{aligned}
+    C_X(t) &= \frac1{V_s}\sum_{\vec x,\vec y}\vev{O_X^\dagger(x)\,O_X(y)} , \\
+    C_{K}(t) &= \frac1{V_s}\sum_{\vec x,\vec y}\Tr\!\left[S_s(x|y)\,S_u(x|y)^\dagger\right] , &
+    C_{K^0}(t) &= -\frac1{V_s}\sum_{\vec x,\vec y}\Tr\!\left[S_{s'}(x|y)\,\gamma_5 S_u(x|y)^\dagger\gamma_5\right] , \\
+    C_{s\bar s'}(t) &= \frac1{V_s}\sum_{\vec x,\vec y}\Tr\!\left[S_s(x|y)\,S_s(x|y)^\dagger\right] , &
+    C_{\eta_s}(t) &= -\frac1{V_s}\sum_{\vec x,\vec y}\Tr\!\left[S_s(x|y)\,\gamma_5 S_{s'}(x|y)^\dagger\gamma_5\right] ,
+  \end{aligned}
+  \label{eq:os:wick}
+\end{equation}
+where $V_s$ is the spatial volume and the trace runs over spin and colour.
+The factors $r$ drop out, since $r^2=1$.
+
+\paragraph{Stochastic estimate.}
+The one-end trick uses the source $\xi$ of the light correlators on the time slice $t_0$
+(chosen at random or looping over all slices): a $\mathbb Z_2\times\mathbb Z_2$ noise $(\pm1\pm i)/\sqrt2$
+in every spin and colour component, without dilution, see eq.~(\ref{eq:source}).
+The light propagator $\psi_u = S_u\,\xi$ of the light correlators is reused.
+Each strange operator needs two inversions,
+\begin{equation}
+  \psi_s = S_s\,\xi , \qquad \phi_s = S_{s'}\,\gamma_5\xi .
+\end{equation}
+Using $E[\xi\,\xi^\dagger]=\id$ on the time slice $t_0$, eq.~(\ref{eq:os:wick}) becomes
+\begin{equation}
+  \begin{aligned}
+    C_{K} &\to \frac1{V_s}\sum_{\vec x}\psi_u^\dagger\psi_s , &
+    C_{K^0} &\to -\frac1{V_s}\sum_{\vec x}\psi_u^\dagger\gamma_5\phi_s , \\
+    C_{s\bar s'} &\to \frac1{V_s}\sum_{\vec x}\psi_s^\dagger\psi_s , &
+    C_{\eta_s} &\to -\frac1{V_s}\sum_{\vec x}\phi_s^\dagger\gamma_5\psi_s ,
+  \end{aligned}
+\end{equation}
+with all fields at $x=(\vec x,t_0+t)$.
+$C_{s\bar s'}$ is real. For $C_K$, $C_{K^0}$ and $C_{\eta_s}$ the code keeps the real part
+(for $\eta_s$ it uses $\re(\phi_s^\dagger\gamma_5\psi_s)=\re(\psi_s^\dagger\gamma_5\phi_s)$):
+the imaginary parts are lattice artefacts. Section~3 of Ref.~\cite{Ottnad:2015hva} shows this for $\eta_s$;
+the analogous argument holds for $K$ and $K^0$.
+
+The OS correlators use the same $\xi$ and $t_0$ as the light correlators of the same sample,
+so they are correlated with $\langle PP\rangle$ of {\ttfamily onlinemeas} with the same file suffix.
+With {\ttfamily HeavyMesons = yes}, the heavy-light correlators use the same $t_0$ but independent noise;
+the light and the OS correlators do not depend on {\ttfamily HeavyMesons}.
+
+\paragraph{Implementation.}
+\begin{center}
+\begin{tabular}{llll}
+  \hline
+  type & correlator & estimator (sum over $\vec x$) & $\kappa_{q_1}\kappa_{q_2}$ \\
+  \hline
+  1 & $C_K$ ($K^\pm$) & $+\re\,\psi_u^\dagger\psi_s$ & $\kappa_\ell\kappa_s$ \\
+  2 & $C_{K^0}$ & $-\re\,\psi_u^\dagger\gamma_5\phi_s$ & $\kappa_\ell\kappa_s$ \\
+  3 & $C_{\eta_s}$ (connected) & $-\re\,\psi_s^\dagger\gamma_5\phi_s$ & $\kappa_s^2$ \\
+  4 & $C_{s\bar s'}$ & $+\psi_s^\dagger\psi_s$ & $\kappa_s^2$ \\
+  \hline
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item Normalisation: $\psi_u$, $\psi_s$ and $\phi_s$ are the propagators returned by {\ttfamily op\_invert},
+        i.e.\ multiplied by $2\kappa$ of the respective operator. The sums are divided by
+        $2\kappa_{q_1}\kappa_{q_2}V_s$, with the $\kappa$ of the two quarks as in the table.
+        This is the normalisation of $\langle PP\rangle$ of the light correlators ({\ttfamily onlinemeas} type $1$):
+        if the strange operator is a copy of the light operator, types $1$ and $4$ equal $\langle PP\rangle$,
+        and types $2$ and $3$ equal the connected neutral pion correlator.
+  \item The scalar products are summed over the local sites of each time slice by
+        {\ttfamily os\_mesons\_contractions} (per OpenMP thread, static schedule), then over the threads
+        in thread order and over the spatial MPI ranks, and finally gathered in $t$.
+  \item $s'$ is inverted with the operator's {\ttfamily 2KappaMu} negated, so {\ttfamily AddDownPropagator}
+        of the strange operator is not used. Both inversions start from a zero initial guess;
+        the settings of the operator are restored afterwards.
+  \item Output: one file {\ttfamily os\_mesons.opXX.<suffix>} per strange operator ({\ttfamily XX}: operator index,
+        suffix as for {\ttfamily onlinemeas}) in the {\ttfamily onlinemeas} format, with the types of the table.
+        {\ttfamily OSMesonsWriteSources} and {\ttfamily OSMesonsWritePropagators} write $\xi$, $\psi_u$,
+        $\psi_s$ and $\phi_s$.
+\end{itemize}
+\endgroup
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
