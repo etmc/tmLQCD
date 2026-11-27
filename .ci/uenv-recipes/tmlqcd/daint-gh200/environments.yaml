@@ -5,7 +5,9 @@ gcc-env:
       specs: ['libfabric@2.4.0+cuda']
   unify: true
   specs:
-  - tmlqcd@master +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  #- tmlqcd@master +lemon +quda ^quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  - quda+clover+cuda+twisted_clover+twisted_mass+ndeg_twisted_clover+ndeg_twisted_mass+wilson+qdp+multigrid+mpi cuda_arch=90
+  - c-lime@master
   - numdiff
   variants:
   - +mpi

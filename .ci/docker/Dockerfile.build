@@ -1,0 +1,169 @@
+FROM docker.io/nvidia/cuda:12.9.2-devel-ubuntu24.04
+
+# Cap parallel compile jobs (nvcc is memory-heavy; nproc can be 200+ on CI builders).
+ARG BUILD_JOBS=16
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN echo "Running CSCS CI on $(nproc) processors, building with -j ${BUILD_JOBS}"
+
+RUN apt-get update -qq && apt-get install -qq -y --no-install-recommends \
+    build-essential \
+    cmake \
+    wget \
+    ninja-build \
+    git \
+    ca-certificates \
+    automake \
+    autoconf \
+    libtool \
+    libopenblas-dev \
+    flex \
+    numdiff \
+    libfftw3-dev \
+    pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+# CSCS Alps/Daint GH200 nodes expose the Slingshot interconnect to containers
+# via a container-engine "CXI hook" that swaps in the host's libfabric/xpmem
+# stack at *runtime*. That only works if the MPI inside the image was itself
+# built against libfabric+xpmem (ch4:ofi), matching CSCS's documented MPICH
+# recipe (https://docs.cscs.ch/software/communication/mpich/). We deliberately
+# avoid bind-mounting any host Cray Programming Environment paths here, since
+# those are an internal implementation detail that CSCS has changed before
+# (see git history) and will change again.
+
+# xpmem: shared-memory intra-node transport, used by libfabric/MPICH.
+RUN git clone --depth 1 https://github.com/hpc/xpmem && \
+    cd xpmem/lib && \
+    gcc -I../include -shared -o libxpmem.so.1 libxpmem.c && \
+    ln -s libxpmem.so.1 libxpmem.so && \
+    mv libxpmem.so* /usr/lib && \
+    cp ../include/xpmem.h /usr/include/ && \
+    ldconfig && \
+    cd ../.. && rm -rf xpmem
+
+# The image is built without a GPU/driver present, so register the CUDA
+# driver *stub* library that ships with the "devel" base image. This lets
+# libfabric's and MPICH's configure/build-time CUDA checks resolve -lcuda.
+# The real driver is injected by the container engine at run time, so this
+# entry is removed again once the CUDA-aware builds below are done.
+RUN echo '/usr/local/cuda/lib64/stubs' > /etc/ld.so.conf.d/cuda-stubs.conf && ldconfig
+
+# libfabric with CUDA support, needed for GPU-aware (HMEM) transfers over CXI.
+ARG LIBFABRIC_VERSION=1.22.0
+RUN wget -q https://github.com/ofiwg/libfabric/archive/refs/tags/v${LIBFABRIC_VERSION}.tar.gz && \
+    tar xf v${LIBFABRIC_VERSION}.tar.gz && \
+    cd libfabric-${LIBFABRIC_VERSION} && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr --with-cuda=/usr/local/cuda && \
+    make -j${BUILD_JOBS} && \
+    make install && \
+    ldconfig && \
+    cd .. && rm -rf v${LIBFABRIC_VERSION}.tar.gz libfabric-${LIBFABRIC_VERSION}
+
+# MPICH built against the libfabric/xpmem stack above (ch4:ofi), with CUDA
+# support so GPU buffers can be passed directly to MPI calls.
+ARG MPICH_VERSION=4.3.1
+ARG MPICH_PATH=/usr/local/mpich
+RUN wget -q https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz && \
+    tar -xzf mpich-${MPICH_VERSION}.tar.gz && \
+    cd mpich-${MPICH_VERSION} && \
+    ./configure \
+    --disable-fortran \
+    --with-device=ch4:ofi \
+    --with-libfabric=/usr \
+    --with-xpmem=/usr \
+    --with-cuda=/usr/local/cuda \
+    --prefix=$MPICH_PATH && \
+    make install -j${BUILD_JOBS} && \
+    cd .. && rm -rf mpich-${MPICH_VERSION}.tar.gz mpich-${MPICH_VERSION}
+
+RUN echo "${MPICH_PATH}/lib" >> /etc/ld.so.conf.d/cscs.conf && ldconfig
+
+# NOTE: the CUDA driver stub registered above must stay in place until after
+# QUDA itself is built: QUDA's own binaries link through mpicc/mpicxx, and
+# those wrappers now carry -lcuda (since MPICH was configured --with-cuda),
+# so both CMake's find_package(MPI) compiler probe and the final QUDA link
+# step need -lcuda to resolve. It is removed at the very end of this file, after tmLQCD is built,
+# once nothing further needs to link against CUDA.
+
+# QUDA source: pinned to a known-good commit by default (develop as of
+# 2026-11-10, merge of lattice/quda#1658). Override with
+# --build-arg QUDA_GIT_COMMIT=<sha>, or pass an empty QUDA_GIT_COMMIT to build
+# the tip of QUDA_GIT_BRANCH.
+ARG QUDA_GIT_REPO=https://github.com/lattice/quda.git
+ARG QUDA_GIT_BRANCH=develop
+ARG QUDA_GIT_COMMIT=af7e15080e247795ef076b6d9284478755a9a683
+
+#clone QUDA
+RUN git clone --branch "${QUDA_GIT_BRANCH}" "${QUDA_GIT_REPO}" /quda && \
+    if [ -n "${QUDA_GIT_COMMIT}" ]; then git -C /quda checkout "${QUDA_GIT_COMMIT}"; fi && \
+    echo "Building QUDA at $(git -C /quda rev-parse HEAD)"
+
+RUN  cmake -S /quda \
+    -DCMAKE_CUDA_COMPILER=nvcc \
+    -DCMAKE_CXX_COMPILER=/usr/local/mpich/bin/mpicxx \
+    -DCMAKE_C_COMPILER=/usr/local/mpich/bin/mpicc \
+    -DCMAKE_BUILD_TYPE=STRICT \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DQUDA_GPU_ARCH=sm_90 \
+    -DQUDA_GPU_ARCH_SUFFIX=real \
+    -DQUDA_PRECISION=14 \
+    -DQUDA_RECONSTRUCT=7 \
+    -DQUDA_DIRAC_NEG_TWISTED_CLOVER=ON \
+    -DQUDA_DIRAC_NDEG_TWISTED_MASS=ON \
+    -DQUDA_BUILD_ALL_TESTS=OFF \
+    -DQUDA_MULTIGRID=ON \
+    -DQUDA_MULTIGRID_NVEC_LIST="6,24,32" \
+    -DQUDA_MULTIGRID_MRHS_LIST=16 \
+    -DQUDA_MPI=ON  \
+    -DQUDA_INTERFACE_QDP=ON \
+    -DQUDA_INTERFACE_MILC=OFF \
+    -DQUDA_DIRAC_DEFAULT_OFF=ON \
+    -DQUDA_DIRAC_WILSON=ON \
+    -DQUDA_DIRAC_CLOVER=ON \
+    -DQUDA_DIRAC_TWISTED_MASS=ON \
+    -DQUDA_DIRAC_TWISTED_CLOVER=ON \
+    -GNinja \
+    -B /quda/build 
+
+RUN cmake --build /quda/build -j ${BUILD_JOBS}
+
+RUN cmake --install /quda/build
+
+# c-lime: required by tmLQCD (find_package(CLime REQUIRED)).
+RUN git clone --depth 1 https://github.com/usqcd-software/c-lime.git /c-lime && \
+    cd /c-lime && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr/local && \
+    make -j${BUILD_JOBS} && \
+    make install && \
+    cd / && rm -rf /c-lime
+
+# Clone tmLQCD
+ARG CICD_SRC_DIR="/tmlqcd"
+COPY . ${CICD_SRC_DIR}
+
+RUN cmake -S ${CICD_SRC_DIR} \
+          -DCMAKE_INSTALL_PREFIX=/usr/local \
+          -DMPI_HOME=${MPICH_PATH} \
+          -DCMAKE_CUDA_ARCHITECTURES=90 \
+          -DTM_USE_LEMON=ON \
+          -DTM_USE_MPI=ON \
+          -DTM_USE_QUDA=ON \
+          -DTM_USE_CUDA=ON \
+          -DTM_USE_GAUGE_COPY=ON \
+          -DTM_USE_HALFSPINOR=ON \
+          -DTM_USE_OMP=ON \
+          -DTM_USE_FFTW=ON \
+          -B ${CICD_SRC_DIR}/build
+RUN cmake --build ${CICD_SRC_DIR}/build -j ${BUILD_JOBS}
+
+# Drop the build-time CUDA driver stub now that everything that needed to
+# link against CUDA (libfabric, MPICH, QUDA, tmLQCD) is built. The real driver is
+# injected by the container engine at run time.
+RUN rm /etc/ld.so.conf.d/cuda-stubs.conf && ldconfig
+
+# Make the tmLQCD binaries (hmc_tm, invert, ...) available to CI test jobs.
+ENV PATH="${CICD_SRC_DIR}/build/src/bin:${PATH}"
