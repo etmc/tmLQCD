@@ -7,7 +7,7 @@ env:
 
 jobs:
   ddalphaamg-nf211-hmc-tmclover:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: get_tmlqcd

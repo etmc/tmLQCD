@@ -7,7 +7,7 @@ env:
 
 jobs:
   basic-nf211-hmc-tmclover:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       # handling of environment variable: https://stackoverflow.com/a/57969570
