@@ -216,6 +216,10 @@ void convert_32_gauge_field(su3_32** gf32, su3** gf, int V) {
       gf32[i][mu].c22 = (_Complex float)gf[i][mu].c22;
     }
   }
+  // the gauge copy of the 32-bit field (TM_USE_GAUGE_COPY) has to be rebuilt from the new field
+  // (as g_update_gauge_copy after reading a gauge field); otherwise mixed-precision solvers use
+  // the links of the previous gauge field
+  g_update_gauge_copy_32 = 1;
 #if defined TM_USE_HALFSPINOR
 
 #endif
