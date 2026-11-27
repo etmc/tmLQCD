@@ -126,12 +126,12 @@ jobs:
         working-directory: ${{github.workspace}}/qphix
         run: mkdir build
 
-      - name: cache_qphix
-        id: cache-qphix
-        uses: actions/cache@v6
-        with:
-          path: qphix/build
-          key: ${{ runner.os }}-haswell-qphix
+      #- name: cache_qphix
+        #id: cache-qphix
+        #uses: actions/cache@v6
+        #with:
+          #path: qphix/build
+          #key: ${{ runner.os }}-haswell-qphix
 
       - name: build_qphix
         working-directory: ${{github.workspace}}/qphix/build
