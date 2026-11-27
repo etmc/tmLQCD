@@ -608,8 +608,6 @@ static inline double fltlist_next_token(int * const list_end){
 %x PCOMP
 %x NBCORES
 
-%x OMPNUMTHREADS
-
 %x DFLNBLOCKT
 %x DFLNBLOCKX
 %x DFLNBLOCKY
@@ -718,8 +716,6 @@ static inline double fltlist_next_token(int * const list_end){
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
-
-^OMPNumThreads{EQL}                BEGIN(OMPNUMTHREADS);
 
 ^NoBlocksT{EQL}                    BEGIN(DFLNBLOCKT);
 ^NoBlocksX{EQL}                    BEGIN(DFLNBLOCKX);
