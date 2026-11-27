@@ -137,6 +137,7 @@ jobs:
         working-directory: ${{github.workspace}}/qphix/build
         if: steps.cache-qphix.outputs.cache-hit != 'true'
         run: |
+          sed -i -e  "s/cmake_minimum_required(VERSION 3.1)/cmake_minimum_required(VERSION 3.25)/g" ../CMakeLists.txt 
           cmake \
             -DQMP_DIR=${{github.workspace}}/qmp/build/install_dir \
             -Disa=avx2 \
