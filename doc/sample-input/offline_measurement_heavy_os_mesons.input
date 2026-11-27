@@ -1,0 +1,85 @@
+# example input file for offline measurements using "offline_measurement"
+# with the heavy-light (HeavyMesons) and Osterwalder-Seiler (OSMesons) meson correlators
+# requires 2 8^4 gauge configuration conf.0000 and conf.0002
+
+L=8
+T=8
+
+DebugLevel = 5
+
+InitialStoreCounter = 0
+Measurements = 2
+# measurements will be carried out in nsave steps
+# e.g. for conf.0000 and conf.0002 in this case 
+nsave=2
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+# the correlators measurement uses the first operator (operator 0) for the light quark;
+# HeavyMesons uses the second operator (operator 1) as heavy doublet;
+# OSMesons uses the operators listed in OSMesonsStrangeOperators as OS strange quarks
+# (2kappaMu with the same sign as the light quark)
+BeginMeasurement CORRELATORS
+  Frequency = 1 
+  HeavyMesons = yes
+  OSMesons = yes
+  OSMesonsStrangeOperators = 2, 3
+EndMeasurement
+
+BeginMeasurement POLYAKOVLOOP
+  Frequency = 1
+EndMeasurement
+
+BeginMeasurement ORIENTEDPLAQUETTES
+  Frequency = 1
+EndMeasurement
+
+# requirements are the same as for the correlators measurement
+BeginMeasurement PIONNORM
+  Frequency = 1
+EndMeasurement
+
+# note: setting the solver to CGMMS will result in the CGMMS inversion taking place
+# because the solver is not properly decoupled form the rest of the code
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+EndOperator
+
+BeginOperator DBTMWILSON
+  2kappamubar = 0.2
+  2kappaepsbar = 0.1
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.07
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+EndOperator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.1
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+EndOperator
