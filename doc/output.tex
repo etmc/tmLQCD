@@ -67,6 +67,28 @@ is set. Record $n$ can be read with {\ttfamily read\_spinor(even, odd, filename,
   $f$ (sink flavour), in the basis of Ref.~\cite{baron2011computing}.
 \end{itemize}
 
+\subsubsection*{\ttfamily os\_mesons.opXX.<suffix>}
+Written by the {\ttfamily CORRELATORS} measurement if {\ttfamily OSMesons = yes}
+(see section~\ref{sec:osmesons}), one file per operator {\ttfamily XX} (two digits) in
+{\ttfamily OSMesonsStrangeOperators}. The suffix is the one of {\ttfamily onlinemeas} with the same
+source (sample). The file has the {\ttfamily onlinemeas} format,
+\begin{verbatim}
+  type  1  t  C(t0+t)  C(t0-t)      t = 0 ... T/2
+\end{verbatim}
+with {\ttfamily type} $1$: $K^\pm$, $2$: $K^0$, $3$: connected $\eta_s$, $4$: $s\bar s'$.
+At $t=0$ and $t=T/2$ the last column is $0$. The normalisation is the one of type $1$ of
+{\ttfamily onlinemeas}.
+
+\subsubsection*{\ttfamily os\_mesons\_source/prop\_light/prop\_strange.<suffix>}
+{\sloppy LIME files written if {\ttfamily OSMesonsWriteSources} or {\ttfamily OSMesonsWritePropagators}
+is set. Record $n$ can be read with {\ttfamily read\_spinor(even, odd, filename, n)}.\par}
+\begin{itemize}
+\item {\ttfamily os\_mesons\_source}: 1 record, the noise $\xi$ at $t_0$ (the source of the light correlators).
+\item {\ttfamily os\_mesons\_prop\_light}: 1 record, the light propagator $\psi_u$ ($+\mu_\ell$).
+\item {\ttfamily os\_mesons\_prop\_strange.opXX}: 2 records per strange operator {\ttfamily XX},
+  $\psi_s$ ($s$ on $\xi$) and $\phi_s$ ($s'$ on $\gamma_5\xi$).
+\end{itemize}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "main"

@@ -774,8 +774,9 @@ where {\ttfamily TYPE} can be currently one of the following:
   \item {\ttfamily MaxSolverIterations}
   \end{itemize}
   this is for zero temperature, so the stochastic source is at fixed
-  $t$. In addition it needs an operator defined in the input file,
-  otherwise it will do nothing. (see input keywords for {\ttfamily invert} above)
+  $t$. In addition it needs the light quark as the first operator (operator $0$) in the
+  input file, of type {\ttfamily TMWILSON}, {\ttfamily WILSON} or {\ttfamily CLOVER};
+  otherwise the program stops. (see input keywords for {\ttfamily invert} above)
 
   Heavy-light meson correlators (section~\ref{sec:heavymesons}) are controlled by
   \begin{itemize}
@@ -784,10 +785,41 @@ where {\ttfamily TYPE} can be currently one of the following:
     are computed in addition. This needs two operators in the input file: the first one of type
     {\ttfamily TMWILSON}, {\ttfamily WILSON} or {\ttfamily CLOVER} (light doublet),
     the second one of type {\ttfamily DBTMWILSON} or {\ttfamily DBCLOVER} (heavy doublet).
+    The heavy-light correlators use the same source time slices as the light correlators,
+    but independent noise; the light correlators do not depend on {\ttfamily HeavyMesons}.
   \item {\ttfamily HeavyMesonsWriteSources} \\
     {\ttfamily yes} or {\ttfamily no} (default). Write the stochastic sources to disk.
   \item {\ttfamily HeavyMesonsWritePropagators} \\
     {\ttfamily yes} or {\ttfamily no} (default). Write the light and heavy propagators to disk.
+  \end{itemize}
+
+  Osterwalder-Seiler (OS) meson correlators (section~\ref{sec:osmesons}) are controlled by
+  \begin{itemize}
+  \item {\ttfamily OSMesons} \\
+    {\ttfamily yes} or {\ttfamily no} (default). If {\ttfamily yes}, the correlators of the OS kaons
+    ($K^\pm$, $K^0$), of the connected $\eta_s$ and of the $s\bar s'$ meson are computed in addition,
+    for every operator in {\ttfamily OSMesonsStrangeOperators}. They reuse the source and the light
+    propagator of the light correlators, so the light quark (operator $0$) needs
+    {\ttfamily 2KappaMu}~$\neq0$.
+  \item {\ttfamily OSMesonsStrangeOperators} \\
+    Comma-separated list of operator indices (counted from $0$ in the order of the input file,
+    at most $16$), required with {\ttfamily OSMesons = yes}. Each operator defines the OS strange quarks
+    $s$ ($+\mu_s$) and $s'$ ($-\mu_s$): type {\ttfamily TMWILSON} or {\ttfamily CLOVER} with
+    {\ttfamily 2KappaMu} $=2\kappa\mu_s\neq0$ of the \emph{same sign} as the light quark,
+    normally with the {\ttfamily kappa} and {\ttfamily CSW} of the light quark (otherwise a warning
+    is printed). An entry that is the light quark, not defined, of another type, with
+    {\ttfamily 2KappaMu} $=0$ or of the opposite sign, or listed twice stops the program.
+    Each operator needs two inversions per sample; its {\ttfamily AddDownPropagator} is not used.
+  \item {\ttfamily OSMesonsWriteSources} \\
+    {\ttfamily yes} or {\ttfamily no} (default). Write the stochastic source to disk.
+  \item {\ttfamily OSMesonsWritePropagators} \\
+    {\ttfamily yes} or {\ttfamily no} (default). Write the light and the strange propagators to disk.
+  \end{itemize}
+  The use of these keywords is shown by the sample inputs in {\ttfamily doc/sample-input}:
+  \begin{itemize}
+  \item {\ttfamily offline\_measurement\_os\_mesons.input}: light and OS mesons.
+  \item {\ttfamily offline\_measurement\_heavy\_os\_mesons.input}: light, heavy and OS mesons
+    (the heavy doublet is operator $1$, so the OS strange quarks are operators $2$ and $3$).
   \end{itemize}
 \item {\ttfamily PIONNORM}:
   \begin{itemize}
